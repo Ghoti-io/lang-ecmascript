@@ -33,5 +33,7 @@
 #include <ghoti.io/lang-ecmascript/allocator.h>
 #include <ghoti.io/lang-ecmascript/core.h>
 #include <ghoti.io/lang-ecmascript/engine.h>
+#include <ghoti.io/lang-ecmascript/limits.h>
+#include <ghoti.io/lang-ecmascript/source.h>
 
 #endif // GHOTI_IO_GLECMA_LANG_ECMASCRIPT_H

@@ -15,11 +15,13 @@ design, the target and the plan are in
 
 ## Status
 
-**Scaffolding.** The library registers an ECMAScript engine with a
-runtime-core context and reports its version and target edition. It does not
-yet parse or run script; the tokenizer and parser come next, then the
-bytecode compiler and interpreter. No interface is stable: every header is
-labelled `@stability free` until the suite's first release.
+**Scaffolding and source text.** The library registers an ECMAScript engine
+with a runtime-core context, reports its version and target edition, and
+takes source text: UTF-8 or UTF-16, validated and copied, with exact line and
+column locations, under a size cap. It does not yet tokenize, parse or run
+script; the tokenizer and parser come next, then the bytecode compiler and
+interpreter. No interface is stable: every header is labelled
+`@stability free` until the suite's first release.
 
 ## Example
 
@@ -50,7 +52,8 @@ int main(void) {
 ```
 
 `examples/register_engine.c` is the same program with its error handling;
-`make examples` builds and runs it.
+`examples/source_locations.c` creates a source and asks where things are in
+it. `make examples` builds and runs both.
 
 ## The API so far
 
@@ -64,8 +67,53 @@ int main(void) {
   identifies an ECMAScript frame to runtime-core and its consumers;
   `glecma_engine_register`, which registers it with a context and is
   idempotent; and `glecma_engine_find`.
+- `core.h` also holds what every parse call reports through:
+  `GLECMA_ERR_SYNTAX`, appended after the shared nine results for source
+  text that is not valid ECMAScript; `GLECMA_Location` (offset in input
+  units, 1-based line, 0-based column in UTF-16 code units); and
+  `GLECMA_Failure` (result, static message, location, and the limit's name
+  for `GLECMA_ERR_LIMIT`), written on every return when the caller passes one.
+- `limits.h`: `GLECMA_Limits` and `glecma_limits_default`. Its one field so
+  far is `source_units`, default 64 Mi units; zero is a cap of zero.
+- `source.h`: `glecma_source_create_utf8` and `glecma_source_create_utf16`
+  copy and validate source text (ill-formed UTF-8 is `GLECMA_ERR_CORRUPT` at
+  the first bad byte; a lone UTF-16 surrogate is a code point of its own;
+  nothing is stripped, a leading BOM included); `glecma_source_location`
+  maps an offset to its line and column, with lines split at ECMA-262's five
+  line terminators; `glecma_source_encoding`, `_units`, `_code_points`,
+  `_lines`, `_dump` and `_destroy`. A source is immutable, and any number of
+  threads may read one at once.
 
-Outputs are written only on success. A NULL allocator means the default.
+```c
+GLECMA_Source * source = NULL;
+GLECMA_Failure failure;
+GLECMA_Result result =
+    glecma_source_create_utf8(text, length, NULL, NULL, &failure, &source);
+if (result == GLECMA_ERR_CORRUPT) {
+  // The location names the first ill-formed byte.
+  fprintf(stderr, "%s at line %zu, column %zu\n",
+      failure.message != NULL ? failure.message : "ill-formed UTF-8",
+      failure.location.line, failure.location.column);
+  return 1;
+} else if (result == GLECMA_ERR_LIMIT) {
+  fprintf(stderr, "over the %s limit\n", failure.limit);
+  return 1;
+} else if (result != GLECMA_OK) {
+  fprintf(stderr, "%s\n", glecma_result_string(result));
+  return 1;
+}
+GLECMA_Location location;
+if (glecma_source_location(source, offset, &location) == GLECMA_OK) {
+  printf("line %zu, column %zu\n", location.line, location.column);
+} else {
+  // Past the end, or inside a multi-unit code point.
+  fprintf(stderr, "offset %zu is not a position\n", offset);
+}
+glecma_source_destroy(source);
+```
+
+Outputs are written only on success, and a failure leaves nothing allocated.
+A NULL allocator means the default, and NULL limits mean the defaults.
 
 ## Building
 

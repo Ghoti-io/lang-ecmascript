@@ -26,7 +26,13 @@ TEST(Result, SharedVocabularyKeepsItsNumbers) {
   EXPECT_EQ(GLECMA_ERR_OOM, 6);
   EXPECT_EQ(GLECMA_ERR_INVALID, 7);
   EXPECT_EQ(GLECMA_ERR_INTERNAL, 8);
-  EXPECT_EQ(GLECMA_RESULT_COUNT, 9);
+}
+
+// core.h: the syntax result is the first value appended after the
+// shared nine, before the count, so it moves none of them.
+TEST(Result, SyntaxIsAppendedAfterTheSharedNine) {
+  EXPECT_EQ(GLECMA_ERR_SYNTAX, 9);
+  EXPECT_EQ(GLECMA_RESULT_COUNT, 10);
 }
 
 TEST(Result, EveryResultHasItsOwnDescription) {

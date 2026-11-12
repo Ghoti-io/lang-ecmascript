@@ -149,6 +149,7 @@ cat > "$work/consumer.c" <<'EOF'
 
 #include <ghoti.io/runtime-core/b/group.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -184,6 +185,46 @@ int main(void) {
   if (grcore_context_destroy(context) != GRCORE_OK ||
       grcore_group_destroy(group) != GRCORE_OK) {
     fprintf(stderr, "consumer: the context or group did not tear down\n");
+    return 1;
+  }
+  // Source text through the installed source.h and limits.h: a location
+  // after a CRLF, a refusal of ill-formed UTF-8 with its position, and the
+  // size cap with the field it names.
+  GLECMA_Source * source = NULL;
+  GLECMA_Failure failure;
+  GLECMA_Location location;
+  if (glecma_source_create_utf8("a\r\nb", 4, NULL, NULL, &failure,
+          &source) != GLECMA_OK ||
+      glecma_source_lines(source) != 2 ||
+      glecma_source_location(source, 3, &location) != GLECMA_OK ||
+      location.line != 2 || location.column != 0) {
+    fprintf(stderr, "consumer: a UTF-8 source did not locate\n");
+    return 1;
+  }
+  glecma_source_destroy(source);
+  const uint16_t wide[] = {0xD800, 0x61};
+  if (glecma_source_create_utf16(wide, 2, NULL, NULL, NULL, &source) !=
+          GLECMA_OK ||
+      glecma_source_code_points(source) != 2) {
+    fprintf(stderr, "consumer: a UTF-16 source did not decode\n");
+    return 1;
+  }
+  glecma_source_destroy(source);
+  if (glecma_source_create_utf8("ab\xE0\x80", 4, NULL, NULL, &failure,
+          &source) != GLECMA_ERR_CORRUPT ||
+      failure.location.offset != 2) {
+    fprintf(stderr, "consumer: ill-formed UTF-8 was not refused\n");
+    return 1;
+  }
+  GLECMA_Limits limits;
+  if (glecma_limits_default(&limits) != GLECMA_OK) {
+    return 1;
+  }
+  limits.source_units = 1;
+  if (glecma_source_create_utf8("ab", 2, &limits, NULL, &failure,
+          &source) != GLECMA_ERR_LIMIT ||
+      failure.limit == NULL || strcmp(failure.limit, "source_units") != 0) {
+    fprintf(stderr, "consumer: the source_units cap was not applied\n");
     return 1;
   }
   printf("%s\n", version);

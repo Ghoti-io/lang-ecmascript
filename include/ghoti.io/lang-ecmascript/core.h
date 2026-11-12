@@ -22,7 +22,8 @@
  * @file core.h
  * @stability free
  *
- * Result codes, the version this build reports, and the edition of the
+ * Result codes, the failure record and source location every parse call
+ * reports through, the version this build reports, and the edition of the
  * language it implements.
  */
 
@@ -32,6 +33,8 @@
 #include <ghoti.io/lang-ecmascript/macros.h>
 
 #include <ghoti.io/lang-ecmascript/allocator.h>
+
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,10 +60,17 @@ extern "C" {
  * @brief Result of an operation.
  *
  * Zero is success. ::GLECMA_RESULT_COUNT closes the enum so a test can check
- * the string table is complete. These are the suite's shared nine; a value is
- * appended before the count only when an operation needs to report something
- * none of them means (a script's early error, an uncaught guest exception),
- * so the nine keep their numbers.
+ * the string table is complete. The first nine are the suite's shared
+ * vocabulary; a value is appended before the count only when an operation
+ * needs to report something none of them means, so the nine keep their
+ * numbers.
+ *
+ * ::GLECMA_ERR_SYNTAX is the first such value: source text that decodes
+ * cleanly but is not ECMAScript for the goal it was parsed in. It is kept
+ * apart from ::GLECMA_ERR_CORRUPT (the text is not well-formed UTF-8, so it
+ * is not source text at all) and from ::GLECMA_ERR_INVALID (the caller's
+ * arguments are wrong), so that a host can tell a script's author's mistake
+ * from its own.
  */
 typedef enum {
   GLECMA_OK = 0,          ///< The operation succeeded.
@@ -73,8 +83,50 @@ typedef enum {
   GLECMA_ERR_OOM,         ///< The allocator returned NULL.
   GLECMA_ERR_INVALID,     ///< A caller-supplied argument is wrong.
   GLECMA_ERR_INTERNAL,    ///< The library's own invariant failed.
+  GLECMA_ERR_SYNTAX,      ///< Well-formed source text that is not valid
+                          ///< ECMAScript for the requested goal: a grammar
+                          ///< error or an early error.
   GLECMA_RESULT_COUNT     ///< Not a result; closes the enum.
 } GLECMA_Result;
+
+/**
+ * @brief A position in source text.
+ *
+ * `offset` counts the input's own units: bytes for UTF-8 source, 16-bit code
+ * units for UTF-16 source. `line` is 1-based and advances at each of
+ * ECMA-262's line terminators (LF, CR, CRLF as one, U+2028, U+2029); the LF of
+ * a CRLF is on the CR's line. `column` is 0-based and counts UTF-16 code units
+ * from the start of the line, whatever the input encoding, because that is
+ * how source maps and browser developer tools count: a code point above
+ * U+FFFF is two columns wide, and a UTF-8 host still gets columns a debugger
+ * front end can use.
+ */
+typedef struct GLECMA_Location {
+  size_t offset; ///< Index into the input, in input units.
+  size_t line;   ///< 1-based line number.
+  size_t column; ///< 0-based column, in UTF-16 code units.
+} GLECMA_Location;
+
+/**
+ * @brief Why a call failed, written on every return when the caller asks.
+ *
+ * A call that takes a `GLECMA_Failure *` writes all of it on every return,
+ * success included, whenever the pointer is not NULL; a field that does not
+ * apply to the result is zero or NULL. Every string is static, never
+ * allocated and never caller data, so the record needs no freeing and stays
+ * valid for the life of the process.
+ */
+typedef struct GLECMA_Failure {
+  GLECMA_Result result;     ///< The same code the function returned.
+  const char * message;     ///< A static English description, or NULL.
+  GLECMA_Location location; ///< Where in the source the failure is, for
+                            ///< ::GLECMA_ERR_CORRUPT (the first byte of the
+                            ///< first ill-formed sequence) and
+                            ///< ::GLECMA_ERR_SYNTAX; all zero otherwise.
+  const char * limit;       ///< For ::GLECMA_ERR_LIMIT, the static name of
+                            ///< the ::GLECMA_Limits field that was exceeded;
+                            ///< NULL otherwise.
+} GLECMA_Failure;
 
 /**
  * @brief Static description of a result code.

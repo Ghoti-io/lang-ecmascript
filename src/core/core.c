@@ -51,6 +51,8 @@ const char * glecma_result_string(GLECMA_Result result) {
       return "Invalid argument";
     case GLECMA_ERR_INTERNAL:
       return "Internal error";
+    case GLECMA_ERR_SYNTAX:
+      return "Syntax error";
     case GLECMA_RESULT_COUNT:
     default:
       return "Unknown error";

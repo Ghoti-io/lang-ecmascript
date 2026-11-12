@@ -42,6 +42,8 @@
 
 // core.h and allocator.h
 #define GLECMA_Allocator GHOTIIO_LANG_ECMASCRIPT(GLECMA_Allocator)
+#define GLECMA_Failure GHOTIIO_LANG_ECMASCRIPT(GLECMA_Failure)
+#define GLECMA_Location GHOTIIO_LANG_ECMASCRIPT(GLECMA_Location)
 #define GLECMA_Result GHOTIIO_LANG_ECMASCRIPT(GLECMA_Result)
 #define glecma_allocator_default GHOTIIO_LANG_ECMASCRIPT(glecma_allocator_default)
 #define glecma_ecma262_edition GHOTIIO_LANG_ECMASCRIPT(glecma_ecma262_edition)
@@ -54,9 +56,42 @@
 #define glecma_engine_find GHOTIIO_LANG_ECMASCRIPT(glecma_engine_find)
 #define glecma_engine_register GHOTIIO_LANG_ECMASCRIPT(glecma_engine_register)
 
+// limits.h
+#define GLECMA_Limits GHOTIIO_LANG_ECMASCRIPT(GLECMA_Limits)
+#define glecma_limits_default GHOTIIO_LANG_ECMASCRIPT(glecma_limits_default)
+
+// source.h
+#define GLECMA_Encoding GHOTIIO_LANG_ECMASCRIPT(GLECMA_Encoding)
+#define GLECMA_Source GHOTIIO_LANG_ECMASCRIPT(GLECMA_Source)
+#define glecma_source_code_points                                              \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_code_points)
+#define glecma_source_create_utf16                                             \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_create_utf16)
+#define glecma_source_create_utf8                                              \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_create_utf8)
+#define glecma_source_destroy GHOTIIO_LANG_ECMASCRIPT(glecma_source_destroy)
+#define glecma_source_dump GHOTIIO_LANG_ECMASCRIPT(glecma_source_dump)
+#define glecma_source_encoding GHOTIIO_LANG_ECMASCRIPT(glecma_source_encoding)
+#define glecma_source_lines GHOTIIO_LANG_ECMASCRIPT(glecma_source_lines)
+#define glecma_source_location GHOTIIO_LANG_ECMASCRIPT(glecma_source_location)
+#define glecma_source_units GHOTIIO_LANG_ECMASCRIPT(glecma_source_units)
+
 // Internal (src/); hidden by -fvisibility=hidden, renamed to keep one rule.
 #define glecma_result_from_grcore                                              \
   GHOTIIO_LANG_ECMASCRIPT(glecma_result_from_grcore)
+#define GLECMA_SourceCheckpoint                                                \
+  GHOTIIO_LANG_ECMASCRIPT(GLECMA_SourceCheckpoint)
+#define GLECMA_SourceCursor GHOTIIO_LANG_ECMASCRIPT(GLECMA_SourceCursor)
+#define glecma_source_cursor_location                                          \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_cursor_location)
+#define glecma_source_cursor_next                                              \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_cursor_next)
+#define glecma_source_cursor_seek                                              \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_cursor_seek)
+#define glecma_source_cursor_start                                             \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_cursor_start)
+#define glecma_source_utf8_decode                                              \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_utf8_decode)
 
 /// @endcond
 
