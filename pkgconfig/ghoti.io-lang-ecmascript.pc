@@ -1,0 +1,7 @@
+Name: Ghoti.io Lang-ecmascript(BRANCH)
+Description: An ECMAScript (JavaScript) engine on the Ghoti.io language runtime.
+Version: (VERSION)
+URL: https://github.com/Ghoti-io/lang-ecmascript
+Libs: -L(PC_LIB_DIR) -l(SUITE)-(PROJECT)(BRANCH)
+Cflags: -I(PC_INCLUDE_DIR)
+Requires: (REQUIRES)
