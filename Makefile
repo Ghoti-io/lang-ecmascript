@@ -1,7 +1,8 @@
 # The suite's Makefile skeleton, taken from lang-wasm's (which came from
 # color's, and that from model's). SUITE, PROJECT, the dependency block and
-# the object discovery are what changed. lang-wasm's spec corpus, JIT,
-# debugger and benchmark gates are not this library's yet.
+# the object discovery are what changed. lang-wasm's spec corpus, JIT and
+# debugger gates are not this library's yet; the benchmark harness is (bench/,
+# `make bench`, and the check-bench gate in `make test`).
 
 SUITE := ghoti.io
 PROJECT := lang-ecmascript
@@ -206,7 +207,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 
 # fuzz-replay joins these when the first parser lands with its harness and
 # seed corpus; until then there is nothing to replay.
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-gtest-full
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-gtest-full
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
@@ -307,7 +308,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(ECMALIBRARY)
 
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-stamps check-aliasing check-labels check-edges
-.PHONY: check-fp-contract check-gtest-full check-install examples
+.PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
 .PHONY: fuzz fuzz-clean help
 
@@ -393,6 +394,35 @@ examples: $(EXAMPLE_EXECUTABLES) ## Build and run every example
 	@for example in $(EXAMPLE_EXECUTABLES); do \
 		printf '\n### %s ###\n\n' "$$(basename $$example)"; \
 		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$example || exit 1; \
+	done
+
+####################################################################
+# Benchmarks (AD-26)
+####################################################################
+
+BENCH_SOURCES := $(shell find bench -type f -name '*.c' 2>/dev/null | sort)
+BENCH_EXECUTABLES := $(patsubst bench/%.c,$(APP_DIR)/bench/%$(EXE_EXTENSION),$(BENCH_SOURCES))
+-include $(patsubst bench/%.c,$(APP_DIR)/bench/%.d,$(BENCH_SOURCES))
+
+$(APP_DIR)/bench/%$(EXE_EXTENSION): bench/%.c $(APP_DIR)/$(STATIC_TARGET) $(FLAGS_STAMP) | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -MF $(@D)/$(*F).d -o $@ $< $(LDFLAGS) $(ECMALIBRARY)
+
+bench: $(BENCH_EXECUTABLES) ## Run the benchmark harness (prints a calibration result first)
+	@if [ -z "$(strip $(BENCH_EXECUTABLES))" ]; then \
+		printf 'bench: no benchmark sources under bench/, so this measures nothing\n' >&2; exit 1; \
+	fi
+	@for b in $(BENCH_EXECUTABLES); do \
+		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$b || exit 1; \
+	done
+
+check-bench: $(BENCH_EXECUTABLES) ## Fail if bench/ is empty; build and smoke-run the harness
+	@if [ -z "$(strip $(BENCH_EXECUTABLES))" ]; then \
+		printf 'check-bench: no benchmark harness under bench/ (AD-26 requires one)\n' >&2; exit 1; \
+	fi
+	@for b in $(BENCH_EXECUTABLES); do \
+		printf '\n### Benchmark smoke %s ###\n\n' "$$(basename $$b $(EXE_EXTENSION))"; \
+		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$b --smoke || exit 1; \
 	done
 
 ####################################################################

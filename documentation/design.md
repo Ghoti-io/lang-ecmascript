@@ -77,6 +77,7 @@ documentation and tested as a choice.
 | Syntax result, locations, failure record | `core.h` | `GLECMA_ERR_SYNTAX` appended after the shared nine; `GLECMA_Location`; `GLECMA_Failure`, which every parse call writes |
 | Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; so far the one field the source enforces, `source_units` |
 | Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump |
+| Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
 
 The descriptor's callbacks are all NULL, which runtime-core reads as "the
 engine has nothing to say": every slot is raw, frames have no source
