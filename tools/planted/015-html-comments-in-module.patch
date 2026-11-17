@@ -1,0 +1,11 @@
+--- a/src/lex/lexer.c
++++ b/src/lex/lexer.c
+@@ -315,7 +315,7 @@
+ static GLECMA_Result skip_trivia(GLECMA_Lexer * lexer,
+     const GLECMA_LexText * text, bool * newline) {
+   size_t offset = lexer->position.offset;
+-  const bool html = (lexer->mode & GLECMA_LEXF_MODULE) == 0;
++  const bool html = true;
+   for (;;) {
+     uint32_t u = glecma_lex_unit(text, offset);
+     if (u < 0x80u) {

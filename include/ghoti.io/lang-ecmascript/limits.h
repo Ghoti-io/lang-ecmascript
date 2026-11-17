@@ -58,6 +58,25 @@ extern "C" {
 #define GLECMA_LIMIT_SOURCE_UNITS_DEFAULT (UINT64_C(64) * 1024 * 1024)
 
 /**
+ * @brief The default for ::GLECMA_Limits::tokens: 48 Mi tokens.
+ *
+ * Real source never takes more than half a token per input unit (the densest
+ * file measured, a minified library, takes 0.47), so this admits real source
+ * of the default `source_units` cap with room to spare, while source made of
+ * one-unit tokens, which only a hostile author writes, is refused at
+ * three-quarters of that cap. design.md ("Limits") gives the measurement.
+ */
+#define GLECMA_LIMIT_TOKENS_DEFAULT (UINT64_C(48) * 1024 * 1024)
+
+/**
+ * @brief The default for ::GLECMA_Limits::literal_length: 16 Mi code points.
+ *
+ * design.md ("Limits") gives the measurement: the longest literal in real
+ * bundles is an embedded data string of a few megabytes.
+ */
+#define GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT (UINT64_C(16) * 1024 * 1024)
+
+/**
  * @brief Caps checked before the allocation they bound.
  *
  * The first member is the size of the struct the caller was compiled
@@ -78,11 +97,18 @@ typedef struct GLECMA_Limits {
   uint32_t reserved;     ///< Padding; must be zero.
   uint64_t source_units; ///< Input units of one source: bytes for UTF-8,
                          ///< 16-bit code units for UTF-16.
+  uint64_t tokens;       ///< Tokens one tokenizer run may produce. The end of
+                         ///< input is not a token.
+  uint64_t literal_length; ///< Code points in one identifier, string literal,
+                           ///< template part or regular expression literal,
+                           ///< counted in the source text and the delimiters
+                           ///< included.
 } GLECMA_Limits;
 
 /** @brief Initializer for a ::GLECMA_Limits: its size, and every default. */
 #define GLECMA_LIMITS_INIT                                                     \
-  { (uint32_t)sizeof(GLECMA_Limits), 0u, GLECMA_LIMIT_SOURCE_UNITS_DEFAULT }
+  { (uint32_t)sizeof(GLECMA_Limits), 0u, GLECMA_LIMIT_SOURCE_UNITS_DEFAULT,    \
+    GLECMA_LIMIT_TOKENS_DEFAULT, GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT }
 
 /**
  * @brief Writes the default caps into @p limits.

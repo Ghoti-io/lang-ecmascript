@@ -1,5 +1,5 @@
 # id|name|the defect|patch (in this directory)|gate (a make target) that must fail with it applied
-# Story 1 (source text) registers 1-5; story 1c registers 6-9. Append only.
+# Story 1 (source text) registers 1-5; story 1c registers 6-9; story 2 registers 10-21. Append only.
 001|source-overlong-e0|UTF-8 E0 followed by 80..9F (an overlong form) is accepted|001-source-overlong-e0.patch|test
 002|source-encoded-surrogate|UTF-8 ED followed by A0..BF (an encoded surrogate) is accepted|002-source-encoded-surrogate.patch|test
 003|source-astral-column|A code point above U+FFFF is one column wide instead of two UTF-16 code units|003-source-astral-column.patch|test
@@ -9,3 +9,16 @@
 007|failure-written-past-size|The failure record is written past the size the caller declared|007-failure-written-past-size.patch|test
 008|limits-default-ignores-size|glecma_limits_default writes every member whatever the caller's size|008-limits-default-ignores-size.patch|test
 009|limit-name-renamed|A limit's name is renamed in the registry's source of truth|009-limit-name-renamed.patch|check-limit-names
+# Story 2 (the tokenizer) registers 010-021.
+010|rule-codes-renumbered|A rule code is renumbered (ESCAPE_HEX takes ESCAPE_UNICODE's value)|010-rule-codes-renumbered.patch|test
+011|tokens-cap-off-by-one|One token more than the tokens cap is accepted|011-tokens-cap-off-by-one.patch|test
+012|literal-length-delimiters-uncounted|A string's quotes do not count toward the literal length cap|012-literal-length-delimiters-uncounted.patch|test
+013|builtin-mode-in-the-public-entry|The public tokenizer entry sets the internal built-in mode bit, so user source can spell an intrinsic|013-builtin-mode-in-the-public-entry.patch|test
+014|unbuilt-feature-accepted|A feature set naming a feature the build lacks is accepted instead of refused|014-unbuilt-feature-accepted.patch|test
+015|html-comments-in-module|HTML-like comments are recognized in the Module goal|015-html-comments-in-module.patch|test
+016|legacy-octal-accepted-in-strict|A legacy octal literal is accepted in strict code|016-legacy-octal-accepted-in-strict.patch|test
+017|unicode-version-pin-wrong|The pinned Unicode version says 16.0.0 while unicode reports 17.0.0|017-unicode-version-pin-wrong.patch|test
+018|walk-astral-column-one|The tokenizer counts a code point above U+FFFF as one column, not two UTF-16 code units|018-walk-astral-column-one.patch|fuzz-replay
+019|identifier-start-accepts-digits|A digit is accepted as the first character of a name|019-identifier-start-accepts-digits.patch|test
+020|comment-newline-not-flagged|A multi-line comment holding a line terminator does not set the newline flag|020-comment-newline-not-flagged.patch|test
+021|template-invalid-escape-cooked-defined|A template with an invalid escape keeps a defined cooked value|021-template-invalid-escape-cooked-defined.patch|test

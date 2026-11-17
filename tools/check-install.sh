@@ -187,6 +187,23 @@ int main(void) {
     fprintf(stderr, "consumer: the context or group did not tear down\n");
     return 1;
   }
+  // The parse options, the feature set and the rule codes through the
+  // installed options.h and core.h, and the Unicode version the headers were
+  // built for against the one the library runs with.
+  {
+    GLECMA_FeatureSet features = GLECMA_FEATURE_SET_INIT;
+    GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+    options.features = &features;
+    if (glecma_parse_options_default(&options) != GLECMA_OK ||
+        glecma_feature_set_add(&features, "a-feature") != GLECMA_OK ||
+        !glecma_feature_set_has(&features, "a-feature") ||
+        strcmp(glecma_unicode_version(), GLECMA_UNICODE_VERSION) != 0 ||
+        strcmp(glecma_rule_name(GLECMA_RULE_UNTERMINATED_STRING),
+            "unterminated-string") != 0) {
+      fprintf(stderr, "consumer: the parse options or rule codes failed\n");
+      return 1;
+    }
+  }
   // Source text through the installed source.h and limits.h: a location
   // after a CRLF, a refusal of ill-formed UTF-8 with its position, and the
   // size cap with the field it names.

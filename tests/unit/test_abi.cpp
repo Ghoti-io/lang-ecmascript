@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 //
-// The size-first structs and the counted source: what story 1c changed. A
+// The size-first structs and the counted source: what the size-first change made. A
 // caller compiled against a shorter struct keeps working when a member is
-// added (AD-14), and a source is read, retained and released from any thread.
+// added, and a source is read, retained and released from any thread.
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
 
@@ -125,7 +125,7 @@ TEST(AbiFailure, TheInitializerNamesItsSizeAndIsZeroElsewhere) {
   EXPECT_EQ(failure.location.offset, 0u);
 }
 
-// The layout rules (contract 22): the members sit where a caller built
+// The layout rules: the members sit where a caller built
 // earlier expects them.
 TEST(AbiLayout, SizeFirstAndFixedWidth) {
   EXPECT_EQ(offsetof(GLECMA_Limits, size), 0u);
@@ -133,6 +133,27 @@ TEST(AbiLayout, SizeFirstAndFixedWidth) {
   EXPECT_EQ(offsetof(GLECMA_Failure, size), 0u);
   EXPECT_EQ(offsetof(GLECMA_Failure, result), 4u);
   EXPECT_EQ(sizeof(GLECMA_Location), 3 * sizeof(size_t));
+}
+
+// The rule and the feature name were appended to the failure record, and
+// two caps to the limits, after every member that was already there.
+TEST(AbiLayout, RuleAndFeatureAreAppendedAtTheEnd) {
+  EXPECT_EQ(offsetof(GLECMA_Failure, rule),
+      offsetof(GLECMA_Failure, limit) + sizeof(const char *));
+  EXPECT_EQ(offsetof(GLECMA_Failure, reserved),
+      offsetof(GLECMA_Failure, rule) + sizeof(uint32_t));
+  EXPECT_EQ(offsetof(GLECMA_Failure, feature),
+      offsetof(GLECMA_Failure, reserved) + sizeof(uint32_t));
+  EXPECT_EQ(sizeof(GLECMA_Failure),
+      offsetof(GLECMA_Failure, feature) + GLECMA_FEATURE_NAME_MAX);
+  EXPECT_EQ(sizeof(GLECMA_Failure) % alignof(GLECMA_Failure), 0u);
+  EXPECT_EQ(offsetof(GLECMA_Limits, tokens),
+      offsetof(GLECMA_Limits, source_units) + sizeof(uint64_t));
+  EXPECT_EQ(offsetof(GLECMA_Limits, literal_length),
+      offsetof(GLECMA_Limits, tokens) + sizeof(uint64_t));
+  EXPECT_EQ(sizeof(GLECMA_Limits), 32u);
+  EXPECT_EQ(sizeof(GLECMA_Failure), offsetof(GLECMA_Failure, limit) +
+      sizeof(const char *) + 8 + GLECMA_FEATURE_NAME_MAX);
 }
 
 TEST(SourceCount, RetainThenReleaseKeepsTheSourceUntilTheLastHolder) {

@@ -178,6 +178,7 @@ CUTIL_BRANCH ?= $(if $(filter -dev,$(DEPENDENCY_RELEASE_BRANCH)),-dev,-0)$(DEPEN
 RCORE_BRANCH ?= $(if $(filter -dev,$(DEPENDENCY_RELEASE_BRANCH)),-dev,-0)$(DEPENDENCY_BUILD_SUFFIX)
 CUTIL_PC ?= ghoti.io-cutil$(CUTIL_BRANCH)
 RCORE_PC ?= ghoti.io-runtime-core$(RCORE_BRANCH)
+UNICODE_PC ?= ghoti.io-unicode$(CUTIL_BRANCH)
 
 CUTIL_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags $(CUTIL_PC) 2>/dev/null)
 CUTIL_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs $(CUTIL_PC) 2>/dev/null)
@@ -200,18 +201,28 @@ endif
 endif
 INCLUDE += $(RCORE_CFLAGS)
 
+# unicode: ID_Start, ID_Continue and the space separators of the lexical
+# grammar, at the one Unicode version the engine is pinned to.
+UNICODE_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags $(UNICODE_PC) 2>/dev/null)
+UNICODE_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs $(UNICODE_PC) 2>/dev/null)
+UNICODE_LIBDIR := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs-only-L $(UNICODE_PC) 2>/dev/null | awk '{print $$1}' | sed 's/^-L//')
+ifeq ($(strip $(UNICODE_CFLAGS)),)
+ifndef SKIP_DEP_CHECK
+$(error $(UNICODE_PC) was not found by pkg-config. Install unicode into the same PREFIX and set PKG_CONFIG_PATH. There is deliberately no sibling-checkout fallback.)
+endif
+endif
+INCLUDE += $(UNICODE_CFLAGS)
+
 SOURCES := $(shell find src -type f -name '*.c')
 LIBOBJECTS := $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
 
-# fuzz-replay joins these when the first parser lands with its harness and
-# seed corpus; until then there is nothing to replay.
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-gtest-full
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-gtest-full fuzz-replay
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
-ECMALIBRARY := -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(RCORE_LIBS) $(CUTIL_LIBS)
+ECMALIBRARY := -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
 
 ifeq ($(OS_NAME), Windows)
 TEST_LDFLAGS := -Wl,--wrap=__mingw_fprintf
@@ -228,7 +239,7 @@ TEST_EXECUTABLES := $(addprefix $(APP_DIR)/,$(addsuffix $(EXE_EXTENSION),$(TEST_
 EXAMPLE_SOURCES := $(sort $(wildcard examples/*.c))
 EXAMPLE_EXECUTABLES := $(patsubst examples/%.c,$(APP_DIR)/examples/%$(EXE_EXTENSION),$(EXAMPLE_SOURCES))
 
-TEST_LD_PATH := $(APP_DIR):$(RCORE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)
+TEST_LD_PATH := $(APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)
 
 all: $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET) ## Build shared + static libraries
 
@@ -278,7 +289,7 @@ $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 
 $(APP_DIR)/$(TARGET): $(LIBOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) $(RCORE_LIBS) $(CUTIL_LIBS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
 ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(APP_DIR)/$(BASE_NAME)
@@ -314,7 +325,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 .PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
 .PHONY: check-limit-names check-planted
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
-.PHONY: fuzz fuzz-clean help
+.PHONY: fuzz fuzz-clean fuzz-replay fuzz-replay-asan help
 
 check-aliasing: ## Fail if -Wstrict-aliasing is not armed at level 1
 	@mkdir -p $(BUILD_DIR)
@@ -367,7 +378,7 @@ check-edges: $(APP_DIR)/$(TARGET) ## Fail on a dependency outside cutil and runt
 check-limit-names: ## Fail if the limit-name registry and GLECMA_Limits disagree, or a name was removed
 	@tools/check-limit-names.sh .
 
-check-planted: ## Apply each planted defect to a scratch tree; its gate must fail (slow; run before closing a story)
+check-planted: ## Apply each planted defect to a scratch tree; its gate must fail (slow; run before closing a change that adds a check)
 	@tools/check-planted.sh
 
 check-gtest-full: ## Prove full-suite selection and zero-test rejection
@@ -407,7 +418,7 @@ examples: $(EXAMPLE_EXECUTABLES) ## Build and run every example
 	done
 
 ####################################################################
-# Benchmarks (AD-26)
+# Benchmarks
 ####################################################################
 
 BENCH_SOURCES := $(shell find bench -type f -name '*.c' 2>/dev/null | sort)
@@ -428,7 +439,7 @@ bench: $(BENCH_EXECUTABLES) ## Run the benchmark harness (prints a calibration r
 
 check-bench: $(BENCH_EXECUTABLES) ## Fail if bench/ is empty; build and smoke-run the harness
 	@if [ -z "$(strip $(BENCH_EXECUTABLES))" ]; then \
-		printf 'check-bench: no benchmark harness under bench/ (AD-26 requires one)\n' >&2; exit 1; \
+		printf 'check-bench: no benchmark harness under bench/ (a benchmark harness is required)\n' >&2; exit 1; \
 	fi
 	@for b in $(BENCH_EXECUTABLES); do \
 		printf '\n### Benchmark smoke %s ###\n\n' "$$(basename $$b $(EXE_EXTENSION))"; \
@@ -451,7 +462,7 @@ ASAN_DEPFILES := $(ASAN_LIBOBJECTS:.o=.d) \
     $(foreach pair,$(TEST_PAIRS),$(ASAN_OBJ_DIR)/tests/$(basename $(notdir $(word 1,$(subst |, ,$(pair))))).d)
 -include $(ASAN_DEPFILES)
 ASAN_ARCHIVE := $(ASAN_APP_DIR)/$(STATIC_TARGET)
-ASAN_ECMALIBRARY := -Wl,--whole-archive $(ASAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(CUTIL_LIBS)
+ASAN_ECMALIBRARY := -Wl,--whole-archive $(ASAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
 ASAN_CFLAGS := $(CFLAGS) $(ASAN_UBSAN_FLAGS) -DGLECMA_BUILD
 ASAN_CXXFLAGS := $(CXXFLAGS) $(ASAN_UBSAN_FLAGS)
 ASAN_LDFLAGS := $(LDFLAGS) $(ASAN_UBSAN_FLAGS)
@@ -497,9 +508,10 @@ test-asan: $(ASAN_TEST_EXECUTABLES) ## Build with ASan+UBSan and run the tests
 	@for test_exe in $(ASAN_TEST_EXECUTABLES); do \
 		printf '\n### ASan+UBSan %s ###\n\n' "$$(basename $$test_exe)"; \
 		$(ASAN_PRELOAD) \
-		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 			tools/run-gtest-full.sh $$test_exe || exit 1; \
 	done
+	@$(MAKE) --no-print-directory fuzz-replay-asan
 	@printf '\nASan+UBSan suite clean.\n'
 
 ####################################################################
@@ -516,7 +528,7 @@ TSAN_DEPFILES := $(TSAN_LIBOBJECTS:.o=.d) \
     $(foreach pair,$(TEST_PAIRS),$(TSAN_OBJ_DIR)/tests/$(basename $(notdir $(word 1,$(subst |, ,$(pair))))).d)
 -include $(TSAN_DEPFILES)
 TSAN_ARCHIVE := $(TSAN_APP_DIR)/$(STATIC_TARGET)
-TSAN_ECMALIBRARY := -Wl,--whole-archive $(TSAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(CUTIL_LIBS)
+TSAN_ECMALIBRARY := -Wl,--whole-archive $(TSAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
 TSAN_CFLAGS := $(CFLAGS) $(TSAN_FLAGS) -DGLECMA_BUILD
 TSAN_CXXFLAGS := $(CXXFLAGS) $(TSAN_FLAGS)
 TSAN_LDFLAGS := $(LDFLAGS) $(TSAN_FLAGS)
@@ -549,7 +561,7 @@ $(foreach pair,$(TEST_PAIRS),\
 	$(eval $(call tsan-test-executable-rule,$(word 1,$(subst |, ,$(pair))),$(word 2,$(subst |, ,$(pair))))))
 
 TSAN_TEST_EXECUTABLES := $(addprefix $(TSAN_APP_DIR)/,$(addsuffix $(EXE_EXTENSION),$(TEST_NAMES)))
-TSAN_RUN_ENV := LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+TSAN_RUN_ENV := LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 	TSAN_OPTIONS="halt_on_error=1:history_size=7:second_deadlock_stack=1"
 
 test-tsan: $(TSAN_TEST_EXECUTABLES) ## Build with TSan and run the tests (Linux only)
@@ -564,9 +576,50 @@ else
 endif
 
 ####################################################################
-# Fuzzing. Each tests/fuzz/fuzz_<name>.c becomes a libFuzzer harness;
-# there are none until the first parser exists.
+# Fuzzing. Each tests/fuzz/fuzz_<name>.c is a libFuzzer harness (`make
+# fuzz-<name>`, clang) and, with tests/fuzz/replay_main.c, a plain program
+# that `make fuzz-replay` runs over every seed and every input a campaign
+# once found. The replay needs no clang and no libFuzzer, so a regression a
+# fuzzer caught is a failing test and not a campaign to repeat; it is part of
+# `make test`, and `make test-asan` runs it again under ASan and UBSan.
 ####################################################################
+
+FUZZ_SOURCES := $(wildcard tests/fuzz/fuzz_*.c)
+FUZZERS := $(patsubst tests/fuzz/fuzz_%.c,%,$(FUZZ_SOURCES))
+FUZZ_REPLAYS := $(foreach f,$(FUZZERS),$(APP_DIR)/fuzz/replay_$(f)$(EXE_EXTENSION))
+FUZZ_INPUTS = $(shell find tests/fuzz/corpus -type f 2>/dev/null | sort)
+-include $(foreach f,$(FUZZERS),$(APP_DIR)/fuzz/replay_$(f).d)
+
+$(APP_DIR)/fuzz/replay_%$(EXE_EXTENSION): tests/fuzz/fuzz_%.c tests/fuzz/replay_main.c $(APP_DIR)/$(STATIC_TARGET) $(FLAGS_STAMP) | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -MF $(@D)/replay_$*.d -o $@ tests/fuzz/fuzz_$*.c tests/fuzz/replay_main.c $(LDFLAGS) $(ECMALIBRARY)
+
+fuzz-replay: $(FUZZ_REPLAYS) ## Feed every corpus file once through each fuzz entry point
+	@if [ -z "$(strip $(FUZZ_REPLAYS))" ] || [ -z "$(strip $(FUZZ_INPUTS))" ]; then \
+		printf 'fuzz-replay: no fuzz harness or no corpus file, so this measures nothing\n' >&2; exit 1; \
+	fi
+	@for r in $(FUZZ_REPLAYS); do \
+		printf '\n### Fuzz replay %s ###\n' "$$(basename $$r $(EXE_EXTENSION))"; \
+		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$r $(FUZZ_INPUTS) || { printf 'fuzz-replay: %s failed\n' "$$r" >&2; exit 1; }; \
+	done
+
+# The same replay in the ASan and UBSan tree.
+ASAN_FUZZ_REPLAYS := $(foreach f,$(FUZZERS),$(ASAN_APP_DIR)/fuzz/replay_$(f)$(EXE_EXTENSION))
+
+$(ASAN_APP_DIR)/fuzz/replay_%$(EXE_EXTENSION): tests/fuzz/fuzz_%.c tests/fuzz/replay_main.c $(ASAN_ARCHIVE) $(ASAN_FLAGS_STAMP) | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(ASAN_CFLAGS) $(INCLUDE) -o $@ tests/fuzz/fuzz_$*.c tests/fuzz/replay_main.c $(ASAN_LDFLAGS) $(ASAN_ECMALIBRARY)
+
+fuzz-replay-asan: $(ASAN_FUZZ_REPLAYS) ## Replay the corpus under ASan and UBSan
+	@if [ -z "$(strip $(ASAN_FUZZ_REPLAYS))" ] || [ -z "$(strip $(FUZZ_INPUTS))" ]; then \
+		printf 'fuzz-replay-asan: no fuzz harness or no corpus file, so this measures nothing\n' >&2; exit 1; \
+	fi
+	@for r in $(ASAN_FUZZ_REPLAYS); do \
+		printf '\n### ASan+UBSan fuzz replay %s ###\n' "$$(basename $$r $(EXE_EXTENSION))"; \
+		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+			$$r $(FUZZ_INPUTS) || { printf 'fuzz-replay-asan: %s failed\n' "$$r" >&2; exit 1; }; \
+	done
+
 
 FUZZ_CC ?= clang
 FUZZ_CXX ?= clang++
@@ -596,7 +649,7 @@ $$(FUZZ_APP_DIR)/fuzz_$2: tests/fuzz/fuzz_$2.c $$(FUZZ_OBJECTS) $$(FUZZ_FLAGS_ST
 	fi
 	@mkdir -p $$(@D) $$(FUZZ_CORPUS)/$2
 	$$(FUZZ_CC) $$(FUZZ_BIN_FLAGS) -std=c17 $(INCLUDE) \
-		-o $$@ $$< $$(FUZZ_OBJECTS) $(RCORE_LIBS) $(CUTIL_LIBS)
+		-o $$@ $$< $$(FUZZ_OBJECTS) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
 
 fuzz-run-$2: $$(FUZZ_APP_DIR)/fuzz_$2 ## Run the $2 fuzzer for $$(FUZZ_TIME) seconds
 	@mkdir -p $$(FUZZ_CORPUS)/$2
@@ -604,14 +657,11 @@ fuzz-run-$2: $$(FUZZ_APP_DIR)/fuzz_$2 ## Run the $2 fuzzer for $$(FUZZ_TIME) sec
 		-max_total_time=$$(FUZZ_TIME) -print_final_stats=1
 endef
 
-FUZZ_SOURCES := $(wildcard tests/fuzz/fuzz_*.c)
-FUZZERS := $(patsubst tests/fuzz/fuzz_%.c,%,$(FUZZ_SOURCES))
-
 $(foreach f,$(FUZZERS),$(eval $(call fuzz-rule,$(f),$(f))))
 
 fuzz: $(addprefix fuzz-run-,$(FUZZERS)) ## Build and run every fuzzer briefly
 ifeq ($(strip $(FUZZERS)),)
-	@printf 'fuzz: no fuzzers in tests/fuzz yet; the first arrives with the first parser\n' >&2; exit 1
+	@printf 'fuzz: no fuzzers in tests/fuzz\n' >&2; exit 1
 endif
 
 fuzz-clean: ## Remove the fuzz build
@@ -622,7 +672,7 @@ fuzz-clean: ## Remove the fuzz build
 ####################################################################
 
 LDCONF_INSTALL_PATH ?= /etc/ld.so.conf.d
-PC_REQUIRES := $(CUTIL_PC) $(RCORE_PC)
+PC_REQUIRES := $(CUTIL_PC) $(UNICODE_PC) $(RCORE_PC)
 PKGCONFIG_INSTALL_PATH ?= $(PC_INSTALL_PATH)
 
 CHECK_INSTALL_PREFIX ?= $(if $(PREFIX),$(PREFIX),/usr/local)
@@ -709,20 +759,20 @@ help: ## Display this help
 
 $(FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE) $(ECMALIBRARY) $(RCORE_LIBS) $(RCORE_CFLAGS) $(CUTIL_LIBS) $(CUTIL_CFLAGS) $(TESTFLAGS) $(TEST_LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE) $(ECMALIBRARY) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(UNICODE_CFLAGS) $(CUTIL_LIBS) $(CUTIL_CFLAGS) $(TESTFLAGS) $(TEST_LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(ASAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(INCLUDE) $(ASAN_ECMALIBRARY) $(RCORE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(INCLUDE) $(ASAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(TSAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(INCLUDE) $(TSAN_ECMALIBRARY) $(RCORE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(INCLUDE) $(TSAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(FUZZ_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(FUZZ_CC) $(FUZZ_CXX) $(FUZZ_LIB_FLAGS) $(FUZZ_BIN_FLAGS) $(INCLUDE) $(RCORE_LIBS) $(RCORE_CFLAGS) $(CUTIL_LIBS) $(FUZZ_SAN)' > $@.new
+	@printf '%s\n' '$(FUZZ_CC) $(FUZZ_CXX) $(FUZZ_LIB_FLAGS) $(FUZZ_BIN_FLAGS) $(INCLUDE) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(UNICODE_CFLAGS) $(CUTIL_LIBS) $(FUZZ_SAN)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@

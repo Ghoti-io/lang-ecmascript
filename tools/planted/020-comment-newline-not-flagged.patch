@@ -1,0 +1,11 @@
+--- a/src/lex/lexer.c
++++ b/src/lex/lexer.c
+@@ -362,7 +362,7 @@
+             }
+             scan++;
+           }
+-          if (has_newline) {
++          if (false) {
+             *newline = true;
+             lexer->line_start = true;
+           }

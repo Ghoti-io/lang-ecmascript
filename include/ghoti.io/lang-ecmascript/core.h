@@ -58,6 +58,27 @@ extern "C" {
 #define GLECMA_ECMA262_YEAR 2026
 
 /**
+ * @brief The Unicode Character Database version the engine is pinned to.
+ *
+ * One version for the whole engine: identifiers (ID_Start, ID_Continue) and
+ * white space here, and case mapping, normalization, collation and RegExp
+ * property escapes in later milestones, all read tables of this version. It
+ * moves only in an edition bump, together with `unicode`, `regex` and the
+ * collation data, never on its own. ::glecma_unicode_version reports the
+ * version actually in use, and a test requires that it equal this macro.
+ */
+#define GLECMA_UNICODE_VERSION "17.0.0"
+
+/**
+ * @brief Bytes in a feature name, the terminating NUL included.
+ *
+ * Names are short ASCII identifiers such as "decorators"; a longer one is
+ * refused when it is added to a feature set. The same size is the width of
+ * ::GLECMA_Failure::feature.
+ */
+#define GLECMA_FEATURE_NAME_MAX 48
+
+/**
  * @brief Result of an operation.
  *
  * Zero is success. ::GLECMA_RESULT_COUNT closes the enum so a test can check
@@ -114,6 +135,120 @@ typedef struct GLECMA_Location {
 } GLECMA_Location;
 
 /**
+ * @brief The rule a syntax error broke.
+ *
+ * Each code names one rule of the lexical or syntactic grammar or one early
+ * error, so that a test and a host can assert the reason for a refusal and
+ * not only the refusal. The codes are an append-only enumeration: a value is
+ * never renumbered, reused or removed, and a new rule is appended before
+ * ::GLECMA_RULE_COUNT with the next number. A host may store and compare the
+ * numbers. ::glecma_rule_name and ::glecma_rule_clause give each its stable
+ * name and the ECMA-262 clause it comes from (the clause numbers are the
+ * 16th edition's, and are checked against the 17th when the clause
+ * concordance is committed).
+ *
+ * Zero is no rule: the value of ::GLECMA_Failure::rule for every result but
+ * ::GLECMA_ERR_SYNTAX. The lexical rules come first; the rules of the parser
+ * and of the early errors are appended after them.
+ */
+typedef enum {
+  GLECMA_RULE_NONE = 0, ///< No rule: the failure is not a syntax error.
+
+  GLECMA_RULE_UNEXPECTED_CHARACTER = 1, ///< A code point that begins no token
+                                        ///< (12.6).
+  GLECMA_RULE_UNTERMINATED_COMMENT = 2, ///< A multi-line comment that never
+                                        ///< ends (12.4).
+  GLECMA_RULE_UNTERMINATED_STRING = 3,  ///< A string literal ended by a line
+                                        ///< terminator or the end of input
+                                        ///< (12.9.4).
+  GLECMA_RULE_UNTERMINATED_TEMPLATE = 4, ///< A template literal that never
+                                         ///< ends (12.9.6).
+  GLECMA_RULE_UNTERMINATED_REGEXP = 5,  ///< A regular expression literal
+                                        ///< ended by a line terminator or the
+                                        ///< end of input (12.9.5).
+  GLECMA_RULE_REGEXP_FLAGS = 6,         ///< A backslash where the flags of a
+                                        ///< regular expression literal end
+                                        ///< (12.9.5).
+  GLECMA_RULE_IDENTIFIER_ESCAPE = 7,    ///< A malformed `\u` escape in a name,
+                                        ///< or one that is not an
+                                        ///< IdentifierPart (12.7).
+  GLECMA_RULE_PRIVATE_NAME = 8,         ///< `#` not followed by an
+                                        ///< IdentifierName (12.7).
+  GLECMA_RULE_ESCAPE_HEX = 9,           ///< A malformed `\x` escape (12.9.4).
+  GLECMA_RULE_ESCAPE_UNICODE = 10,      ///< A malformed `\u` escape in a
+                                        ///< string or template (12.9.4).
+  GLECMA_RULE_ESCAPE_CODE_POINT = 11,   ///< A malformed or out-of-range
+                                        ///< `\u{...}` escape (12.9.4).
+  GLECMA_RULE_ESCAPE_LEGACY_OCTAL_STRICT = 12, ///< A legacy octal escape in
+                                               ///< strict code (12.9.4,
+                                               ///< 12.9.4.1).
+  GLECMA_RULE_ESCAPE_NON_OCTAL_DECIMAL_STRICT = 13, ///< `\8` or `\9` in
+                                                    ///< strict code (12.9.4).
+  GLECMA_RULE_TEMPLATE_ESCAPE_OCTAL = 14, ///< A decimal digit escape in a
+                                          ///< template: not an escape
+                                          ///< sequence there (12.9.6).
+  GLECMA_RULE_NUMERIC_EXPECTED_DIGIT = 15, ///< No digit where a numeric
+                                           ///< literal needs one (12.9.3).
+  GLECMA_RULE_NUMERIC_SEPARATOR = 16,   ///< A numeric separator that is not
+                                        ///< between two digits (12.9.3).
+  GLECMA_RULE_NUMERIC_SEPARATOR_LEGACY = 17, ///< A separator in a legacy
+                                             ///< octal or leading-zero
+                                             ///< literal (12.9.3).
+  GLECMA_RULE_NUMERIC_BIGINT = 18,      ///< The BigInt suffix on a literal
+                                        ///< that cannot be one (12.9.3).
+  GLECMA_RULE_NUMERIC_TRAILING = 19,    ///< An IdentifierStart or digit
+                                        ///< directly after a numeric
+                                        ///< literal (12.9.3).
+  GLECMA_RULE_NUMERIC_LEGACY_OCTAL_STRICT = 20, ///< A legacy octal literal in
+                                                ///< strict code (12.9.3).
+  GLECMA_RULE_NUMERIC_NON_OCTAL_DECIMAL_STRICT = 21, ///< A leading-zero
+                                                     ///< decimal literal in
+                                                     ///< strict code
+                                                     ///< (12.9.3).
+  GLECMA_RULE_ESCAPED_RESERVED_WORD = 22, ///< A reserved word written with a
+                                          ///< `\u` escape, where an
+                                          ///< Identifier is required (12.7.1).
+  GLECMA_RULE_RESERVED_WORD = 23,       ///< A reserved word where an
+                                        ///< Identifier is required (13.1.1).
+  GLECMA_RULE_RESERVED_WORD_STRICT = 24, ///< A word reserved only in strict
+                                         ///< code, or in a module, where an
+                                         ///< Identifier is required (13.1.1).
+
+  GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
+                    ///< it.
+} GLECMA_Rule;
+
+/**
+ * @brief The stable name of a rule code, such as "unterminated-string".
+ *
+ * @param rule A rule code, including values outside the enum.
+ * @return A static string, never NULL; "unknown" for a value outside the
+ *   enum, and "none" for ::GLECMA_RULE_NONE.
+ */
+GLECMA_API const char * glecma_rule_name(uint32_t rule);
+
+/**
+ * @brief The ECMA-262 clause a rule comes from, such as "12.9.4".
+ *
+ * @param rule A rule code, including values outside the enum.
+ * @return A static string, never NULL; "" for ::GLECMA_RULE_NONE and for a
+ *   value outside the enum.
+ */
+GLECMA_API const char * glecma_rule_clause(uint32_t rule);
+
+/**
+ * @brief The Unicode version the engine's identifier and white space tables
+ *   are generated from.
+ *
+ * This is the version of the `unicode` library the engine is running with,
+ * which is the one version every part of the engine uses and which equals
+ * ::GLECMA_UNICODE_VERSION in a correctly built library (a test requires it).
+ *
+ * @return A static string such as "17.0.0", never NULL.
+ */
+GLECMA_API const char * glecma_unicode_version(void);
+
+/**
  * @brief Why a call failed, written on every return when the caller asks.
  *
  * The first member is the size of the struct the caller was compiled
@@ -125,9 +260,10 @@ typedef struct GLECMA_Location {
  *
  * A call that takes a `GLECMA_Failure *` writes all of it on every return,
  * success included, whenever the pointer is not NULL; a field that does not
- * apply to the result is zero or NULL. Every string is static, never
- * allocated and never caller data, so the record needs no freeing and stays
- * valid for the life of the process.
+ * apply to the result is zero, NULL or empty. Every string pointer is
+ * static, never allocated and never caller data, so the record needs no
+ * freeing and stays valid for the life of the process; the one piece of
+ * caller text it carries, a feature name, is copied into `feature`.
  *
  * The members are fixed-width integers (the result is the ::GLECMA_Result
  * value as a `uint32_t`, so the layout does not depend on the compiler's
@@ -145,11 +281,19 @@ typedef struct GLECMA_Failure {
   const char * limit;       ///< For ::GLECMA_ERR_LIMIT, the static name of
                             ///< the ::GLECMA_Limits field that was exceeded;
                             ///< NULL otherwise.
+  uint32_t rule;            ///< For ::GLECMA_ERR_SYNTAX, the ::GLECMA_Rule
+                            ///< that was broken, as a number; zero otherwise.
+  uint32_t reserved;        ///< Padding; always zero.
+  char feature[GLECMA_FEATURE_NAME_MAX]; ///< For ::GLECMA_ERR_UNSUPPORTED from
+                            ///< a feature set, the name of the first feature
+                            ///< the build lacks, NUL-terminated; empty
+                            ///< otherwise. A copy, because a feature name is
+                            ///< the caller's text and the record outlives it.
 } GLECMA_Failure;
 
 /** @brief Initializer for a ::GLECMA_Failure: sets `size`, zeroes the rest. */
 #define GLECMA_FAILURE_INIT                                                    \
-  { (uint32_t)sizeof(GLECMA_Failure), 0u, NULL, {0, 0, 0}, NULL }
+  { (uint32_t)sizeof(GLECMA_Failure), 0u, NULL, {0, 0, 0}, NULL, 0u, 0u, {0} }
 
 /**
  * @brief Static description of a result code.

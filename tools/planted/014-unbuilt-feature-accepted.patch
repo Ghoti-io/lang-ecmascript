@@ -1,0 +1,11 @@
+--- a/src/core/options.c
++++ b/src/core/options.c
+@@ -116,7 +116,7 @@
+ // this looks a name up in it.
+ bool glecma_feature_built(const char * name) {
+   (void)name;
+-  return false;
++  return true;
+ }
+ 
+ const char * glecma_feature_set_first_unbuilt(

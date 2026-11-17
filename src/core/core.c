@@ -31,6 +31,8 @@
 
 #include "core/core_internal.h"
 
+#include <ghoti.io/unicode/char.h>
+
 const char * glecma_result_string(GLECMA_Result result) {
   switch (result) {
     case GLECMA_OK:
@@ -65,6 +67,10 @@ const char * glecma_version_string(void) {
 
 unsigned glecma_version_number(void) {
   return GLECMA_VERSION_NUMBER;
+}
+
+const char * glecma_unicode_version(void) {
+  return guni_ucd_version();
 }
 
 unsigned glecma_ecma262_edition(void) {

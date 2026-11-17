@@ -1,0 +1,11 @@
+--- a/src/lex/lexer.c
++++ b/src/lex/lexer.c
+@@ -762,7 +762,7 @@
+     *token = out;
+     return GLECMA_OK;
+   }
+-  if (lexer->tokens >= lexer->max_tokens) {
++  if (lexer->tokens > lexer->max_tokens) {
+     lexer->error.result = GLECMA_ERR_LIMIT;
+     lexer->error.rule = 0;
+     lexer->error.message = "source has more tokens than the tokens limit";

@@ -1,0 +1,11 @@
+--- a/src/lex/literal.c
++++ b/src/lex/literal.c
+@@ -428,7 +428,7 @@
+   uint32_t flags = 0;
+   GLECMA_TokenKind kind = GLECMA_TOK_NUMBER;
+   bool integer = true; // A form a BigInt suffix may follow.
+-  bool strict = (lexer->mode & (GLECMA_LEXF_STRICT | GLECMA_LEXF_MODULE)) != 0;
++  bool strict = false;
+   uint32_t u = glecma_lex_unit(text, offset);
+   enum { TAIL_DOT, TAIL_EXPONENT, TAIL_SUFFIX } tail = TAIL_DOT;
+ 

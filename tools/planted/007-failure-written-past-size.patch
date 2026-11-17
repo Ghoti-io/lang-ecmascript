@@ -1,11 +1,11 @@
---- a/src/source/source.c
-+++ b/src/source/source.c
-@@ -265,7 +265,7 @@
+--- a/src/core/failure.c
++++ b/src/core/failure.c
+@@ -37,7 +37,7 @@
  // Writes only the members that lie wholly within the caller's `size`, so a
  // caller built against a shorter struct is never written past.
  #define FAILURE_WITHIN(failure, member)                                        \
 -  ((size_t)(failure)->size >= offsetof(GLECMA_Failure, member) +               \
-+  ((size_t)(failure)->size + 4096u >= offsetof(GLECMA_Failure, member) +               \
++  ((size_t)(failure)->size + 4096u >= offsetof(GLECMA_Failure, member) +       \
            sizeof((failure)->member))
  
- static void write_failure(GLECMA_Failure * failure, GLECMA_Result result,
+ void glecma_failure_set(GLECMA_Failure * failure, GLECMA_Result result,

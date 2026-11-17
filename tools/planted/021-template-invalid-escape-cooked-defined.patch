@@ -1,0 +1,11 @@
+--- a/src/lex/literal.c
++++ b/src/lex/literal.c
+@@ -702,7 +702,7 @@
+   }
+   token->kind = GLECMA_TOK_TEMPLATE;
+   token->template_part = part;
+-  if (undefined) {
++  if (false) {
+     token->flags |= GLECMA_TOKF_COOKED_UNDEFINED;
+     token->escape_rule = first_rule;
+     token->escape_location = glecma_lex_locate(lexer, text, first_offset);

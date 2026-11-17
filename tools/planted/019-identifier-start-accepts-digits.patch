@@ -1,0 +1,11 @@
+--- a/src/lex/lexer.c
++++ b/src/lex/lexer.c
+@@ -43,7 +43,7 @@
+ 
+ bool glecma_lex_is_id_start(uint32_t cp) {
+   if (cp < 128u) {
+-    return (glecma_lex_ascii_class[cp] & GLECMA_LEXC_START) != 0;
++    return (glecma_lex_ascii_class[cp] & GLECMA_LEXC_PART) != 0;
+   }
+   return guni_has_property(cp, GUNI_PROP_ID_START);
+ }

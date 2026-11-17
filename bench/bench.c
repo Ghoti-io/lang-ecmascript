@@ -24,8 +24,9 @@
  * The benchmark harness.
  *
  * A way to check "performant" from the first commit. It holds a calibration
- * case and the decoder-throughput cases: creating a source from UTF-8 and from
- * UTF-16 text, which decodes every code point and indexes its lines.
+ * case, the decoder-throughput cases (creating a source from UTF-8 and from
+ * UTF-16 text, which decodes every code point and indexes its lines) and the
+ * tokenizer-throughput cases (reading a source to the end, token by token).
  *
  * The calibration case is a fixed amount of integer work that touches no
  * library code, run the same way every real case is, so a figure from a real
@@ -33,11 +34,14 @@
  * without the calibration beside it cannot be compared across hosts or
  * compilers.
  *
- * The decoder cases run over the seed files in bench/seeds (named in
+ * The cases run over the seed files in bench/seeds (named in
  * documentation/benchmarks.md). Each seed is repeated up to a fixed size at
  * setup, so a unit of work is long enough to time and the seed set stays
- * small. The clock covers the creation and release of the source and not the
- * setup.
+ * small. The decoder cases use the first three seeds and the tokenizer cases
+ * all five, so that adding a seed for one does not change the other's
+ * workload. The decoder clock covers the creation and release of the source
+ * and not the setup; the tokenizer clock covers reading the tokens of sources
+ * already made, and not the setup.
  *
  * Usage:
  *   bench                 run every case: several repeats, report best, median
@@ -56,6 +60,8 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
+
+#include "lex/lexer.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -77,6 +83,8 @@ typedef struct {
   uint64_t (*run)(uint64_t iterations, double * elapsed);
   /** Bytes of input one unit processes; 0 when not a throughput case. */
   uint64_t (*bytes_per_iter)(void);
+  /** Tokens one unit processes; NULL when the case does not tokenize. */
+  uint64_t (*tokens_per_iter)(void);
   uint64_t iterations;       /* per repeat, full run */
   uint64_t smoke_iterations; /* per repeat, --smoke */
 } Case;
@@ -121,13 +129,19 @@ typedef struct {
   size_t utf8_bytes;
   uint16_t * utf16;   /* the same text, transcoded */
   size_t utf16_units;
+  GLECMA_Source * source8;  /* made at setup, for the tokenizer cases */
+  GLECMA_Source * source16;
+  uint64_t tokens;    /* tokens in one reading of the text */
 } Seed;
 
 static Seed seeds[MAX_SEEDS];
 static size_t seed_count = 0;
 static bool seeds_loaded = false;
 
-static const char * const seed_names[] = {"ascii.js", "multibyte.js", "terminators.js"};
+/* The first DECODE_SEEDS are the decoder cases' workload; every one is the
+ * tokenizer cases'. */
+#define DECODE_SEEDS 3
+static const char * const seed_names[] = {"ascii.js", "multibyte.js", "terminators.js", "tokens.js", "minified.js"};
 
 /* A complete seed is whole code points, so repeating it keeps the text valid. */
 static void load_seed(Seed * s, const char * name) {
@@ -189,6 +203,12 @@ static void load_seed(Seed * s, const char * name) {
   }
   s->utf16_units = out;
   snprintf(s->name, sizeof(s->name), "%s", name);
+
+  /* The tokenizer cases read sources that already exist. */
+  if (glecma_source_create_utf8(s->utf8, s->utf8_bytes, NULL, NULL, NULL, &s->source8) != GLECMA_OK ||
+      glecma_source_create_utf16(s->utf16, s->utf16_units, NULL, NULL, NULL, &s->source16) != GLECMA_OK) {
+    setup_failed("a seed was refused by the library");
+  }
 }
 
 static void load_seeds(void) {
@@ -207,7 +227,7 @@ static uint64_t decode_run(uint64_t iterations, double * elapsed, bool utf16) {
   uint64_t sink = 0;
   double start = now_ns();
   for (uint64_t i = 0; i < iterations; i++) {
-    for (size_t s = 0; s < seed_count; s++) {
+    for (size_t s = 0; s < DECODE_SEEDS; s++) {
       GLECMA_Source * src = NULL;
       GLECMA_Result r = utf16
           ? glecma_source_create_utf16(seeds[s].utf16, seeds[s].utf16_units, NULL, NULL, NULL, &src)
@@ -234,7 +254,7 @@ static uint64_t decode_utf16_run(uint64_t iterations, double * elapsed) {
 static uint64_t decode_utf8_bytes(void) {
   load_seeds();
   uint64_t total = 0;
-  for (size_t s = 0; s < seed_count; s++) {
+  for (size_t s = 0; s < DECODE_SEEDS; s++) {
     total += seeds[s].utf8_bytes;
   }
   return total;
@@ -243,16 +263,91 @@ static uint64_t decode_utf8_bytes(void) {
 static uint64_t decode_utf16_bytes(void) {
   load_seeds();
   uint64_t total = 0;
+  for (size_t s = 0; s < DECODE_SEEDS; s++) {
+    total += seeds[s].utf16_units * sizeof(uint16_t);
+  }
+  return total;
+}
+
+
+/* ---- The tokenizer ------------------------------------------------------- */
+
+static bool count_token(void * context, const GLECMA_Token * token) {
+  (void)token;
+  ++*(uint64_t *)context;
+  return true;
+}
+
+/* One reading of a source to its end, in the division goal after names and
+ * the regular expression goal elsewhere (the library's test driver). Returns
+ * the number of tokens. */
+static uint64_t read_tokens(const GLECMA_Source * source) {
+  GLECMA_Lexer lexer;
+  if (glecma_lexer_open(&lexer, source, NULL, 0, NULL) != GLECMA_OK) {
+    setup_failed("the tokenizer would not open");
+  }
+  uint64_t tokens = 0;
+  if (glecma_lexer_run(&lexer, count_token, &tokens) != GLECMA_OK) {
+    setup_failed("a seed was refused by the tokenizer");
+  }
+  return tokens;
+}
+
+/* One unit of work is every seed read to its end. */
+static uint64_t tokenize_run(uint64_t iterations, double * elapsed, bool utf16) {
+  load_seeds();
+  uint64_t sink = 0;
+  double start = now_ns();
+  for (uint64_t i = 0; i < iterations; i++) {
+    for (size_t s = 0; s < seed_count; s++) {
+      sink += read_tokens(utf16 ? seeds[s].source16 : seeds[s].source8);
+    }
+  }
+  *elapsed = now_ns() - start;
+  return sink;
+}
+
+static uint64_t tokenize_utf8_run(uint64_t iterations, double * elapsed) {
+  return tokenize_run(iterations, elapsed, false);
+}
+
+static uint64_t tokenize_utf16_run(uint64_t iterations, double * elapsed) {
+  return tokenize_run(iterations, elapsed, true);
+}
+
+static uint64_t tokenize_utf8_bytes(void) {
+  load_seeds();
+  uint64_t total = 0;
+  for (size_t s = 0; s < seed_count; s++) {
+    total += seeds[s].utf8_bytes;
+  }
+  return total;
+}
+
+static uint64_t tokenize_utf16_bytes(void) {
+  load_seeds();
+  uint64_t total = 0;
   for (size_t s = 0; s < seed_count; s++) {
     total += seeds[s].utf16_units * sizeof(uint16_t);
   }
   return total;
 }
 
+static uint64_t tokenize_tokens(void) {
+  load_seeds();
+  uint64_t total = 0;
+  for (size_t s = 0; s < seed_count; s++) {
+    total += read_tokens(seeds[s].source8);
+  }
+  return total;
+}
+
 static const Case cases[] = {
-  {"calibration-xorshift", calibration_run, NULL, 200000000ull, 1000000ull},
-  {"source-decode-utf8", decode_utf8_run, decode_utf8_bytes, 200ull, 1ull},
-  {"source-decode-utf16", decode_utf16_run, decode_utf16_bytes, 200ull, 1ull},
+  {"calibration-xorshift", calibration_run, NULL, NULL, 200000000ull, 1000000ull},
+  {"source-decode-utf8", decode_utf8_run, decode_utf8_bytes, NULL, 200ull, 1ull},
+  {"source-decode-utf16", decode_utf16_run, decode_utf16_bytes, NULL, 200ull, 1ull},
+  {"tokenize-utf8", tokenize_utf8_run, tokenize_utf8_bytes, tokenize_tokens, 100ull, 1ull},
+  {"tokenize-utf16", tokenize_utf16_run, tokenize_utf16_bytes, tokenize_tokens, 100ull, 1ull},
 };
 
 static int compare_double(const void * a, const void * b) {
@@ -311,6 +406,11 @@ int main(int argc, char ** argv) {
       double bytes = (double)cases[c].bytes_per_iter();
       printf("  %-22s %.2f MiB/s at the best run   (%.0f bytes per iteration)\n", "",
           bytes / best * 1e9 / (1024.0 * 1024.0), bytes);
+    }
+    if (cases[c].tokens_per_iter) {
+      double tokens = (double)cases[c].tokens_per_iter();
+      printf("  %-22s %.2f Mtokens/s at the best run   (%.0f tokens per iteration, %.3f per byte)\n", "",
+          tokens / best * 1e3, tokens, tokens / (double)cases[c].bytes_per_iter());
     }
   }
   if (ran == 0) {

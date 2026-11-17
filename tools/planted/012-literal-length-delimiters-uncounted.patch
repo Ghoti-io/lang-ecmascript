@@ -1,0 +1,11 @@
+--- a/src/lex/literal.c
++++ b/src/lex/literal.c
+@@ -584,7 +584,7 @@
+       (lexer->mode & (GLECMA_LEXF_STRICT | GLECMA_LEXF_MODULE)) != 0
+       ? ESCAPE_STRING_STRICT : ESCAPE_STRING_SLOPPY;
+   size_t offset = start + 1;
+-  uint64_t count = 1;
++  uint64_t count = 0;
+   uint32_t flags = 0;
+   const uint64_t max = lexer->max_literal;
+   for (;;) {

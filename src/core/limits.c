@@ -46,6 +46,12 @@ GLECMA_Result glecma_limits_default(GLECMA_Limits * limits) {
   if (WITHIN(limits->size, source_units)) {
     limits->source_units = GLECMA_LIMIT_SOURCE_UNITS_DEFAULT;
   }
+  if (WITHIN(limits->size, tokens)) {
+    limits->tokens = GLECMA_LIMIT_TOKENS_DEFAULT;
+  }
+  if (WITHIN(limits->size, literal_length)) {
+    limits->literal_length = GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT;
+  }
   return GLECMA_OK;
 }
 
@@ -57,6 +63,12 @@ bool glecma_limits_resolve(const GLECMA_Limits * limits, GLECMA_Limits * out) {
     }
     if (WITHIN(limits->size, source_units)) {
       resolved.source_units = limits->source_units;
+    }
+    if (WITHIN(limits->size, tokens)) {
+      resolved.tokens = limits->tokens;
+    }
+    if (WITHIN(limits->size, literal_length)) {
+      resolved.literal_length = limits->literal_length;
     }
   }
   *out = resolved;

@@ -1,10 +1,10 @@
 # Design
 
-**Status:** Design, with the scaffolding and source text built. The library
-registers an ECMAScript engine with a runtime-core context, reports its
-version and target edition, and takes source text: a validated, owned copy
-with exact locations, under a size cap. It does not yet tokenize, parse or
-run any script. Everything below the "What exists" section describes intended
+**Status:** Design, with the scaffolding, source text and tokenizer built. The
+library registers an ECMAScript engine with a runtime-core context, reports
+its version and target edition, takes source text (a validated, owned copy
+with exact locations, under a size cap) and reads it into tokens by the
+whole lexical grammar. It does not yet parse or run any script. Everything below the "What exists" section describes intended
 work, and each part moves into "What exists" in the commit that builds it.
 
 `lang-ecmascript` is an ECMAScript (JavaScript) engine for embedding: a
@@ -75,7 +75,11 @@ documentation and tested as a choice.
 | Allocator | `allocator.h` | cutil's allocator under this library's name |
 | Engine descriptor | `engine.h` | The descriptor runtime-core uses to recognize ECMAScript frames, and idempotent registration with a context |
 | Syntax result, locations, failure record | `core.h` | `GLECMA_ERR_SYNTAX` appended after the shared nine; `GLECMA_Location`; `GLECMA_Failure`, which every parse call writes |
-| Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; so far the one field the source enforces, `source_units` |
+| Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; the source, token and literal-length caps (`source_units`, `tokens`, `literal_length`) |
+| Rule codes | `core.h` | `GLECMA_Rule`, the append-only codes of the rules a syntax error can break, with `glecma_rule_name` and `glecma_rule_clause` |
+| Parse options, feature set | `options.h` | `GLECMA_ParseOptions` (the limits and a feature set) and `GLECMA_FeatureSet` (`glecma_feature_set_add`, `glecma_feature_set_has`); a set naming a feature the build lacks is refused |
+| Unicode version | `core.h` | `GLECMA_UNICODE_VERSION` and `glecma_unicode_version()` |
+| Tokenizer | `src/lex/` (internal) | The whole lexical grammar, with Annex B, in each input element goal; reached through two internal entries |
 | Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump, `glecma_source_retain` and `glecma_source_release` (the holders are counted atomically; the last release frees) |
 | Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
 
@@ -196,9 +200,38 @@ cap.
 | Field | Caps | Default | Why |
 | --- | --- | --- | --- |
 | `source_units` | Input units of one source | 64 Mi (67,108,864) | Real bundles reach tens of megabytes, and a source costs about 1.03 times its input, so the default admits them while bounding what a hostile host-supplied string can make the library allocate: a copy of at most 64 MiB of UTF-8 or 128 MiB of UTF-16, plus its checkpoints. A host raises it deliberately |
+| `tokens` | Tokens one tokenizer run produces (the end of input is not one) | 48 Mi (50,331,648) | See "Measured defaults" below |
+| `literal_length` | Code points in one identifier, string literal, template part or regular expression literal, in the source text, delimiters included | 16 Mi (16,777,216) | See "Measured defaults" below |
 
-The nesting, node, token and literal-length caps join with the tokenizer and
-parser that enforce them.
+The nesting and node caps join with the parser that enforces them.
+
+**Measured defaults.** Both are measured on one machine class (a 12-thread
+x86-64 laptop, GCC 16.2 `-O2`) over thirteen widely deployed JavaScript files
+(jQuery minified and not, Underscore, PrismJS, MathJax's configuration
+bundles, and small application scripts) and over two synthetic extremes.
+
+- *Tokens.* The unminified files take 0.07 to 0.16 tokens per input byte and
+  the dense ones (minified code, and a data file) 0.34 to 0.47 (the densest,
+  jQuery's minified build, is 0.470). A source of the default `source_units` cap (64 Mi) therefore holds
+  at most about 31.5 million tokens of real code, and the default of 48 Mi
+  admits it with a margin of 1.6 times. The synthetic extreme is source of
+  one-unit tokens (`a+a+a+...`, 1.0 token per unit), which no author writes
+  and which the default refuses at 48 Mi tokens, three quarters of the source
+  cap. The cap exists for a host that raises `source_units` far above the
+  default, or one that wants fewer tokens than bytes. A source that reaches
+  the cap costs the tokenizer about 0.65 seconds per 32 Mi tokens.
+- *Literal length.* The longest string, template or regular expression
+  literal among the files is 1,348 code points, far below any cap worth
+  having; the sample holds no file that inlines binary data, which is where
+  a single literal reaches megabytes. The default is therefore chosen from
+  cost, not from a measured maximum: 16 Mi code points is a literal of tens
+  of megabytes of data, larger than any the sample suggests a real source
+  holds, and still cheap to bound. At the cap a
+  literal costs 22 ms to scan and, when its value is asked for, 22 ms and
+  32 MiB (two bytes per code point) to decode, so the cap bounds what one
+  hostile literal can make the library spend. These figures come from a
+  small, local sample, not from a corpus chosen for the purpose; the
+  defaults are re-measured when the real-world corpus is pinned.
 
 ## The failure record
 
@@ -206,12 +239,173 @@ parser that enforce them.
 the caller passes it, success included. It is size-first like the limits
 (`GLECMA_FAILURE_INIT`), and the library writes only the members within the
 size it is given. It holds the result, a static
-English message or NULL, a location, and for `GLECMA_ERR_LIMIT` the static
-name of the field. The location is meaningful for `GLECMA_ERR_CORRUPT` (the
-first ill-formed byte) and, once the parser exists, `GLECMA_ERR_SYNTAX`;
-otherwise it is zero. Every string in it is static, so the record needs no
-freeing. A code naming the rule a syntax error broke joins the record with
-the first such rule.
+English message or NULL, a location, for `GLECMA_ERR_LIMIT` the static name
+of the field, for `GLECMA_ERR_SYNTAX` the rule code that was broken, and for
+`GLECMA_ERR_UNSUPPORTED` from a feature set the name of the first feature the
+build lacks. The location is meaningful for `GLECMA_ERR_CORRUPT` (the first
+ill-formed byte) and `GLECMA_ERR_SYNTAX` (a point inside the offending
+construct); otherwise it is zero. Every string pointer in it is static, so
+the record needs no freeing; the one piece of the caller's text it carries,
+a feature name, is copied into a fixed array, so it does not depend on the
+caller's set outliving the call. The members after `limit` (`rule`, a
+padding word, `feature`) were appended in the order given, so a caller built
+against the shorter record is not written past.
+
+The rule codes, `GLECMA_Rule`, are an append-only enumeration with explicit
+values: a host stores and compares the numbers, so a code is never
+renumbered, reused or removed, and a test pins each code's value. Each code
+has a stable name and the clause of ECMA-262 it comes from
+(`glecma_rule_name`, `glecma_rule_clause`). The clause numbers are the 16th
+edition's and are checked against the 17th when the clause concordance is
+committed. The lexical rules are the first twenty-four; the parser's and the
+early errors' rules are appended after them.
+
+## The Unicode version
+
+**One version for the whole engine.** Identifiers (ID_Start and ID_Continue)
+and white space (the Space_Separators) in the tokenizer, and later case
+mapping, normalization, collation and the property escapes of regular
+expressions, all read tables of the same Unicode Character Database version,
+which is 17.0.0. It moves only when the edition does, together with the
+`unicode` library, the regular expression library and the collation data, as
+one change. It is never moved alone, because a version that differs between
+two parts of the engine makes a name valid to one and invalid to the other.
+
+`GLECMA_UNICODE_VERSION` is the pin, and `glecma_unicode_version()` is the
+version in use: the one `unicode` reports (`guni_ucd_version()`). A test
+requires the two to be equal and equal to what `unicode` answers, so a build
+against a `unicode` of another version fails its tests rather than lexing
+differently. A check that `unicode` and the regular expression library agree
+on the version joins when the second dependency does.
+
+Identifier characters are classified by `unicode`'s `ID_Start` and
+`ID_Continue` properties, which are what ECMA-262's `UnicodeIDStart` and
+`UnicodeIDContinue` name, with `$`, `_`, ZWNJ and ZWJ added as the grammar
+says. A test classifies every code point, raw and through a `\u{...}` escape,
+against `unicode`'s own answer.
+
+## The parse options and the feature set
+
+Every entry that tokenizes takes `GLECMA_ParseOptions`: a size-first struct
+holding the limits and a feature set, filled by `glecma_parse_options_default`
+or `GLECMA_PARSE_OPTIONS_INIT`. A member beyond the caller's declared size
+takes its default, so a caller built before a member was added keeps working,
+and a test is built against a header-only struct. The goal and its context
+join at the end of the struct with the parser.
+
+A **feature set** (`GLECMA_FeatureSet`) names features that are finished at
+TC39 and not in the pinned edition, so that one can be built and measured
+before an edition turns it on. It is a plain value (sixteen names of up to 47
+characters each, size-first, no allocation). The pinned edition is what an
+empty set accepts. **This build defines no feature, so every non-empty set
+is refused**, before the entry reads a token, with `GLECMA_ERR_UNSUPPORTED`
+and the first feature named in the failure record. The alternative, ignoring
+a feature the build lacks, would hand a caller who asked for a feature the
+plain edition's parse with no sign that it was not what they asked for.
+Adding a name to a set does not check it against the build: the refusal is
+the entry's, so one set can be carried unchanged to an engine that has the
+feature.
+
+## The tokenizer
+
+ECMA-262 has no single token stream. The lexical grammar is a set of
+*input element goals*, and the syntactic grammar chooses one at each point:
+where a `/` is division and where it begins a regular expression, where a
+`}` is a punctuator and where it continues a template. Only a parser knows,
+so the tokenizer is **pulled**: `glecma_lexer_next` reads one token under the
+goal its caller names (division, regular expression, template tail, or the
+combination), and a caller that must look ahead copies the lexer, which is a
+plain value, and restores the copy. A test driver guesses goals from the
+previous token (it is exact only where the guess is right and is never used
+by a parser); the parser will name them.
+
+**What a token is.** A kind (each punctuator has its own), a keyword (when a
+name spells a reserved, strict-mode or contextual word), flags, and a start
+and end location; it points into the source by offset and holds no text and
+no allocation. What a token *means* is produced on demand by
+`glecma_token_value`: a name with its escapes decoded, a string literal's
+value (a lone surrogate stays one), a template part's cooked or raw value.
+Numeric and BigInt literals are not evaluated here: the compiler computes
+their values, with the maths library, where the arithmetic belongs.
+
+**Locations.** The scanners work in offsets and bring a token's line and
+column up to date once, at its end, by walking the units it covers. An error
+inside a token locates its offset from the token's start. A test compares
+every token's start and end with the source's own location query over a
+corpus in both encodings, so the two ways of counting cannot drift apart.
+
+**What is validated** (each with a rule code and a location inside the
+construct): every punctuator, name (with `\u` escapes, each of which must be
+an identifier character), numeric literal (decimal, hexadecimal, octal and
+binary, BigInt, numeric separators, Annex B's legacy octal and leading-zero
+decimal forms, and what may follow), string literal and each of its escapes,
+template part and regular expression literal's shape and flags. Comments are
+skipped: single-line, multi-line (a line terminator inside one counts for
+automatic semicolon insertion), the hashbang at the very start, and, in the
+Script goal only, Annex B's HTML-like comments (`<!--` anywhere, `-->` at the
+start of a line or after only comments). In the Module goal they are not
+comments, so `a <!-- b` is `a < ! -- b`.
+
+**Strictness.** Legacy octal literals and escapes, `\8`, `\9` and
+leading-zero decimals are errors in strict code. The tokenizer is told the
+strictness it starts in and can be told again (a directive prologue makes a
+function strict after its first tokens were read), and the tokens it already
+returned carry flags (`LEGACY_OCTAL`, `NON_OCTAL_DECIMAL`) so that the parser
+can refuse a literal or an escape that came before the directive.
+
+**Templates.** A template's cooked value is undefined when it holds an
+invalid escape, and that is not an error in a tagged template. The tokenizer
+cannot know whether a template is tagged, so it does not refuse: the token
+says its cooked value is undefined, records the rule of the first invalid
+escape and where it is, and keeps the raw value intact. The parser reports it
+for an untagged template. Cooked and raw values read CR and CRLF as LF; a
+line separator and a paragraph separator are kept.
+
+**Identifiers and reserved words.** A name token records the word it spells
+after its escapes are decoded, and a flag when it was written with an escape.
+Where the grammar needs an Identifier, the parser asks
+`glecma_token_identifier_check`, which refuses a reserved word, a word
+reserved in the context (strict code, a generator, a module or async
+function) and a reserved word spelled with an escape, with a rule code for
+each. An escaped word is a name and never the keyword, so it cannot be used
+where a keyword is required. A name after a dot is never asked about.
+
+**Limits.** The token cap is checked before a token is scanned; the
+literal-length cap is checked as a literal is scanned, so a hostile literal
+costs no more than the cap. Neither allocates: the tokenizer allocates
+nothing, and a test counts the allocator's requests while a source is read to
+its end.
+
+### The internal built-in mode
+
+The engine's own built-ins will be written in a dialect of strict ECMAScript
+with one more token: an intrinsic is spelled `%Name`. The tokenizer has a mode
+bit for it. With the bit set, `%IdentifierName` is one token (an intrinsic's
+name, without escapes) where the parser expects a primary expression, which
+is where a `/` would begin a regular expression, and nowhere else. The bit is
+set only by an internal entry, which no public header declares, and no member
+of the parse options selects it, so user source can never spell an intrinsic:
+in every public goal `%` is the remainder operator, and `%Name(x)` is the
+tokens `%`, `Name`, `(`, `x`, `)` it always was. A test checks both, and that
+the public entry refuses the bit if it is passed.
+
+## Fuzzing
+
+Two harnesses, `tests/fuzz/fuzz_tokenizer.c` and `fuzz_source.c`, are
+libFuzzer targets (`make fuzz-tokenizer`) and, with a replay driver, plain
+programs (`make fuzz-replay`) that run every file of the seed corpus through
+the same entry point. The replay needs no libFuzzer, is part of `make test`,
+and runs again under ASan and UBSan in `make test-asan`, so an input a
+campaign once found is a failing test. The first byte of an input chooses the
+encoding (UTF-8 or UTF-16), strictness, the goal, the built-in entry, the
+limits and how goals are chosen; the rest is the source. The tokenizer
+harness checks that the result is one a tokenizer may return, that a failure
+record agrees with it, that tokens lie inside the source in order and at the
+positions the source reports, that a saved lexer reads a token twice the same
+way, and that the same input fails the same way. The source harness
+transcodes a well-formed UTF-8 input with its own decoder and requires the
+two encodings to agree on code points, lines, locations and tokens. The
+seeds are regenerated by `tests/fuzz/make-seeds.py`.
 
 ## Layering on the runtime
 

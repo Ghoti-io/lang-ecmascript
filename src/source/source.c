@@ -277,34 +277,10 @@ GLECMA_Result glecma_source_cursor_seek(GLECMA_SourceCursor * cursor,
   return GLECMA_OK;
 }
 
-// Writes only the members that lie wholly within the caller's `size`, so a
-// caller built against a shorter struct is never written past.
-#define FAILURE_WITHIN(failure, member)                                        \
-  ((size_t)(failure)->size >= offsetof(GLECMA_Failure, member) +               \
-          sizeof((failure)->member))
-
 static void write_failure(GLECMA_Failure * failure, GLECMA_Result result,
     const char * message, const GLECMA_Location * location,
     const char * limit) {
-  if (failure == NULL) {
-    return;
-  }
-  failure->result = (uint32_t)result;
-  if (FAILURE_WITHIN(failure, message)) {
-    failure->message = message;
-  }
-  if (FAILURE_WITHIN(failure, location)) {
-    if (location != NULL) {
-      failure->location = *location;
-    } else {
-      failure->location.offset = 0;
-      failure->location.line = 0;
-      failure->location.column = 0;
-    }
-  }
-  if (FAILURE_WITHIN(failure, limit)) {
-    failure->limit = limit;
-  }
+  glecma_failure_set(failure, result, message, location, limit, 0, NULL);
 }
 
 static void source_free(GLECMA_Source * source) {

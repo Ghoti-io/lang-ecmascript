@@ -1,0 +1,11 @@
+--- a/src/lex/literal.c
++++ b/src/lex/literal.c
+@@ -91,7 +91,7 @@
+           line++; // U+2028 or U+2029
+           column = 0;
+         } else {
+-          column += length == 4 ? 2 : 1;
++          column += 1;
+         }
+         offset += length;
+       }

@@ -1,0 +1,11 @@
+--- a/src/lex/lexer.c
++++ b/src/lex/lexer.c
+@@ -276,7 +276,7 @@
+     }
+     return GLECMA_ERR_INVALID;
+   }
+-  return open_lexer(lexer, source, options, mode, failure);
++  return open_lexer(lexer, source, options, mode | GLECMA_LEXF_BUILTIN, failure);
+ }
+ 
+ GLECMA_Result glecma_lexer_open_builtin(GLECMA_Lexer * lexer,
