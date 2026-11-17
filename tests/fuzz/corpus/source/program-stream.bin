@@ -1,0 +1,5 @@
+'use strict';
+const f = (a, b = 2, ...c) => a ** b + c.length;
+class A { #p = 1; static s = `t${f(1)}`; get p() { return this.#p; } }
+async function* g() { for await (const x of y) yield x?.z ?? 0; }
+export default A;

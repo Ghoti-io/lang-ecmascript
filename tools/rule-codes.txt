@@ -1,0 +1,30 @@
+# The registry of syntax rule codes: one row per GLECMA_Rule, `number<TAB>enumerator<TAB>name`, where the
+# name is what glecma_rule_name returns. A host may store and compare the numbers and the names, so a row is
+# never removed, renumbered or renamed, and a new code is appended with the next number. tools/check-rule-codes.py
+# fails when the enumeration, the name table and this file disagree, or when a row that is already
+# committed has changed or gone.
+0	GLECMA_RULE_NONE	none
+1	GLECMA_RULE_UNEXPECTED_CHARACTER	unexpected-character
+2	GLECMA_RULE_UNTERMINATED_COMMENT	unterminated-comment
+3	GLECMA_RULE_UNTERMINATED_STRING	unterminated-string
+4	GLECMA_RULE_UNTERMINATED_TEMPLATE	unterminated-template
+5	GLECMA_RULE_UNTERMINATED_REGEXP	unterminated-regexp
+6	GLECMA_RULE_REGEXP_FLAGS	regexp-flags
+7	GLECMA_RULE_IDENTIFIER_ESCAPE	identifier-escape
+8	GLECMA_RULE_PRIVATE_NAME	private-name
+9	GLECMA_RULE_ESCAPE_HEX	escape-hex
+10	GLECMA_RULE_ESCAPE_UNICODE	escape-unicode
+11	GLECMA_RULE_ESCAPE_CODE_POINT	escape-code-point
+12	GLECMA_RULE_ESCAPE_LEGACY_OCTAL_STRICT	escape-legacy-octal-strict
+13	GLECMA_RULE_ESCAPE_NON_OCTAL_DECIMAL_STRICT	escape-non-octal-decimal-strict
+14	GLECMA_RULE_TEMPLATE_ESCAPE_OCTAL	template-escape-octal
+15	GLECMA_RULE_NUMERIC_EXPECTED_DIGIT	numeric-expected-digit
+16	GLECMA_RULE_NUMERIC_SEPARATOR	numeric-separator
+17	GLECMA_RULE_NUMERIC_SEPARATOR_LEGACY	numeric-separator-legacy
+18	GLECMA_RULE_NUMERIC_BIGINT	numeric-bigint
+19	GLECMA_RULE_NUMERIC_TRAILING	numeric-trailing
+20	GLECMA_RULE_NUMERIC_LEGACY_OCTAL_STRICT	numeric-legacy-octal-strict
+21	GLECMA_RULE_NUMERIC_NON_OCTAL_DECIMAL_STRICT	numeric-non-octal-decimal-strict
+22	GLECMA_RULE_ESCAPED_RESERVED_WORD	escaped-reserved-word
+23	GLECMA_RULE_RESERVED_WORD	reserved-word
+24	GLECMA_RULE_RESERVED_WORD_STRICT	reserved-word-strict

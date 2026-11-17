@@ -46,10 +46,11 @@ OPTIONS = [
     ("utf16-strict", 0x03),
 ]
 
-def write(path, option, text, wide):
+def write(path, option, text, wide, second=None):
     data = text.encode("utf-16-le" if wide else "utf-8", "surrogatepass")
+    header = bytes([option]) + (bytes([second]) if second is not None else b"")
     with open(path, "wb") as f:
-        f.write(bytes([option]) + data)
+        f.write(header + data)
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus")
@@ -57,11 +58,16 @@ def main():
         os.makedirs(os.path.join(root, sub), exist_ok=True)
     for name, text in SNIPPETS.items():
         for label, option in OPTIONS:
-            write(os.path.join(root, "tokenizer", "%s-%s.bin" % (name, label)), option, text, option & 1)
+            # The second byte of a tokenizer seed: bit 0 reads the source from the stream.
+            write(os.path.join(root, "tokenizer", "%s-%s.bin" % (name, label)), option, text, option & 1, 0)
+        write(os.path.join(root, "tokenizer", "%s-stream.bin" % name), 0x00, text, False, 1)
+        write(os.path.join(root, "tokenizer", "%s-stream-utf16.bin" % name), 0x01, text, True, 1)
     # The source harness: UTF-8 and UTF-16, a small cap, and ill-formed UTF-8.
     for name, text in SNIPPETS.items():
         write(os.path.join(root, "source", "%s-utf8.bin" % name), 0x00, text, False)
         write(os.path.join(root, "source", "%s-utf16.bin" % name), 0x01, text, True)
+        write(os.path.join(root, "source", "%s-stream.bin" % name), 0x04, text, False)
+        write(os.path.join(root, "source", "%s-stream-utf16.bin" % name), 0x05, text, True)
     write(os.path.join(root, "source", "program-cap.bin"), 0x02, SNIPPETS["program"], False)
     for label, raw in (("overlong", b"a\xc0\x80b"), ("surrogate", b"\xed\xa0\x80"), ("truncated", b"x\xf0\x9f"), ("high", b"\xf5\x80\x80\x80")):
         with open(os.path.join(root, "source", "bad-%s.bin" % label), "wb") as f:

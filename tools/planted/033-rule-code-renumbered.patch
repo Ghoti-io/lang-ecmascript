@@ -1,0 +1,11 @@
+--- a/include/ghoti.io/lang-ecmascript/core.h
++++ b/include/ghoti.io/lang-ecmascript/core.h
+@@ -174,7 +174,7 @@
+                                         ///< IdentifierPart (clause 12.7).
+   GLECMA_RULE_PRIVATE_NAME = 8,         ///< `#` not followed by an
+                                         ///< IdentifierName (clause 12.7).
+-  GLECMA_RULE_ESCAPE_HEX = 9,           ///< A malformed `\x` escape (clause 12.9.4).
++  GLECMA_RULE_ESCAPE_HEX = 109,           ///< A malformed `\x` escape (clause 12.9.4).
+   GLECMA_RULE_ESCAPE_UNICODE = 10,      ///< A malformed `\u` escape in a
+                                         ///< string or template (clause 12.9.4).
+   GLECMA_RULE_ESCAPE_CODE_POINT = 11,   ///< A malformed or out-of-range

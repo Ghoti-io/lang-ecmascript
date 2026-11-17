@@ -1,0 +1,11 @@
+--- a/src/core/failure.c
++++ b/src/core/failure.c
+@@ -106,7 +106,7 @@
+       "Invalid Unicode escape sequence in an identifier"},
+   {GLECMA_RULE_PRIVATE_NAME, "private-name", "12.7",
+       "A private name needs an identifier after #"},
+-  {GLECMA_RULE_ESCAPE_HEX, "escape-hex", "12.9.4",
++  {GLECMA_RULE_ESCAPE_HEX, "escape-hexadecimal", "12.9.4",
+       "Invalid hexadecimal escape sequence"},
+   {GLECMA_RULE_ESCAPE_UNICODE, "escape-unicode", "12.9.4",
+       "Invalid Unicode escape sequence"},

@@ -1,0 +1,36 @@
+/*
+ * SPDX-License-Identifier: LGPL-3.0-only
+ *
+ * Copyright (C) 2026 Corey Pennycuff
+ *
+ * This file is part of Ghoti.io Lang-ecmascript.
+ *
+ * Ghoti.io Lang-ecmascript is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License version 3
+ * as published by the Free Software Foundation.
+ *
+ * Ghoti.io Lang-ecmascript is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * @file
+ *
+ * The registry of feature names: the one list of the features this build
+ * defines, features being what a ::GLECMA_FeatureSet may name that is
+ * finished at TC39 and not in the pinned edition.
+ *
+ * Each row is `GLECMA_FEATURE(identifier, "name")`, the name being the
+ * lowercase spelling a feature set carries and the test262 tag table cites.
+ * Rows are appended, never renamed or removed: a host stores the names.
+ *
+ * The registry is empty. This library defines no feature in its first
+ * release series; the first rows arrive with the work that builds a feature
+ * behind the set, and until then every entry that is given a non-empty set
+ * refuses it, naming the first feature, with ::GLECMA_ERR_UNSUPPORTED.
+ */

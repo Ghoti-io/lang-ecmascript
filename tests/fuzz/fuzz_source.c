@@ -25,7 +25,8 @@
  * between the two.
  *
  * The first byte chooses: bit 0, the rest is UTF-16 code units (else UTF-8);
- * bit 1, a small source-size cap. A UTF-8 input that is well-formed is also
+ * bit 1, a small source-size cap; bit 2, the source is made from the
+ * library's input stream, read in short pieces, instead of from a buffer. A UTF-8 input that is well-formed is also
  * transcoded here, by this file's own decoder, and made into a UTF-16 source:
  * the two must agree on code points, lines, the location of every code point
  * and, when tokenized, on every token's kind, flags, line and column. An
@@ -38,6 +39,7 @@
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
 
+#include "fuzz_common.h"
 #include "lex/lexer.h"
 
 #include <stdint.h>
@@ -121,14 +123,11 @@ int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
   GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   GLECMA_Source * source = NULL;
 
+  const int stream = (options & 4) != 0;
   if (options & 1) {
     size_t count = size / 2;
-    uint16_t * units = (uint16_t *)malloc(count * sizeof(uint16_t) + 1);
-    check(units != NULL);
-    memcpy(units, data, count * sizeof(uint16_t));
-    GLECMA_Result r = glecma_source_create_utf16(units, count, &limits, NULL,
-        &failure, &source);
-    free(units);
+    GLECMA_Result r = fuzz_make_source(1, stream, data, size, &limits, &failure,
+        &source);
     if (r == GLECMA_ERR_LIMIT) {
       check(count > limits.source_units && source == NULL);
       return 0;
@@ -155,8 +154,8 @@ int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
     return 0;
   }
 
-  GLECMA_Result r = glecma_source_create_utf8((const char *)data, size,
-      &limits, NULL, &failure, &source);
+  GLECMA_Result r = fuzz_make_source(0, stream, data, size, &limits, &failure,
+      &source);
   if (r == GLECMA_ERR_LIMIT) {
     check(size > limits.source_units && source == NULL);
     return 0;

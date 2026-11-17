@@ -163,6 +163,25 @@
 #define glecma_token_value GHOTIIO_LANG_ECMASCRIPT(glecma_token_value)
 #define glecma_token_value_free GHOTIIO_LANG_ECMASCRIPT(glecma_token_value_free)
 
+// stream.h
+#define GLECMA_Stream GHOTIIO_LANG_ECMASCRIPT(GLECMA_Stream)
+#define GLECMA_StreamCloseFn GHOTIIO_LANG_ECMASCRIPT(GLECMA_StreamCloseFn)
+#define GLECMA_StreamReadFn GHOTIIO_LANG_ECMASCRIPT(GLECMA_StreamReadFn)
+#define glecma_source_create_stream \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_source_create_stream)
+#define glecma_stream_create_callback \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_stream_create_callback)
+#define glecma_stream_create_file \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_stream_create_file)
+#define glecma_stream_create_memory \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_stream_create_memory)
+#define glecma_stream_destroy GHOTIIO_LANG_ECMASCRIPT(glecma_stream_destroy)
+#define glecma_stream_eof GHOTIIO_LANG_ECMASCRIPT(glecma_stream_eof)
+#define glecma_stream_read GHOTIIO_LANG_ECMASCRIPT(glecma_stream_read)
+#define glecma_stream_seek GHOTIIO_LANG_ECMASCRIPT(glecma_stream_seek)
+#define glecma_stream_size GHOTIIO_LANG_ECMASCRIPT(glecma_stream_size)
+#define glecma_stream_tell GHOTIIO_LANG_ECMASCRIPT(glecma_stream_tell)
+
 /// @endcond
 
 #endif // GHOTI_IO_GLECMA_NAMESPACE_H

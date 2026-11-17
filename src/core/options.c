@@ -111,10 +111,24 @@ bool glecma_feature_set_has(const GLECMA_FeatureSet * set, const char * name) {
   return false;
 }
 
-// This build defines no feature, so every name is unbuilt. When the registry
-// of feature names exists, this looks a name up in it.
+// The names this build defines, from the registry. The registry is empty, so
+// the table holds only its terminator.
+static const char * const defined_features[] = {
+#define GLECMA_FEATURE(identifier, name) name,
+#include "core/features.def"
+#undef GLECMA_FEATURE
+  NULL
+};
+
 bool glecma_feature_built(const char * name) {
-  (void)name;
+  if (name == NULL) {
+    return false;
+  }
+  for (size_t i = 0; defined_features[i] != NULL; i++) {
+    if (strcmp(defined_features[i], name) == 0) {
+      return true;
+    }
+  }
   return false;
 }
 

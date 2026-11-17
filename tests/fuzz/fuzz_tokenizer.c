@@ -37,6 +37,10 @@
  *               the same token; 3 as 0, with a feature set naming a feature
  *               (which must be refused before a token is read)
  *
+ * The second byte's bit 0 makes the source from the library's input stream,
+ * read in short pieces, instead of from a buffer; both constructors are
+ * fuzzed and the tokenizer reads a source made either way.
+ *
  * It checks what a hostile input must not break: the result is one of the
  * few a tokenizer may return, a failure record is consistent with it, tokens
  * lie inside the source in order, their positions equal the source's own
@@ -49,6 +53,7 @@
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
 
+#include "fuzz_common.h"
 #include "lex/lexer.h"
 
 #include <stdint.h>
@@ -166,12 +171,13 @@ static GLECMA_Result run_twice(GLECMA_Lexer * lexer, const GLECMA_Source * sourc
 }
 
 int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
-  if (size == 0) {
+  if (size < 2) {
     return 0;
   }
   const uint8_t options = data[0];
-  data++;
-  size--;
+  const int stream = data[1] & 1;
+  data += 2;
+  size -= 2;
   const int wide = options & 1;
   const uint32_t mode = ((options & 2) ? GLECMA_LEXF_STRICT : 0u) |
       ((options & 4) ? GLECMA_LEXF_MODULE : 0u);
@@ -197,21 +203,8 @@ int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
   GLECMA_Source * source = NULL;
   GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   GLECMA_Result created;
-  uint16_t * units16 = NULL;
-  if (wide) {
-    size_t count = size / 2;
-    units16 = (uint16_t *)malloc(count * sizeof(uint16_t) + 1);
-    if (units16 == NULL) {
-      return 0;
-    }
-    memcpy(units16, data, count * sizeof(uint16_t));
-    created = glecma_source_create_utf16(units16, count, &limits, NULL,
-        &failure, &source);
-  } else {
-    created = glecma_source_create_utf8((const char *)data, size, &limits,
-        NULL, &failure, &source);
-  }
-  free(units16);
+  created = fuzz_make_source(wide, stream, data, size, &limits, &failure,
+      &source);
   if (created != GLECMA_OK) {
     check(created == GLECMA_ERR_CORRUPT || created == GLECMA_ERR_LIMIT);
     check(source == NULL);

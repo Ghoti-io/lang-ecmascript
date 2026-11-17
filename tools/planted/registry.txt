@@ -34,3 +34,6 @@
 030|clause-cited-not-in-concordance|The rule table cites a clause the concordance lacks|030-clause-cited-not-in-concordance.patch|check-clauses
 031|tag-cites-unknown-clause|A tag row cites a clause the concordance lacks|031-tag-cites-unknown-clause.patch|check-clauses
 032|out-tag-defined-by-the-text|A tag marked out has a probe that the 17th edition's text contains|032-out-tag-defined-by-the-text.patch|check-clauses
+# Story 4 (the parser and the public tree) registers 033 onward.
+033|rule-code-renumbered|A rule code's number is changed in the enumeration|033-rule-code-renumbered.patch|check-rule-codes
+034|rule-code-renamed|A rule code's stable name is changed in the name table|034-rule-code-renamed.patch|check-rule-codes

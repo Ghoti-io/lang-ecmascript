@@ -286,6 +286,28 @@ Identifier characters are classified by `unicode`'s `ID_Start` and
 says. A test classifies every code point, raw and through a `\u{...}` escape,
 against `unicode`'s own answer.
 
+**From a stream.** CONVENTIONS section 5 has a library that reads input read
+it through its own stream, so `GLECMA_Stream` hands out bytes from memory (a
+borrowed block), from a file or from a host's reader, and
+`glecma_source_create_stream` reads one to its end and makes a source. The
+result equals the source the buffer constructor makes from the same bytes: the
+stream is read into one buffer and that buffer is handed to the buffer
+constructor, so the two cannot disagree on counts, locations or failures, and
+a differential test and the fuzzers' option bit check it. The size cap is
+checked as bytes arrive: the buffer never grows past one byte beyond the cap
+(that byte is what tells a stream longer than the cap from one exactly as
+long), so a stream of unbounded length costs at most the cap before it is
+refused. A stream that reports an error is `GLECMA_ERR_IO` and stays failed;
+a UTF-16 stream of an odd number of bytes is `GLECMA_ERR_CORRUPT`, located at
+the end of the whole units. The price of one constructor is a second copy of
+the text while the source is built (the buffer, then the source's own copy);
+reading straight into the source's storage would save it and is rejected
+until a measurement says the copy matters, because it would put a second
+validation path in the constructor that every other source depends on. The
+stream has no `read_line`: the tokenizer reads units, so nothing would call
+it. Parsing that starts before the stream ends is not built; the contract is
+the whole text first.
+
 ## The parse options and the feature set
 
 Every entry that tokenizes takes `GLECMA_ParseOptions`: a size-first struct
@@ -306,7 +328,10 @@ a feature the build lacks, would hand a caller who asked for a feature the
 plain edition's parse with no sign that it was not what they asked for.
 Adding a name to a set does not check it against the build: the refusal is
 the entry's, so one set can be carried unchanged to an engine that has the
-feature.
+feature. The names this build defines are the rows of one registry,
+`src/core/features.def`, an X-macro list that is empty: the refusal looks a
+name up in it, so the first feature to be built is a row there and nothing
+else in the refusal changes.
 
 ## The tokenizer
 

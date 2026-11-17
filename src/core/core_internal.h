@@ -88,8 +88,8 @@ GLECMA_INTERNAL_API bool glecma_parse_options_resolve(
 /**
  * @brief Whether this build defines a feature.
  *
- * No feature is defined by this build yet, so this is false for every name.
- * When the registry of feature names exists, this looks a name up in it.
+ * Looks the name up in the registry, `src/core/features.def`. The registry
+ * is empty, so this is false for every name.
  *
  * @param name A feature name.
  * @return true when the build defines it.
