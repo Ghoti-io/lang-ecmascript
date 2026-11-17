@@ -1,0 +1,11 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -379,7 +379,7 @@
+       parser_kid(p, parse_expression(p).node);
+     } else if (parser_is_kw(p, GLECMA_KW_DEFAULT)) {
+       // CaseBlock has one DefaultClause at most (clause 14.12).
+-      if (seen_default) {
++      if (0 && seen_default) {
+         parser_unexpected(p);
+       }
+       seen_default = true;

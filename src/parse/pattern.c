@@ -37,6 +37,7 @@ static PExpr pattern_expr(GLECMA_BNode node, size_t start, size_t end) {
   e.node = node;
   e.start = start;
   e.end = end;
+  e.ref_start = start;
   e.shape = SH_OTHER;
   e.paren = 0;
   e.aux = 0;
@@ -53,6 +54,7 @@ PExpr parse_binding_identifier(Parser * p, uint32_t decl) {
   }
   GLECMA_BText name;
   parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
+  parser_note_binding(p, &p->tok);
   size_t start = p->tok.start.offset;
   size_t end = p->tok.end.offset;
   parser_event(p, GLECMA_BEV_DECLARE, decl, &name, start, end);
@@ -173,6 +175,7 @@ static PExpr binding_object(Parser * p, uint32_t decl) {
       }
       GLECMA_BText name;
       parser_text(p, &key.tok, GLECMA_VALUE_COOKED, true, &name);
+      parser_note_binding(p, &key.tok);
       parser_event(p, GLECMA_BEV_DECLARE, decl, &name, key.start, key.end);
       GLECMA_BNode target = parser_make_text(p, GLECMA_NODE_IDENTIFIER, 0,
           key.start, key.end, &name, NULL);
@@ -226,6 +229,11 @@ static PExpr destructuring_target(Parser * p, bool allow_pattern) {
     // A bracket may begin a nested pattern, or a member expression on a
     // literal (`{}[key]`). The target is read as a left-hand-side expression
     // first: a bare literal is a pattern and is read again as one.
+    if (allow_pattern && parser_memo_has(p, MEMO_PATTERN(p->tok.start.offset))) {
+      // Read before, and a pattern: not read as an expression again, which
+      // would read the patterns in its defaults the same way at every level.
+      return parse_assignment_pattern(p);
+    }
     Snap snap;
     parser_snap(p, &snap);
     const size_t outer_pending = p->pending;
@@ -241,6 +249,7 @@ static PExpr destructuring_target(Parser * p, bool allow_pattern) {
       if (!allow_pattern) {
         parser_fail(p, GLECMA_RULE_INVALID_ASSIGNMENT_TARGET, &at);
       }
+      parser_memo_add(p, MEMO_PATTERN(snap.tok.start.offset));
       parser_restore(p, &snap);
       return parse_assignment_pattern(p);
     }

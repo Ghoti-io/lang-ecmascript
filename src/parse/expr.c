@@ -56,6 +56,7 @@ static PExpr expr_of(GLECMA_BNode node, size_t start, size_t end,
   e.node = node;
   e.start = start;
   e.end = end;
+  e.ref_start = start;
   e.shape = shape;
   e.paren = 0;
   e.aux = 0;
@@ -149,7 +150,7 @@ bool expr_valid_target(const Parser * p, const PExpr * e, bool allow_call) {
 
 void expr_mark_write(Parser * p, const PExpr * e, bool also_read) {
   if (e->shape == SH_IDENT) {
-    parser_amend_reference(p, e->start, GLECMA_BREF_WRITE,
+    parser_amend_reference(p, e->ref_start, GLECMA_BREF_WRITE,
         also_read ? 0u : GLECMA_BREF_READ);
   }
 }
@@ -541,6 +542,7 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
 }
 
 PExpr parse_arrow_paren(Parser * p, size_t start, bool is_async) {
+  const Retro outer = parser_retro_enter(p);
   uint32_t saved_flags = p->flags;
   bool saved_no_in = p->no_in;
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_ARROW, NULL, start,
@@ -554,11 +556,16 @@ PExpr parse_arrow_paren(Parser * p, size_t start, bool is_async) {
       &params_end);
   p->flags = saved_flags;
   p->no_in = saved_no_in;
-  return finish_arrow(p, start, is_async, params, saved_flags, saved_no_in);
+  PExpr arrow = finish_arrow(p, start, is_async, params, saved_flags,
+      saved_no_in);
+  parser_retro_leave(p, outer);
+  return arrow;
 }
 
 PExpr parse_arrow_ident(Parser * p, size_t start, bool is_async,
     const GLECMA_Token * ident, const GLECMA_BText * name) {
+  const Retro outer = parser_retro_enter(p);
+  parser_note_binding(p, ident);
   uint32_t saved_flags = p->flags;
   bool saved_no_in = p->no_in;
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_ARROW, NULL, start,
@@ -571,7 +578,10 @@ PExpr parse_arrow_ident(Parser * p, size_t start, bool is_async,
   parser_kid(p, id);
   GLECMA_BNode params = parser_make(p, GLECMA_NODE_PARAMETER_LIST, 0, 0,
       ident->start.offset, ident->end.offset, mark);
-  return finish_arrow(p, start, is_async, params, saved_flags, saved_no_in);
+  PExpr arrow = finish_arrow(p, start, is_async, params, saved_flags,
+      saved_no_in);
+  parser_retro_leave(p, outer);
+  return arrow;
 }
 
 /* ---- Parentheses ---------------------------------------------------------------- */
@@ -583,7 +593,7 @@ PExpr parse_arrow_ident(Parser * p, size_t start, bool is_async,
 PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
   const size_t open = p->tok.start.offset;
   const bool can_arrow = p->assign_start == open;
-  if (can_arrow && parser_memo_has(p, open)) {
+  if (can_arrow && parser_memo_has(p, MEMO_ARROW(open))) {
     *arrow = true;
     return expr_of(NULL, open, open, SH_OTHER);
   }
@@ -648,8 +658,9 @@ PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
     parser_unexpected(p);
   }
   parser_next(p);
+  const size_t close_end = p->prev_end;
   if (p->tok.kind == GLECMA_TOK_ARROW && can_arrow) {
-    parser_memo_add(p, open);
+    parser_memo_add(p, MEMO_ARROW(open));
     parser_restore(p, &snap);
     *arrow = true;
     return expr_of(NULL, open, open, SH_OTHER);
@@ -665,6 +676,10 @@ PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
     PExpr e = only_expr;
     e.node = only;
     e.paren = 1;
+    // The node keeps the inner range; whatever holds it takes the
+    // parentheses with it.
+    e.start = open;
+    e.end = close_end;
     e.aux = (uint8_t)(e.aux & PA_EVAL);
     if (e.shape == SH_ARROW) {
       // A parenthesized arrow function is an ordinary operand.
@@ -674,7 +689,7 @@ PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
   }
   GLECMA_BNode node = parser_make(p, GLECMA_NODE_SEQUENCE_EXPRESSION, 0, 0,
       first_start, last_end, mark);
-  PExpr e = expr_of(node, first_start, last_end, SH_OTHER);
+  PExpr e = expr_of(node, open, close_end, SH_OTHER);
   e.paren = 1;
   return e;
 }
@@ -683,7 +698,7 @@ PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
 // parameters. The token is `async`.
 PARSER_NOINLINE static PExpr parse_async_paren(Parser * p, bool * arrow) {
   const size_t start = p->tok.start.offset;
-  if (parser_memo_has(p, start)) {
+  if (parser_memo_has(p, MEMO_ARROW(start))) {
     parser_next(p);
     *arrow = true;
     return expr_of(NULL, start, start, SH_OTHER);
@@ -725,7 +740,7 @@ PARSER_NOINLINE static PExpr parse_async_paren(Parser * p, bool * arrow) {
     if ((p->tok.flags & GLECMA_TOKF_NEWLINE_BEFORE) != 0) {
       parser_fail_token(p, GLECMA_RULE_ARROW_LINE_TERMINATOR);
     }
-    parser_memo_add(p, start);
+    parser_memo_add(p, MEMO_ARROW(start));
     parser_restore(p, &snap);
     parser_next(p);
     *arrow = true;
@@ -1217,9 +1232,9 @@ static PExpr unary_inner(Parser * p) {
     parser_next(p);
     PExpr arg = parse_unary_operand(p);
     if (op == GLECMA_OP_TYPEOF && arg.shape == SH_IDENT) {
-      parser_amend_reference(p, arg.start, GLECMA_BREF_TYPEOF, 0);
+      parser_amend_reference(p, arg.ref_start, GLECMA_BREF_TYPEOF, 0);
     } else if (op == GLECMA_OP_DELETE && arg.shape == SH_IDENT) {
-      parser_amend_reference(p, arg.start, GLECMA_BREF_DELETE, 0);
+      parser_amend_reference(p, arg.ref_start, GLECMA_BREF_DELETE, 0);
     }
     size_t mark = p->kids_len;
     parser_kid(p, arg.node);
@@ -1467,15 +1482,23 @@ static PExpr parse_yield(Parser * p) {
 // What follows a parsed left-hand side: an assignment operator, or the end of
 // the assignment expression. `snap` is where the left-hand side began when it
 // began with a bracket, so that a literal followed by `=` can be read again as
-// a pattern.
-PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs, uint32_t ef,
-    const Snap * snap) {
+// a pattern; `is_pattern` says the left-hand side was already read as one.
+PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs,
+    uint32_t ef, const Snap * snap, bool is_pattern) {
   uint32_t op = 0;
   bool logical = false;
-  if (lhs.shape != SH_ARROW && assignment_operator(p->tok.kind, &op, &logical)) {
+  if ((is_pattern || lhs.shape != SH_ARROW) &&
+      assignment_operator(p->tok.kind, &op, &logical)) {
     const bool plain = p->tok.kind == GLECMA_TOK_ASSIGN;
-    if (plain && snap != NULL && !lhs.paren &&
+    if (is_pattern) {
+      // Already a pattern.
+    } else if (plain && snap != NULL && !lhs.paren &&
         (lhs.shape == SH_ARRAY || lhs.shape == SH_OBJECT)) {
+      // Remembered, so that a reading of an enclosing pattern's default does
+      // not read this one as an expression again: a chain of patterns inside
+      // each other's defaults costs quadratic work in the nesting and not
+      // exponential.
+      parser_memo_add(p, MEMO_PATTERN(snap->tok.start.offset));
       parser_restore(p, snap);
       lhs = parse_assignment_pattern(p);
       p->pending = NO_PENDING;
@@ -1497,6 +1520,9 @@ PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs, uint32_t e
         lhs.start, rhs.end, mark);
     return expr_of(node, lhs.start, rhs.end, SH_OTHER);
   }
+  if (is_pattern) {
+    parser_unexpected(p);
+  }
   if (p->pending != NO_PENDING) {
     const bool bare = !lhs.paren &&
         (lhs.shape == SH_ARRAY || lhs.shape == SH_OBJECT);
@@ -1510,10 +1536,15 @@ PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs, uint32_t e
 // An assignment expression that begins with a bracket: its snapshot lives in
 // this frame alone, so that the common assignment expression carries none.
 PARSER_NOINLINE static PExpr assignment_bracketed(Parser * p, uint32_t ef) {
+  if (parser_memo_has(p, MEMO_PATTERN(p->tok.start.offset))) {
+    PExpr pattern = parse_assignment_pattern(p);
+    p->pending = NO_PENDING;
+    return finish_assignment(p, pattern, ef, NULL, true);
+  }
   Snap snap;
   parser_snap(p, &snap);
   PExpr lhs = parse_conditional(p);
-  return finish_assignment(p, lhs, ef, &snap);
+  return finish_assignment(p, lhs, ef, &snap, false);
 }
 
 static PExpr assignment_inner(Parser * p, uint32_t ef) {
@@ -1529,7 +1560,7 @@ static PExpr assignment_inner(Parser * p, uint32_t ef) {
   if (p->tok.kind == GLECMA_TOK_LBRACKET || p->tok.kind == GLECMA_TOK_LBRACE) {
     result = assignment_bracketed(p, ef);
   } else {
-    result = finish_assignment(p, parse_conditional(p), ef, NULL);
+    result = finish_assignment(p, parse_conditional(p), ef, NULL, false);
   }
   p->assign_start = saved_assign;
   if (outer_pending != NO_PENDING) {

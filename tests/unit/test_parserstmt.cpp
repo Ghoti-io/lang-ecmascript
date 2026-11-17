@@ -203,6 +203,8 @@ TEST(ParseStatements, SwitchAndTry) {
     {"switch (a) { b }", GLECMA_RULE_UNEXPECTED_TOKEN, 13},
     {"switch (a) { case 1 b }", GLECMA_RULE_UNEXPECTED_TOKEN, 20},
     {"else a;", GLECMA_RULE_RESERVED_WORD, 0},
+    {"switch (a) { default: default: }", GLECMA_RULE_UNEXPECTED_TOKEN, 22},
+    {"switch (a) { case 1: default: case 2: default: }", GLECMA_RULE_UNEXPECTED_TOKEN, 38},
   });
 }
 
@@ -301,6 +303,30 @@ TEST(ParseStatements, TheDirectivePrologueAndStrictness) {
     {"'use strict'; var let;", GLECMA_RULE_RESERVED_WORD_STRICT, 18},
     {"'use strict'; var yield;", GLECMA_RULE_RESERVED_WORD_STRICT, 18},
     {"function f() { 'use strict'; var static; }", GLECMA_RULE_RESERVED_WORD_STRICT, 33},
+  });
+}
+
+TEST(ParseStatements, ABindingStrictCodeReservesIsRefusedWhenALaterDirectiveMakesItStrict) {
+  // The name and the parameters come before the directive, and are part of
+  // the function the directive makes strict.
+  RefuseAll({
+    {"function f(yield) { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 11},
+    {"function static() { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 9},
+    {"function f(a = 1, static) { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 18},
+    {"x = function static() { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 13},
+    {"x = function f([let]) { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 16},
+    {"x = { m(public) { 'use strict' } }", GLECMA_RULE_RESERVED_WORD_STRICT, 8},
+    {"x = (interface) => { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 5},
+    {"x = package => { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 4},
+    {"x = ({ private }) => { 'use strict' }", GLECMA_RULE_RESERVED_WORD_STRICT, 7},
+  });
+  // Each function answers for its own bindings only.
+  ExpectAll({
+    {"function static() {}", nullptr},
+    {"function f(static) { function g() { 'use strict' } }", nullptr},
+    {"function f() { 'use strict'; function g() {} }", nullptr},
+    {"function f(a = function static() {}) { }", nullptr},
+    {"function f() { var static; function g() { 'use strict' } }", nullptr},
   });
 }
 

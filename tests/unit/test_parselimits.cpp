@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "../parse_test_support.h"
+#include "../test_deadline.h"
 #include "../test_helpers.h"
 
 using glecma_test::Parse;
@@ -160,6 +161,7 @@ TEST(ParseLimits, NestingIsRefusedOneLevelPastItsCapNamingTheField) {
     Repeat("a ** ", "x", "", 40), Repeat("if (a) ", "x;", "", 40),
     Repeat("f(", "x", ")", 40), Repeat("`${", "x", "}`", 40),
     Repeat("class A { m() {", "", "}}", 40),
+    std::string("class A") + Repeat(" extends class", " extends B {}", " {}", 40),
   };
   for (const std::string & text : shapes) {
     uint64_t least = LeastAccepted(text, &GLECMA_Limits::nesting, 100000);
@@ -286,6 +288,8 @@ TEST(ParseLimits, AParseOnAThreadWithASmallStackNeverFaults) {
     Repeat("class A { m() {", "", "}}", 20000), Repeat("!", "x", "", 20000),
     Repeat("() =>", "x", "", 20000), Repeat("if (a) ", "x;", "", 20000),
     Repeat("`${", "x", "}`", 20000), Repeat("a ? b : ", "x", "", 20000),
+    std::string("class A") + Repeat(" extends class", " extends B {}", " {}", 20000),
+    Repeat("[a=", "1", "]=1", 20000), Repeat("({a=", "1", "}=1)", 20000),
   };
   std::atomic<int> refused{0};
   OnSmallStack(256 * 1024, [&] {
@@ -301,7 +305,7 @@ TEST(ParseLimits, AParseOnAThreadWithASmallStackNeverFaults) {
       }
     }
   });
-  EXPECT_EQ(refused.load(), 10);
+  EXPECT_EQ(refused.load(), 13);
 }
 
 #if !defined(__SANITIZE_ADDRESS__) && !defined(__SANITIZE_THREAD__)
@@ -311,6 +315,7 @@ TEST(ParseLimits, AParseOnAThreadWithASmallStackNeverFaults) {
 // the release build's frames; a sanitizer's are larger, and its arms check
 // only that nothing faults.
 TEST(ParseLimits, TheDeepestInputTheDefaultNestingAcceptsParsesOnADefaultStack) {
+  glecma_test::Deadline deadline(std::chrono::seconds(120), "the deepest-input search did not finish");
   struct Shape {
     const char * name;
     std::function<std::string(size_t)> make;
@@ -335,6 +340,7 @@ TEST(ParseLimits, TheDeepestInputTheDefaultNestingAcceptsParsesOnADefaultStack) 
     {"new", [](size_t n) { return Repeat("new ", "x", "", n); }},
     {"label", [](size_t n) { return Repeat("a: ", "x;", "", n); }},
     {"await", [](size_t n) { return Repeat("async function f() { await ", "x", "}", n); }},
+    {"heritage", [](size_t n) { return std::string("class A") + Repeat(" extends class", " extends B {}", " {}", n); }},
   };
   for (const Shape & shape : shapes) {
     // The deepest the default nesting cap admits, found with the stack free.

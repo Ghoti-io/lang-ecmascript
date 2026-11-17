@@ -148,6 +148,7 @@ static PExpr function_rest(Parser * p, size_t start, uint32_t fn,
   e.node = node;
   e.start = start;
   e.end = end;
+  e.ref_start = start;
   e.shape = SH_FUNCTION;
   e.paren = 0;
   e.aux = 0;
@@ -156,6 +157,7 @@ static PExpr function_rest(Parser * p, size_t start, uint32_t fn,
 
 PExpr parse_function_declaration(Parser * p, size_t start, bool is_async,
     bool allow_generator) {
+  const Retro outer = parser_retro_enter(p);
   parser_next(p); // `function`
   uint32_t fn = is_async ? FN_ASYNC : 0u;
   if (p->tok.kind == GLECMA_TOK_STAR) {
@@ -169,10 +171,14 @@ PExpr parse_function_declaration(Parser * p, size_t start, bool is_async,
   PExpr id = parse_binding_identifier(p, GLECMA_BDECL_FUNCTION);
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_FUNCTION, NULL, start,
       start);
-  return function_rest(p, start, fn, id.node, GLECMA_NODE_FUNCTION_DECLARATION);
+  PExpr function = function_rest(p, start, fn, id.node,
+      GLECMA_NODE_FUNCTION_DECLARATION);
+  parser_retro_leave(p, outer);
+  return function;
 }
 
 PExpr parse_function_expression(Parser * p, size_t start, bool is_async) {
+  const Retro outer = parser_retro_enter(p);
   parser_next(p); // `function`
   uint32_t fn = is_async ? FN_ASYNC : 0u;
   if (p->tok.kind == GLECMA_TOK_STAR) {
@@ -189,13 +195,20 @@ PExpr parse_function_expression(Parser * p, size_t start, bool is_async) {
     id = parse_binding_identifier(p, GLECMA_BDECL_FUNCTION_NAME).node;
     p->flags = saved;
   }
-  return function_rest(p, start, fn, id, GLECMA_NODE_FUNCTION_EXPRESSION);
+  PExpr function = function_rest(p, start, fn, id,
+      GLECMA_NODE_FUNCTION_EXPRESSION);
+  parser_retro_leave(p, outer);
+  return function;
 }
 
 PExpr parse_method(Parser * p, size_t start, uint32_t fn) {
+  const Retro outer = parser_retro_enter(p);
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_FUNCTION, NULL, start,
       start);
-  return function_rest(p, start, fn, NULL, GLECMA_NODE_FUNCTION_EXPRESSION);
+  PExpr function = function_rest(p, start, fn, NULL,
+      GLECMA_NODE_FUNCTION_EXPRESSION);
+  parser_retro_leave(p, outer);
+  return function;
 }
 
 /* ---- Classes --------------------------------------------------------------------------- */
@@ -361,7 +374,11 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
   if (parser_is_kw(p, GLECMA_KW_EXTENDS)) {
     derived = true;
     parser_next(p);
+    // A level of nesting: `class A extends class extends ...` recurses
+    // through here and through no other counted function.
+    parser_enter(p);
     heritage = parse_lhs(p).node;
+    parser_leave(p);
   }
   if (p->tok.kind != GLECMA_TOK_LBRACE) {
     parser_unexpected(p);
@@ -396,6 +413,7 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
   e.node = node;
   e.start = start;
   e.end = end;
+  e.ref_start = start;
   e.shape = SH_FUNCTION;
   e.paren = 0;
   e.aux = 0;

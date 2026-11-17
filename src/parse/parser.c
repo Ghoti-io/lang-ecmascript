@@ -244,6 +244,32 @@ void parser_leave(Parser * p) {
   p->depth--;
 }
 
+// A binding written in sloppy code that strict code would refuse: remembered
+// (the first), in case a directive later in the same function turns the code
+// it is part of into strict code.
+void parser_note_binding(Parser * p, const GLECMA_Token * name) {
+  if ((p->flags & PF_STRICT) != 0 || p->retro.rule != GLECMA_RULE_NONE) {
+    return;
+  }
+  uint32_t rule = glecma_token_identifier_check(name, parser_idf(p) | GLECMA_IDF_STRICT);
+  if (rule != GLECMA_RULE_NONE) {
+    p->retro.rule = rule;
+    p->retro.at = name->start;
+  }
+}
+
+// A function has its own bindings to answer for: the enclosing function's
+// are set aside while it is read and put back after.
+Retro parser_retro_enter(Parser * p) {
+  Retro saved = p->retro;
+  p->retro.rule = GLECMA_RULE_NONE;
+  return saved;
+}
+
+void parser_retro_leave(Parser * p, Retro saved) {
+  p->retro = saved;
+}
+
 /* ---- Arrow memo ----------------------------------------------------------- */
 
 static size_t memo_slot(size_t key, size_t capacity) {

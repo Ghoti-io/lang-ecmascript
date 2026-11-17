@@ -134,6 +134,61 @@ TEST(ParseFunctions, AFunctionsRangeIsItsFunctionPrototypeToStringText) {
   }
 }
 
+// A node's range includes the parentheses of a parenthesized expression at
+// its edge: the expression's own node excludes them (tree.h), and whatever
+// holds it takes them in.
+TEST(ParseFunctions, ARangeTakesInAParenthesizedOperandAtItsEdge) {
+  struct Case {
+    const char * source;
+    const char * text;  // the text of the first statement's first child
+  };
+  const Case cases[] = {
+    {"x = (a, b) => (c);", "x = (a, b) => (c)"},
+    {"a * (b);", "a * (b)"},
+    {"(1 + 2) * 3;", "(1 + 2) * 3"},
+    {"(a) = 1;", "(a) = 1"},
+    {"x = (a) ? (b) : (c);", "x = (a) ? (b) : (c)"},
+    {"f((a), (b));", "f((a), (b))"},
+    {"(a).b((c));", "(a).b((c))"},
+    {"new (a)((b));", "new (a)((b))"},
+    {"[...(a)];", "[...(a)]"},
+    {"({a: (1)});", "{a: (1)}"},
+    {"-(a);", "-(a)"},
+    {"(a)++;", "(a)++"},
+    {"typeof (a);", "typeof (a)"},
+    {"`${(a)}`;", "`${(a)}`"},
+  };
+  for (const Case & c : cases) {
+    auto parsed = Parse(c.source);
+    ASSERT_EQ(parsed.result, GLECMA_OK) << c.source;
+    const GLECMA_Node * statement = glecma_node_child(glecma_tree_root(parsed.tree), 0);
+    const GLECMA_Node * node = glecma_node_child(statement, 0);
+    std::string source = c.source;
+    EXPECT_EQ(source.substr(glecma_node_start(node),
+                  glecma_node_end(node) - glecma_node_start(node)),
+        c.text)
+        << c.source;
+    // The statement ends where its last token does.
+    EXPECT_EQ(glecma_node_end(statement), source.size()) << c.source;
+  }
+  // The parenthesized expression's own node is the inner one.
+  auto inner = Parse("(a);");
+  const GLECMA_Node * identifier = glecma_node_child(glecma_node_child(glecma_tree_root(inner.tree), 0), 0);
+  EXPECT_EQ(glecma_node_start(identifier), 1u);
+  EXPECT_EQ(glecma_node_end(identifier), 2u);
+  // Declarations and members that hold one.
+  EXPECT_EQ(FunctionTexts("x = (a) => (b)")[0], "(a) => (b)");
+  EXPECT_EQ(FunctionTexts("var f = function () {}, g = (function () {})")[1], "function () {}");
+  auto declaration = Parse("var x = (1);");
+  const GLECMA_Node * var = glecma_node_child(glecma_tree_root(declaration.tree), 0);
+  const GLECMA_Node * declarator = glecma_node_child(var, 0);
+  EXPECT_EQ(glecma_node_end(declarator), 11u);
+  EXPECT_EQ(glecma_node_end(var), 12u);
+  auto field = Parse("class A { x = (1) }");
+  const GLECMA_Node * body = glecma_node_child(glecma_node_child(glecma_tree_root(field.tree), 0), 2);
+  EXPECT_EQ(glecma_node_end(glecma_node_child(body, 0)), 17u);
+}
+
 TEST(ParseFunctions, ClassesInAllTheirParts) {
   ExpectAll({
     {"class A {}", "(ClassDeclaration (Identifier A) _ (ClassBody))"},

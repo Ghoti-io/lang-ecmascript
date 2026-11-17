@@ -116,8 +116,11 @@ extern "C" {
 /** @brief A parsed expression: its node, range and the facts its parent needs. */
 typedef struct PExpr {
   GLECMA_BNode node;
-  size_t start;
-  size_t end;
+  size_t start;     ///< Where the expression begins, a parenthesis included:
+                    ///< what a node that holds it takes for its own start.
+  size_t end;       ///< Where it ends, a parenthesis included.
+  size_t ref_start; ///< For an identifier, where the name begins (the
+                    ///< position its reference event carries).
   uint8_t shape;
   uint8_t paren; ///< Written in parentheses.
   uint8_t aux;
@@ -136,6 +139,18 @@ typedef struct Snap {
 } Snap;
 
 #define NO_PENDING SIZE_MAX
+
+/** @name Keys of the memo of decisions a first reading made */
+///@{
+#define MEMO_ARROW(offset) ((offset) * 2)       ///< A group at this offset is arrow parameters.
+#define MEMO_PATTERN(offset) ((offset) * 2 + 1) ///< A literal at this offset is followed by `=`.
+///@}
+
+/** @brief A strict-mode reserved word bound before the directive that makes it one. */
+typedef struct Retro {
+  uint32_t rule;
+  GLECMA_Location at;
+} Retro;
 
 typedef struct Parser {
   const GLECMA_Source * source;
@@ -177,6 +192,11 @@ typedef struct Parser {
   // Room for the text of a token that is short, so that the common name
   // is decoded without an allocation.
   uint16_t scratch[256];
+
+  // The first binding of the function being read that a "use strict"
+  // directive in its body would make an error (a word reserved only in
+  // strict code): the name and the parameters come before the directive.
+  Retro retro;
 
   // The directive prologue being read (stmt.c).
   bool prologue_item;  ///< The statement being parsed may be a directive.
@@ -233,6 +253,10 @@ GLECMA_INTERNAL_API void parser_enter(Parser * p);
 GLECMA_INTERNAL_API void parser_leave(Parser * p);
 GLECMA_INTERNAL_API void parser_check_stack(Parser * p);
 GLECMA_INTERNAL_API void parser_set_strict(Parser * p, bool strict);
+GLECMA_INTERNAL_API void parser_note_binding(Parser * p,
+    const GLECMA_Token * name);
+GLECMA_INTERNAL_API Retro parser_retro_enter(Parser * p);
+GLECMA_INTERNAL_API void parser_retro_leave(Parser * p, Retro saved);
 GLECMA_INTERNAL_API void parser_memo_add(Parser * p, size_t key);
 GLECMA_INTERNAL_API bool parser_memo_has(const Parser * p, size_t key);
 

@@ -1,0 +1,12 @@
+--- a/src/parse/func.c
++++ b/src/parse/func.c
+@@ -376,9 +376,7 @@
+     parser_next(p);
+     // A level of nesting: `class A extends class extends ...` recurses
+     // through here and through no other counted function.
+-    parser_enter(p);
+     heritage = parse_lhs(p).node;
+-    parser_leave(p);
+   }
+   if (p->tok.kind != GLECMA_TOK_LBRACE) {
+     parser_unexpected(p);

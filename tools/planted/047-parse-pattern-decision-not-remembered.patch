@@ -1,0 +1,10 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -1498,7 +1498,6 @@
+       // not read this one as an expression again: a chain of patterns inside
+       // each other's defaults costs quadratic work in the nesting and not
+       // exponential.
+-      parser_memo_add(p, MEMO_PATTERN(snap->tok.start.offset));
+       parser_restore(p, snap);
+       lhs = parse_assignment_pattern(p);
+       p->pending = NO_PENDING;

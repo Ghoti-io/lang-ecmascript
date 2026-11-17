@@ -22,7 +22,10 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+
 #include "../parse_test_support.h"
+#include "../test_deadline.h"
 
 using glecma_test::Parse;
 
@@ -265,6 +268,61 @@ TEST(ParseExpressions, DestructuringAssignmentIsResolvedFromTheCoverGrammar) {
       continue;
     }
     Expect(c);
+  }
+}
+
+TEST(ParseExpressions, PatternsInsideEachOthersDefaultsAreReadOnceNotTwiceOver) {
+  // A literal followed by `=` is read as an expression and then again as a
+  // pattern. Were each reading to read the patterns in its defaults the same
+  // way, the work would double with each level; the decision is remembered, so
+  // it grows with the square of the depth.
+  auto small = Parse("[a=[a=1]=1]=1;");
+  ASSERT_EQ(small.result, GLECMA_OK);
+  EXPECT_EQ(small.Body(),
+      "(Expression (Assignment = (ArrayPattern (AssignmentPattern (Identifier a) (Assignment = "
+      "(ArrayPattern (AssignmentPattern (Identifier a) (NumberLiteral))) (NumberLiteral)))) (NumberLiteral)))");
+  // The depths are chosen so that a parse that reads each level twice takes
+  // about a second or more (and a regression is seen as a slow parse, not
+  // a hang); the decision being remembered, each takes a few milliseconds.
+  const struct {
+    const char * open;
+    const char * close;
+    int depth;
+  } shapes[] = {
+    {"[a=", "]=1", 21}, {"[[a=", "]]=1", 21}, {"({a=", "}=1)", 21},
+    {"[{a:[b=", "]=1}=1]", 7}, {"[a=f(", ")]=1", 21},
+    {"[{a:{b=", "}=1}=1]", 12}, {"({a:[b=", "]=1})", 21},
+  };
+  glecma_test::Deadline deadline(std::chrono::seconds(60), "a pattern chain did not finish");
+  for (const auto & shape : shapes) {
+    std::string text;
+    for (int i = 0; i < shape.depth; i++) {
+      text += shape.open;
+    }
+    text += "1";
+    for (int i = 0; i < shape.depth; i++) {
+      text += shape.close;
+    }
+    text += ";";
+    auto start = std::chrono::steady_clock::now();
+    auto parsed = Parse(text);
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    EXPECT_EQ(parsed.result, GLECMA_OK) << shape.open << " " << parsed.failure.message;
+    EXPECT_LT(seconds, 0.4) << shape.open << ": " << seconds << " seconds";
+  }
+  // And deep: with the decision remembered the cost is the square of the
+  // depth at worst, which a few hundred levels can bear.
+  for (const char * open : {"[a=", "({a="}) {
+    std::string deep;
+    const bool object = open[0] == '(';
+    for (int i = 0; i < 80; i++) {
+      deep += open;
+    }
+    deep += "1";
+    for (int i = 0; i < 80; i++) {
+      deep += object ? "}=1)" : "]=1";
+    }
+    EXPECT_EQ(Parse(deep + ";").result, GLECMA_OK) << open;
   }
 }
 

@@ -2283,7 +2283,6 @@ test/language/statements/return/S12.9_A1_T6.js	*	an early error is not reported 
 test/language/statements/return/S12.9_A1_T7.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
 test/language/statements/return/S12.9_A1_T8.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
 test/language/statements/return/S12.9_A1_T9.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
-test/language/statements/switch/S12.11_A2_T1.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
 test/language/statements/switch/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
 test/language/statements/switch/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-generator.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5
 test/language/statements/switch/syntax/redeclaration/async-function-name-redeclaration-attempt-with-class.js	*	an early error is not reported yet: the grammar accepts the program and the check that refuses it is not built	M1 story 5

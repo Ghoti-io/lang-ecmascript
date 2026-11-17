@@ -1,0 +1,11 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -719,7 +719,7 @@
+ // the same sloppy lookahead is checked now.
+ static void check_retroactive(Parser * p, const GLECMA_Location * earlier,
+     uint32_t earlier_flags) {
+-  if (p->retro.rule != GLECMA_RULE_NONE) {
++  if (0 && p->retro.rule != GLECMA_RULE_NONE) {
+     // The function's name or a parameter is a word that strict code reserves.
+     parser_fail(p, p->retro.rule, &p->retro.at);
+   }

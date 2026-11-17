@@ -369,6 +369,7 @@ static GLECMA_BNode parse_switch(Parser * p) {
   parser_kid(p, paren_expression(p));
   parser_expect(p, GLECMA_TOK_LBRACE);
   block_scope(p, GLECMA_BEV_SCOPE_ENTER, start, start);
+  bool seen_default = false;
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
     size_t case_start = p->tok.start.offset;
     size_t inner = p->kids_len;
@@ -377,6 +378,11 @@ static GLECMA_BNode parse_switch(Parser * p) {
       parser_next(p);
       parser_kid(p, parse_expression(p).node);
     } else if (parser_is_kw(p, GLECMA_KW_DEFAULT)) {
+      // CaseBlock has one DefaultClause at most (clause 14.12).
+      if (seen_default) {
+        parser_unexpected(p);
+      }
+      seen_default = true;
       parser_next(p);
       parser_kid(p, NULL);
       flags |= GLECMA_NODEF_DEFAULT;
@@ -713,6 +719,10 @@ static bool is_use_strict(const Parser * p, const GLECMA_Token * t) {
 // the same sloppy lookahead is checked now.
 static void check_retroactive(Parser * p, const GLECMA_Location * earlier,
     uint32_t earlier_flags) {
+  if (p->retro.rule != GLECMA_RULE_NONE) {
+    // The function's name or a parameter is a word that strict code reserves.
+    parser_fail(p, p->retro.rule, &p->retro.at);
+  }
   if (earlier_flags != 0) {
     parser_fail(p, (earlier_flags & GLECMA_TOKF_LEGACY_OCTAL) != 0
             ? GLECMA_RULE_ESCAPE_LEGACY_OCTAL_STRICT

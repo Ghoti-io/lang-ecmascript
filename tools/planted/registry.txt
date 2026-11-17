@@ -49,3 +49,9 @@
 044|parse-cover-initializer-accepted|`({a = 1})` is accepted where it is no pattern|044-parse-cover-initializer-accepted.patch|test
 045|parse-regexp-never-rescanned|A `/` where an expression begins is never read as a regular expression|045-parse-regexp-never-rescanned.patch|check-test262
 046|test262-ledger-row-names-a-passing-pair|The pending ledger lists a pair that passes|046-test262-ledger-row-names-a-passing-pair.patch|check-test262
+047|parse-pattern-decision-not-remembered|An assignment pattern is read again as a pattern at each level of an enclosing pattern's defaults (the work doubles per level)|047-parse-pattern-decision-not-remembered.patch|test
+048|parse-class-heritage-unchecked|The heritage of a class recurses without a level or a stack check|048-parse-class-heritage-unchecked.patch|test
+049|parse-paren-extent-dropped|A node that ends in a parenthesized operand ends before its closing parenthesis|049-parse-paren-extent-dropped.patch|test
+050|parse-switch-duplicate-default-accepted|A second `default:` in a switch is accepted|050-parse-switch-duplicate-default-accepted.patch|test
+051|parse-retroactive-reserved-ignored|A word strict code reserves, bound in a function's name or parameters, is accepted when a directive in the body makes the function strict|051-parse-retroactive-reserved-ignored.patch|test
+052|parse-target-decision-not-remembered|A nested destructuring target is read as an expression and then as a pattern at every level|052-parse-target-decision-not-remembered.patch|test
