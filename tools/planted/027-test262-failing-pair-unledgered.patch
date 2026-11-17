@@ -1,10 +1,10 @@
 --- a/tests/data-test262-pending.tsv
 +++ b/tests/data-test262-pending.tsv
-@@ -8,7 +8,6 @@
+@@ -7,7 +7,6 @@
+ # A selector ending in / names every file under that directory; the mode is * or one mode.
  # The ledger is empty when the parser is complete.
  # selector	mode	reason	cleared by
- harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
--test/harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
- test/annexB/language/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
- test/annexB/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
- test/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+-test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
+ test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
+ test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
+ test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_Invalid-negated.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
