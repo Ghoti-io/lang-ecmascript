@@ -30,6 +30,35 @@ SNIPPETS = {
     "lone-percent": "% %= %1",
 }
 
+# What the parser's harness reads (fuzz_parser.c): programs that between them
+# use every production, and the constructs that need the parser to decide
+# (the cover grammars, automatic semicolon insertion, the directive prologue).
+PARSER_SNIPPETS = {
+    "expressions": "a ? b : c ?? d || e && f | g ^ h & i == j < k << l + m * n ** o; !p; typeof q; x = y = z; x += 1; (a, b); new A(b).c; a?.b?.[c]?.(d); a`b${c}`; `a${`b${c}`}`; /re/g.test(a) / b / c;\n",
+    "arrows": "x => x; (a, b = 1, ...c) => a; async y => await y; async (a) => { await a }; (a = (b = c) => d) => e; ({a = 1}) => a; ([a, [b]]) => a; async(a, b); (x => 1)(2);\n",
+    "patterns": "[a, b] = c; [a, ...b] = c; ({a, b: [c], d = 1, ...e} = f); for ([a] of b); for ({a = 1} of b); var [a = 1, {b}] = c; let {a, ...b} = c; [{}[x], (y)] = z;\n",
+    "statements": "var a = 1, b; let c; const d = 2; if (a) b; else c; for (;;) break; for (var i = 0; i < 1; i++) continue; for (a in b); for (a of b); while (a) b; do a; while (b) switch (a) { case 1: default: } try { a } catch (e) { b } finally { c } l: for (;;) break l; with (a) b; throw a; debugger;\n",
+    "functions": "function f(a, b = 1, ...c) { return a } function* g() { yield 1; yield* x } async function h() { await y } async function* i() { for await (const a of b) yield a } x = function () {}; y = async function* () {}; z = { get a() {}, set a(v) {}, async b() {}, *c() {}, [d]() {} };\n",
+    "classes": "class A { constructor() {} static m() {} get g() {} set g(v) {} async *a() {} static #p = 1; #q; [k]() {} static { x } y = 1; static z; 'str'() {} 1() {} } class B extends A { m() { super.m(); } constructor() { super(); new.target; #q in this } }\n",
+    "asi": "a\nb\n++c\n/d/g.test(e)\nvar f = 1\nvar g = 2\nlet h = f\n(g)\nthrow\nx\n",
+    "cover-errors": "({a = 1}); (a, b) => ; [a = 1] ; ({a} = {b = 1}); (...a); (a,) ; () ; async (a)\n=> 1;",
+    "directives": "'use strict'; 010; with (a) b; function f() { '\\07'; 'use strict'; }",
+    "annexb": "if (a) function f() {} l: function g() {} for (var x = 1 in y); a <!-- b\n--> c\n",
+    "contextual": "var async, get, set, of, let, yield, await, static; x = { async, get, set, async() {}, get() {}, get a() {} }; async\nfunction f() {} for (async of => 1;;); for (let in a); let\nq = 1;",
+    "nested": "((((((((((((((((((((x))))))))))))))))))));\n[[[[[[[[[[[[[[[[[[[[x]]]]]]]]]]]]]]]]]]]];\n!!!!!!!!!!!!!!!!!!!!x;\nfunction f() { function g() { function h() { function i() { function j() {} } } } }\n(a = (b = (c = (d = () => 1) => 2) => 3) => 4) => 5;\n",
+    "builtin": "%ArrayPrototype(x); y = %B + a % b;\n",
+    "templates": "`a${b}c${`d${`e${f}`}`}`; a`\\u{`; `\\01`;",
+}
+
+# (label, option byte) for the parser: bit 0 UTF-16, 1 strict, 2 stream,
+# 3 built-in, 4 checking builder, 5-6 limits, 7 feature set (fuzz_parser.c).
+PARSER_OPTIONS = [
+    ("sloppy", 0x00), ("strict", 0x02), ("utf16", 0x01), ("stream", 0x04),
+    ("stream-utf16", 0x05), ("builtin", 0x0A), ("checking", 0x10),
+    ("checking-strict", 0x12), ("tiny", 0x20), ("stack", 0x40),
+    ("tokens", 0x60), ("feature", 0x80),
+]
+
 # (name, option byte): the byte is bit 0 UTF-16, 1 strict, 2 module,
 # 3 built-in, 4-5 limits, 6-7 variant (see fuzz_tokenizer.c).
 OPTIONS = [
@@ -54,7 +83,7 @@ def write(path, option, text, wide, second=None):
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus")
-    for sub in ("tokenizer", "source"):
+    for sub in ("tokenizer", "source", "parser"):
         os.makedirs(os.path.join(root, sub), exist_ok=True)
     for name, text in SNIPPETS.items():
         for label, option in OPTIONS:
@@ -68,6 +97,9 @@ def main():
         write(os.path.join(root, "source", "%s-utf16.bin" % name), 0x01, text, True)
         write(os.path.join(root, "source", "%s-stream.bin" % name), 0x04, text, False)
         write(os.path.join(root, "source", "%s-stream-utf16.bin" % name), 0x05, text, True)
+    for name, text in list(SNIPPETS.items()) + list(PARSER_SNIPPETS.items()):
+        for label, option in PARSER_OPTIONS:
+            write(os.path.join(root, "parser", "%s-%s.bin" % (name, label)), option, text, option & 1)
     write(os.path.join(root, "source", "program-cap.bin"), 0x02, SNIPPETS["program"], False)
     for label, raw in (("overlong", b"a\xc0\x80b"), ("surrogate", b"\xed\xa0\x80"), ("truncated", b"x\xf0\x9f"), ("high", b"\xf5\x80\x80\x80")):
         with open(os.path.join(root, "source", "bad-%s.bin" % label), "wb") as f:

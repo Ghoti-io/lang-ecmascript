@@ -75,12 +75,14 @@ documentation and tested as a choice.
 | Allocator | `allocator.h` | cutil's allocator under this library's name |
 | Engine descriptor | `engine.h` | The descriptor runtime-core uses to recognize ECMAScript frames, and idempotent registration with a context |
 | Syntax result, locations, failure record | `core.h` | `GLECMA_ERR_SYNTAX` appended after the shared nine; `GLECMA_Location`; `GLECMA_Failure`, which every parse call writes |
-| Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; the source, token and literal-length caps (`source_units`, `tokens`, `literal_length`) |
+| Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; the source, token, literal-length, nesting, node and native-stack caps (`source_units`, `tokens`, `literal_length`, `nesting`, `nodes`, `native_stack_bytes`) |
 | Rule codes | `core.h` | `GLECMA_Rule`, the append-only codes of the rules a syntax error can break, with `glecma_rule_name` and `glecma_rule_clause` |
-| Parse options, feature set | `options.h` | `GLECMA_ParseOptions` (the limits and a feature set) and `GLECMA_FeatureSet` (`glecma_feature_set_add`, `glecma_feature_set_has`); a set naming a feature the build lacks is refused |
+| Parse options, feature set | `options.h` | `GLECMA_ParseOptions` (the limits, a feature set, the goal and the context) and `GLECMA_FeatureSet` (`glecma_feature_set_add`, `glecma_feature_set_has`); a set naming a feature the build lacks is refused. The names the build defines are the rows of `src/core/features.def`, which is empty |
 | Unicode version | `core.h` | `GLECMA_UNICODE_VERSION` and `glecma_unicode_version()` |
 | Tokenizer | `src/lex/` (internal) | The whole lexical grammar, with Annex B, in each input element goal; reached through two internal entries |
 | Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump, `glecma_source_retain` and `glecma_source_release` (the holders are counted atomically; the last release frees) |
+| Parser and tree | `tree.h`, `src/parse/` | `glecma_parse`: a Script into a read-only tree (`GLECMA_Tree`) with a walker, source ranges, a dump and one counted reference to its source; the builder interface with the tree builder and the checking builder; declaration and reference events (see "The parser") |
+| Input stream | `stream.h` | `GLECMA_Stream` over memory, a file or a host's reader, and `glecma_source_create_stream` |
 | Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
 | test262 gate | `tools/check-test262.py`, `tests/t262/`, `tools/test262/` | The pinned corpus, fetched and checked against a list of checksums; the classification and tag tables; the parse score in `make test` with a pending ledger (see "test262") |
 | Clause concordance | `documentation/clause-concordance.tsv`, `tools/ecma262/`, `tools/check-clauses.py` | The 16th-to-17th clause numbers, built from the editions' text, and a gate that fails a cited clause the 17th lacks |
@@ -204,8 +206,9 @@ cap.
 | `source_units` | Input units of one source | 64 Mi (67,108,864) | Real bundles reach tens of megabytes, and a source costs about 1.03 times its input, so the default admits them while bounding what a hostile host-supplied string can make the library allocate: a copy of at most 64 MiB of UTF-8 or 128 MiB of UTF-16, plus its checkpoints. A host raises it deliberately |
 | `tokens` | Tokens one tokenizer run produces (the end of input is not one) | 48 Mi (50,331,648) | See "Measured defaults" below |
 | `literal_length` | Code points in one identifier, string literal, template part or regular expression literal, in the source text, delimiters included | 16 Mi (16,777,216) | See "Measured defaults" below |
-
-The nesting and node caps join with the parser that enforces them.
+| `nesting` | Levels of syntactic nesting: a statement, an assignment expression, a prefix operator, a pattern or an `**` operand inside another | 256 | See "Recursive descent and the stack" |
+| `nodes` | Nodes one parse builds (the checking builder counts the nodes it skips as the tree builder counts the ones it builds, so both refuse the same input) | 16 Mi (16,777,216) | See "Measured defaults" below |
+| `native_stack_bytes` | Native stack, in bytes, that the caller grants one parse beyond the point of the call | 1 MiB (1,048,576) | See "Recursive descent and the stack" |
 
 **Measured defaults.** Both are measured on one machine class (a 12-thread
 x86-64 laptop, GCC 16.2 `-O2`) over thirteen widely deployed JavaScript files
@@ -234,6 +237,16 @@ bundles, and small application scripts) and over two synthetic extremes.
   hostile literal can make the library spend. These figures come from a
   small, local sample, not from a corpus chosen for the purpose; the
   defaults are re-measured when the real-world corpus is pinned.
+- *Nodes.* Real source builds 0.08 nodes per byte (commented, formatted code)
+  to 0.32 (minified code, the densest measured), and one node, with its share
+  of the tree's names, texts and events, takes 85 to 110 bytes. The default
+  of 16 Mi nodes is therefore about 1.7 GB of tree at its largest, and admits
+  a 50 MB minified file or a 200 MB formatted one. A source of the default
+  `source_units` cap is not guaranteed to fit: a minified 64 MiB file builds
+  about 21 million nodes. That is a deliberate bound on memory, stated rather
+  than hidden, and a host that parses larger source raises the cap. The
+  measurement is of the library's own tree on four real files and on the
+  seeds; it is re-measured on the real-world corpus.
 
 ## The failure record
 
@@ -315,7 +328,12 @@ holding the limits and a feature set, filled by `glecma_parse_options_default`
 or `GLECMA_PARSE_OPTIONS_INIT`. A member beyond the caller's declared size
 takes its default, so a caller built before a member was added keeps working,
 and a test is built against a header-only struct. The goal and its context
-join at the end of the struct with the parser.
+are the last two members: `GLECMA_PARSE_SCRIPT` or `GLECMA_PARSE_MODULE`, and
+the context flags (`GLECMA_CONTEXT_STRICT`, which can add strictness and never
+remove it). A goal that is not one is `GLECMA_ERR_INVALID`; the Module goal is
+refused with `GLECMA_ERR_UNSUPPORTED` until it is built. Every parse entry
+takes the options, and the options are the only way to ask for anything: no
+member selects the internal built-in entry.
 
 A **feature set** (`GLECMA_FeatureSet`) names features that are finished at
 TC39 and not in the pinned edition, so that one can be built and measured
@@ -415,6 +433,255 @@ of the parse options selects it, so user source can never spell an intrinsic:
 in every public goal `%` is the remainder operator, and `%Name(x)` is the
 tokens `%`, `Name`, `(`, `x`, `)` it always was. A test checks both, and that
 the public entry refuses the bit if it is passed.
+
+## The parser
+
+`glecma_parse` reads a source for a goal and returns a `GLECMA_Tree`. It is a
+hand-written recursive-descent parser over the tokenizer, in `src/parse/`.
+This section records its decisions and, for each, what was rejected.
+
+**Tokens are pulled, and the grammar names the goal.** The tokenizer has no
+single token stream (a `/` is division or the start of a regular expression, a
+`}` is a punctuator or continues a template), so the parser asks for each token
+under the default goal and *rescans* the current token where the grammar
+needs another: a `/` or `/=` where an expression begins becomes a regular
+expression, a `}` closing a template substitution becomes the template's
+middle or tail, and a `%` in the internal built-in entry becomes an intrinsic
+name. A rescan resets the tokenizer to the token's start, so the token cap
+counts it once. Lookahead copies the tokenizer, which is a plain value; one or
+two tokens are read ahead for `async`, `let`, `get` and `set`, `static`, and
+a label. *Rejected:* choosing the goal from the previous token (as some
+parsers do): it is wrong after `)` and `}`, the two places a program needs it
+right.
+
+**Errors leave by `longjmp`.** The first error is recorded in the parser and
+control returns to the entry. Nothing the parser owns is released on the way:
+everything it holds hangs off one struct, freed once at the entry, and the
+tree is destroyed there on failure, so a failure at any point frees
+everything, and a test fails each allocation of a parse in turn to show it.
+*Rejected:* a result code from every function, which doubles the code of a
+grammar this size and leaves a failure path through every statement to test.
+
+**The tree** is a flat arena. A node is a 32-byte header (kind, flags, an
+operator, the source range, counts), then its child pointers, then up to two
+texts. A kind's children are *positional*: an optional child is an empty slot,
+a `NULL`, so a walker reads `child(n, 1)` the same way whether or not the
+slot is filled, and the kind list in `tree.h` gives each kind's slots. Names are
+interned, so equal names are one copy, and every name or string is the
+tree's own UTF-16 copy: the tree keeps no pointer into the caller's buffer.
+Destroying a tree is a walk of its chunks, never a recursion, and so is the
+dump. *Rejected:* one C struct per node kind (about seventy types, each with
+its own walker code, and a new kind changes the ABI); a node per child with a
+sibling link (a pointer per child and an indirection per step, for a shape the
+positional slots already give); building the tree as JSON or ESTree-shaped
+text (a second parse for every consumer).
+
+**Ranges.** A node's range is in the source's own units. A function's and a
+class's range is exactly its `Function.prototype.toString` text: a method's
+starts at its first modifier or name and not at `static`, a computed key's
+bracket is inside it, an arrow function's starts at its parameters or its
+`async`. The range of a parenthesized expression is the inner expression's:
+parentheses are not nodes, because evaluation, assignment targets and
+`delete` see through them, and a node for them would have to be looked past
+by every consumer. A test re-parses each function of a program from nothing
+but its range.
+
+**Values.** A numeric literal's value is not computed here: the compiler
+computes it with exact arithmetic, and the node's range and two flags (legacy
+octal, leading-zero decimal) say what to compute. A string's value and a
+template part's cooked and raw values are UTF-16 code units (a lone surrogate
+stays one), and a template part whose escape is invalid has the cooked-undefined
+flag. *Rejected:* computing the double here (it would duplicate the compiler's
+rounding, which must be correct for every literal).
+
+**The builder interface.** The parser makes nodes only through
+`GLECMA_TreeBuilder` and never reads one. What it needs to know about an
+expression it has parsed (whether it can be assigned to, whether it was a
+bare literal, its range) it keeps in a small record of its own. That is what
+lets a second builder skip function bodies without changing a decision:
+nothing the parser decides depends on a node that was not built. Two builders
+implement the interface over one tree object. The *tree builder* builds every
+node. The *checking builder* builds none inside a function body and makes the
+reserved `GLECMA_NODE_UNMATERIALIZED_BODY` in place of the body; it is that
+kind's only producer, so no tree a public parse returns holds one. In this
+version it is reached by an internal entry (`glecma_parse_internal`); a public
+parse that skips bodies is a later story's. Both builders count every node the
+parser asks for, whether it is built or not, so the node cap refuses the
+same input under either, and both record every event, bodies included. A test
+runs both over programs that parse and programs that do not and requires the
+same result, the same rule, the same place and the same events, and the
+fuzzer asserts it for every input it generates. *Rejected:* one builder and a
+pass that prunes bodies afterwards (the whole point is not to build them);
+letting the parser read a built node to decide (it would make the two
+builders differ the first time a check read a body).
+
+**Cover grammars are resolved from builder events, not by rewriting nodes.**
+Two places in the grammar cannot tell what a construct is until later. A
+parenthesized list may be an expression or arrow parameters, and `async (` ...
+`)` a call or async arrow parameters: the group is parsed as an expression and
+if `=>` follows, the builder is rewound to a mark taken at the group's start,
+and the group is parsed again as parameters. An array or object literal
+followed by `=` is an assignment pattern, and a `for-in` or `for-of` head may
+be one: the same, with the literal parsed again as a pattern. A rewind
+discards every node and event since the mark and the parser restores its own
+state to the snapshot, so nothing of the first reading survives, and the node
+count is restored too (a test shows the cap that admits a program equals the
+nodes of its tree). A CoverInitializedName (`{a = 1}`) is the one thing a
+literal may hold that an expression may not; it is recorded as pending and is an
+error unless the literal turns out to be a pattern. A group that is found to
+be arrow parameters has its offset remembered, so the second reading of an
+enclosing group takes that decision without making it again: a chain of arrow
+functions nested in each other's parameters costs quadratic work in the
+nesting depth, bounded by the nesting cap, and not exponential. *Rejected:*
+converting the expression's nodes into pattern nodes in place (the usual
+technique): it reads built nodes to decide, which a body that was not built
+cannot answer, and it is the refactoring the checking builder was reserved
+to avoid; a speculative parse that is thrown away on a failure and retried
+(it costs the same and loses the first error's place).
+
+**Declaration and reference events.** Beside nodes, the builder receives
+scopes entered and left (script, function, arrow, block, catch, `for`, class,
+static block, field initializer, `with`), names declared (`var`, `let`,
+`const`, function, class, parameter, catch parameter, a function expression's
+own name, a class's inner name), names referenced with how (read, written,
+`typeof`, `delete`) and uses that change how a function must be compiled
+(`this`, `super` property and call, `new.target`, a call whose callee is the
+plain name `eval`). A scope summary is computed from them, never by walking a
+function's subtree, so a body that was checked and not built still has one. A
+reference is first reported as a read when the name is parsed and its flags are
+amended when what follows shows it is an assignment target (`a = 1` is a write
+and not a read; `a += 1` and `a++` are both), the operand of `typeof` or of
+`delete`. The events are kept in the tree and read through an internal
+accessor; a public accessor is the compiler's story.
+
+**The goals built.** The Script goal, sloppy or strict (by the context flag, or
+by a directive). A Module is `GLECMA_ERR_UNSUPPORTED`, with the message that
+says so, until it is built, as are `import` and `export` declarations;
+`import(...)` and the refusal of `import.meta` in a Script are built.
+Early errors are not built in this version, and the gate's ledger says which
+pairs wait for them. What the grammar itself decides is built: every statement
+and expression form of the edition; classes with fields, accessors, private
+names, static blocks and `#x in o`; destructuring; arrow and async arrow
+functions; generators and `async`/`await` as the grammar parameters `[Yield]`
+and `[Await]` give them, including the contextual words as names where they
+are names; optional chaining; template literals tagged and untagged (an
+invalid escape is refused only when nothing tags the template); automatic
+semicolon insertion with every restricted production; the directive prologue,
+with the strictness it turns on applied to the token already read (a legacy
+octal literal or escape before the directive is refused when it takes
+effect), and strictness turned off again before the token after a strict
+function's closing brace is read.
+
+**Annex B syntax built here** is what the grammar itself needs: a function
+declaration as the body of an `if` or of a label in sloppy code (the `if` form
+is placed in a block of its own, as the Annex says it is to be treated), a
+`for-in` head with an initializer in sloppy code, HTML-like comments (the
+tokenizer's) and the legacy numeric forms. B.3.9, the call expression as an
+assignment target (`f() = 1`, `f()++`, `for (f() of a)`), is accepted in
+sloppy code for `=`, the compound operators, `++` and `--` and the `for`
+heads, and refused in strict code, for the logical assignments and as a
+destructuring target, because the clause is normative-optional for a host that
+supports it and this library is built to sit under browsers; the assignment
+throws a `ReferenceError` when it runs, which the compiler emits. The
+early-error side of Annex B (`let` bound twice in a block with a function, a
+`var` in a `catch` with the same name, the `__proto__` rules) is a later
+story's.
+
+**The dump** (`glecma_tree_dump`) prints one node per line, indented, with its
+kind, operator, flags, texts and range, and walks an unknown kind by number. It
+is *not a printer*: its output does not reparse to the same tree, and nothing
+reparses it. The decision is recorded here, closed by this story: a printer
+that reproduces a tree needs every decision a parse made back again (where
+parentheses are needed, where a `/` is division, where a semicolon must be
+written, what a numeric literal's spelling was, comments), which is a second
+implementation of the grammar to keep in step with the first, and its only
+use here would be a differential the library already has more cheaply (the
+two builders, the re-parse of each function). *Rejected:* a printer, for
+that reason. A host that wants one walks the tree and prints source text
+from the ranges.
+
+**The tree's lifetime.** A tree holds one counted reference to its source and
+releases it when it is destroyed, so a caller may release their own at once
+and the source outlives the tree for as long as anyone else holds it. A
+compiler that wants a function after its tree is gone reparses it from the
+source; a test destroys a tree and parses each function again from its text
+alone. The tree API promises nothing about use at run time.
+
+### Recursive descent and the stack
+
+A hostile input must not make the parser overrun the native stack, whatever
+thread it runs on. Two controls bound it. `nesting` counts *levels of
+syntactic nesting*: a statement, an assignment expression, the operand of a
+prefix operator or of a right-associative `**`, a pattern, a `new`, each inside
+another (the layers an expression goes through on the way down, binary and
+unary, are not levels). It is a bound on the depth a tree can reach through
+nesting, and it is stated in the units a person can count. `native_stack_bytes`
+is the real control: the parser notes its stack position at the entry, and
+every recursive function compares the bytes used since with the grant and
+returns `GLECMA_ERR_LIMIT` naming the field, never a fault. The position is
+the frame's own address (`__builtin_frame_address`), because an
+address-sanitized build moves locals to a stack of its own and an address of
+a local would measure the wrong stack. A reserve of 24 KiB is kept back for
+the frames between two checks, the tokenizer and the builder. A cap of zero is
+a real cap of zero.
+
+*Measured.* The bytes one level costs differ by what the nesting is made of.
+Measured on x86-64 with GCC 16.2 `-O2` (`tools/measure-stack.c`, which finds,
+for each shape, the least nesting and the least grant that admit it at two
+depths and takes the slope):
+
+| Shape | Bytes per level | Shape | Bytes per level |
+| --- | --- | --- | --- |
+| `(((x)))` | 1,920 | `{{{}}}` | 256 |
+| `[[[x]]]` | 1,712 | `function f(){function f(){...}}` | 736 |
+| `({a:({a:x})})` | 1,816 | `class A{m(){class A{m(){...}}}}` | 1,264 |
+| `() => () => x` | 1,552 | `if (a) if (a) x;` | 784 |
+| `f(f(f(x)))` | 1,136 | `a = a = x` | 288 |
+| `` `${`${x}`}` `` | 1,728 | `a ? b : a ? b : x` | 336 |
+| `[[[x]]] = y` | 1,712 | `!!!x` | 160 |
+| `(a = (a = x) => 0) => 0` | 1,104 | `a ** a ** x`, `new new x` | 256, 240 |
+| `a: a: x` | 784 | `async function f() { await ...` | 992 |
+
+The worst is 1,920 bytes per level (a parenthesized group, which holds a
+snapshot of the parser to return to), the commonest real nesting is a
+function or a block at 256 to 736. An address-sanitized build takes about 4.4
+KiB for the same input. The frames that hold a snapshot, and the other large
+frames on the recursive path, are marked not to be inlined, because inlining
+them into the path moved the worst case from 1.9 to 2.4 KiB per level on the
+compiler measured; a parenthesized group that is arrow parameters returns to
+its caller before the arrow function is parsed, so that its frame is not under
+every level of nested arrow bodies.
+
+*Decision.* The default `nesting` is 256 and the default `native_stack_bytes`
+1 MiB. At 256 levels the worst shape takes 492 KB, so the deepest input the
+default nesting admits parses in under half of the default grant, with the
+reserve to spare, on a thread that has 1 MiB: a test finds, for each of nineteen
+shapes, the deepest input the default admits and parses it with the default
+limits on a thread whose entire stack is 1 MiB. 256 levels is almost five times the
+deepest real source measured (of 1,187 real files, the packages of a Node.js
+installation, minified and not, the deepest nests 53 levels, and every one
+that is a Script parses: the 631 that are refused are ES modules, which the
+Script goal refuses at their first `import` or `export`) and below the
+depth at which a chain of `else if` or conditionals in generated code begins to
+appear; it is the figure to raise first if a corpus says otherwise (a host that
+does raises `nesting` and `native_stack_bytes` together, and the table says how
+far). 1 MiB is the stack a Windows main thread starts with and less than any
+Linux or glibc thread's; a host that parses on a thread with less (a macOS
+secondary thread has 512 KiB, a musl thread 128 KiB) must lower the field,
+because the library cannot see how much stack its caller has, and a test
+parses deep input on a thread with 256 KiB and a grant of 128 KiB and requires
+the refusal. *Rejected:* a nesting cap alone (it is safe only for the shape it
+was measured on, and the table spans a factor of twelve); an explicit
+stack with no recursion (it would rewrite the grammar around a
+state machine and give up the correspondence with the specification's
+productions that makes it reviewable); measuring a frame count (it counts
+frames, not bytes, and the bytes are what a stack holds).
+
+The bytes per level are measured here on x86-64 only. The arm64, 32-bit,
+big-endian and Win64 figures are taken when the cross gates run at the
+milestone's close, with the same tool; until then the default is the x86-64
+figure and no claim is made for the others.
+
 
 ## Fuzzing
 

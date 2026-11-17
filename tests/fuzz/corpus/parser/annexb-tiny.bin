@@ -1,0 +1,2 @@
+ if (a) function f() {} l: function g() {} for (var x = 1 in y); a <!-- b
+--> c

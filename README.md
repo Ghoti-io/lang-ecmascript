@@ -15,14 +15,18 @@ design, the target and the plan are in
 
 ## Status
 
-**Scaffolding, source text and the tokenizer.** The library registers an
-ECMAScript engine with a runtime-core context, reports its version and target
-edition, takes source text (UTF-8 or UTF-16, validated and copied, with exact
-line and column locations, under a size cap) and reads it into tokens by the
-whole lexical grammar of the edition, Annex B included, with identifiers from
-`unicode` at one pinned Unicode version. It does not yet parse or run script;
-the parser comes next, then the bytecode compiler and interpreter. No interface is stable: every header is labelled
-`@stability free` until the suite's first release.
+**Scaffolding, source text, the tokenizer and the parser.** The library
+registers an ECMAScript engine with a runtime-core context, reports its
+version and target edition, takes source text (UTF-8 or UTF-16, from a buffer
+or a stream, validated and copied, with exact line and column locations, under
+a size cap), reads it into tokens by the whole lexical grammar of the edition,
+Annex B included, with identifiers from `unicode` at one pinned Unicode
+version, and parses a Script into a read-only tree. The parser reports the
+grammar's errors; the early errors, the Module goal and regular expression
+validation are not built yet, and the conformance gate's ledger says exactly
+which test262 pairs wait for them. It does not yet run script: the bytecode
+compiler and interpreter come next. No interface is stable: every header is
+labelled `@stability free` until the suite's first release.
 
 ## Example
 
@@ -82,10 +86,11 @@ it. `make examples` builds and runs both.
 - `limits.h`: `GLECMA_Limits` (size first, set with `GLECMA_LIMITS_INIT`, so a
   field can be added without breaking a caller built earlier) and
   `glecma_limits_default`. Its fields are `source_units` (default 64 Mi
-  units), `tokens` (48 Mi) and `literal_length` (16 Mi code points); zero is a
-  cap of zero.
-- `options.h`: `GLECMA_ParseOptions` (size first: the limits and a feature
-  set; `glecma_parse_options_default`) and `GLECMA_FeatureSet`
+  units), `tokens` (48 Mi), `literal_length` (16 Mi code points), `nesting`
+  (256 levels), `nodes` (16 Mi) and `native_stack_bytes` (1 MiB, the stack the
+  caller grants a parse); zero is a cap of zero.
+- `options.h`: `GLECMA_ParseOptions` (size first: the limits, a feature set,
+  the goal and the context; `glecma_parse_options_default`) and `GLECMA_FeatureSet`
   (`glecma_feature_set_add`, `glecma_feature_set_has`). The pinned edition is
   what an empty feature set accepts; this build defines no feature, so every
   entry that takes the options refuses a non-empty set with
@@ -98,6 +103,43 @@ it. `make examples` builds and runs both.
   line terminators; `glecma_source_encoding`, `_units`, `_code_points`,
   `_lines`, `_dump`, `_retain` and `_release`. A source is immutable and atomically counted, and any number of
   threads may read one at once.
+- `stream.h`: `GLECMA_Stream` over a block of memory, a file or a host's
+  reader, and `glecma_source_create_stream`, which reads one to its end into a
+  source equal to the one the buffer constructors make from the same bytes
+  (the size cap is checked as the bytes arrive).
+- `tree.h`: `glecma_parse` parses a source into a `GLECMA_Tree`, which the
+  caller destroys with `glecma_tree_destroy`; the tree is read through
+  `glecma_tree_root` and the walker (`glecma_node_kind`, `_flags`,
+  `_operator`, `_start`, `_end`, `_location`, `_child_count`, `_child`,
+  `_text`), and listed with `glecma_tree_dump`. A node's children are
+  positional (an empty slot is `NULL`), its range is exactly the text
+  `Function.prototype.toString` gives for a function or class, and a walker
+  that has a default case for a kind it does not know keeps working as kinds
+  are added. The tree holds one counted reference to its source and keeps no
+  pointer into the caller's buffer.
+
+```c
+GLECMA_Tree * tree = NULL;
+GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+GLECMA_Result result = glecma_parse(source, NULL, NULL, &failure, &tree);
+if (result == GLECMA_ERR_SYNTAX) {
+  // The rule says what the grammar refused, the location where.
+  fprintf(stderr, "%s (%s) at line %zu, column %zu\n", failure.message,
+      glecma_rule_name(failure.rule), failure.location.line,
+      failure.location.column);
+  return 1;
+} else if (result != GLECMA_OK) {
+  fprintf(stderr, "%s\n", glecma_result_string(result));
+  return 1;
+}
+glecma_tree_dump(tree, stdout);
+glecma_tree_destroy(tree);  // the source is the caller's to release
+```
+
+A parse on a thread with a small stack says so: set
+`GLECMA_ParseOptions::limits->native_stack_bytes` to what the thread can
+spare, and a deep input is refused with `GLECMA_ERR_LIMIT` naming
+`native_stack_bytes`, never a fault.
 
 ```c
 GLECMA_Source * source = NULL;
@@ -145,11 +187,11 @@ links with `pkg-config --cflags --libs ghoti.io-lang-ecmascript-0`, and
 `make check-install PREFIX=<prefix>` proves that path with a C and a C++
 consumer.
 
-The tokenizer is internal for now: the parser that will call it is the first
-public entry that reads source, and the tokenizer's tests, fuzzers and
-benchmark reach it directly. `make fuzz-replay` runs the seed corpus of the
-tokenizer and source fuzzers through their entry points; `make fuzz-tokenizer`
-and `make fuzz-source` build them for libFuzzer (clang), and `make bench`
+The tokenizer and the builder interface are internal: `glecma_parse` is the
+public entry that reads source, and the tests, fuzzers and benchmarks reach
+the tokenizer and the checking builder directly. `make fuzz-replay` runs the seed corpus of the
+tokenizer, source and parser fuzzers through their entry points; `make fuzz-tokenizer`,
+`make fuzz-source` and `make fuzz-parser` build them for libFuzzer (clang), and `make bench`
 reports the throughput of the source decoder and of the tokenizer.
 
 `make test` runs the unit tests and the gates: every exported symbol carries

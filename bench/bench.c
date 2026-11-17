@@ -25,8 +25,10 @@
  *
  * A way to check "performant" from the first commit. It holds a calibration
  * case, the decoder-throughput cases (creating a source from UTF-8 and from
- * UTF-16 text, which decodes every code point and indexes its lines) and the
- * tokenizer-throughput cases (reading a source to the end, token by token).
+ * UTF-16 text, which decodes every code point and indexes its lines), the
+ * tokenizer-throughput cases (reading a source to the end, token by token)
+ * and the parser cases (parsing a source into a tree, with each builder, and
+ * destroying a tree).
  *
  * The calibration case is a fixed amount of integer work that touches no
  * library code, run the same way every real case is, so a figure from a real
@@ -37,11 +39,13 @@
  * The cases run over the seed files in bench/seeds (named in
  * documentation/benchmarks.md). Each seed is repeated up to a fixed size at
  * setup, so a unit of work is long enough to time and the seed set stays
- * small. The decoder cases use the first three seeds and the tokenizer cases
- * all five, so that adding a seed for one does not change the other's
- * workload. The decoder clock covers the creation and release of the source
- * and not the setup; the tokenizer clock covers reading the tokens of sources
- * already made, and not the setup.
+ * small. The decoder cases use the first three seeds and the tokenizer and
+ * parser cases all five, so that adding a seed for one does not change the
+ * other's workload. The decoder clock covers the creation and release of the
+ * source and not the setup; the tokenizer clock covers reading the tokens of
+ * sources already made; the parser clock covers a parse and not the release
+ * of its tree, and the destruction case's covers only the release, which is
+ * the whole of what it measures.
  *
  * Usage:
  *   bench                 run every case: several repeats, report best, median
@@ -342,12 +346,83 @@ static uint64_t tokenize_tokens(void) {
   return total;
 }
 
+/* ---- The parser ---------------------------------------------------------- */
+
+#include "parse/parse_internal.h"
+
+/* One unit of work is every seed parsed to a tree. The trees are released
+ * after the clock stops; the destruction case is the other way round. */
+static uint64_t parse_run(uint64_t iterations, double * elapsed, bool utf16,
+    uint32_t internal) {
+  load_seeds();
+  uint64_t sink = 0;
+  double total = 0.0;
+  GLECMA_Tree * trees[MAX_SEEDS];
+  for (uint64_t i = 0; i < iterations; i++) {
+    double start = now_ns();
+    for (size_t s = 0; s < seed_count; s++) {
+      GLECMA_Source * source = utf16 ? seeds[s].source16 : seeds[s].source8;
+      GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+      if (glecma_parse_internal(source, NULL, NULL, internal, &failure, &trees[s]) != GLECMA_OK) {
+        setup_failed("a seed was refused by the parser");
+      }
+    }
+    total += now_ns() - start;
+    for (size_t s = 0; s < seed_count; s++) {
+      sink += glecma_node_end(glecma_tree_root(trees[s]));
+      glecma_tree_destroy(trees[s]);
+    }
+  }
+  *elapsed = total;
+  return sink;
+}
+
+static uint64_t parse_utf8_run(uint64_t iterations, double * elapsed) {
+  return parse_run(iterations, elapsed, false, 0);
+}
+
+static uint64_t parse_utf16_run(uint64_t iterations, double * elapsed) {
+  return parse_run(iterations, elapsed, true, 0);
+}
+
+static uint64_t parse_checking_utf8_run(uint64_t iterations, double * elapsed) {
+  return parse_run(iterations, elapsed, false, GLECMA_PARSE_INTERNAL_CHECKING);
+}
+
+/* One unit of work is every seed's tree released; the parse that made it is
+ * not in the clock. */
+static uint64_t tree_destroy_run(uint64_t iterations, double * elapsed) {
+  load_seeds();
+  uint64_t sink = 0;
+  double total = 0.0;
+  GLECMA_Tree * trees[MAX_SEEDS];
+  for (uint64_t i = 0; i < iterations; i++) {
+    for (size_t s = 0; s < seed_count; s++) {
+      if (glecma_parse(seeds[s].source8, NULL, NULL, NULL, &trees[s]) != GLECMA_OK) {
+        setup_failed("a seed was refused by the parser");
+      }
+      sink += glecma_node_end(glecma_tree_root(trees[s]));
+    }
+    double start = now_ns();
+    for (size_t s = 0; s < seed_count; s++) {
+      glecma_tree_destroy(trees[s]);
+    }
+    total += now_ns() - start;
+  }
+  *elapsed = total;
+  return sink;
+}
+
 static const Case cases[] = {
   {"calibration-xorshift", calibration_run, NULL, NULL, 200000000ull, 1000000ull},
   {"source-decode-utf8", decode_utf8_run, decode_utf8_bytes, NULL, 200ull, 1ull},
   {"source-decode-utf16", decode_utf16_run, decode_utf16_bytes, NULL, 200ull, 1ull},
   {"tokenize-utf8", tokenize_utf8_run, tokenize_utf8_bytes, tokenize_tokens, 100ull, 1ull},
   {"tokenize-utf16", tokenize_utf16_run, tokenize_utf16_bytes, tokenize_tokens, 100ull, 1ull},
+  {"parse-utf8", parse_utf8_run, tokenize_utf8_bytes, tokenize_tokens, 50ull, 1ull},
+  {"parse-utf16", parse_utf16_run, tokenize_utf16_bytes, tokenize_tokens, 50ull, 1ull},
+  {"parse-checking-utf8", parse_checking_utf8_run, tokenize_utf8_bytes, tokenize_tokens, 50ull, 1ull},
+  {"tree-destroy", tree_destroy_run, tokenize_utf8_bytes, NULL, 50ull, 1ull},
 };
 
 static int compare_double(const void * a, const void * b) {

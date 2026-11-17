@@ -269,7 +269,7 @@ TEST(ParseLimits, NativeStackBytesRefusesBeforeTheStackIsUsedUp) {
   uint64_t least = LeastAccepted(text, &GLECMA_Limits::native_stack_bytes,
       uint64_t{1} << 28);
   EXPECT_GT(least, 24u * 1024);
-  EXPECT_LT(least, uint64_t{200} * 4096);
+  EXPECT_LT(least, uint64_t{200} * 16384);  // a sanitizer's frames are several times larger
   // A grant of zero is a real zero: no parse can start.
   limits.native_stack_bytes = 0;
   EXPECT_EQ(ParseLimited("a;", limits, &failure), GLECMA_ERR_LIMIT);

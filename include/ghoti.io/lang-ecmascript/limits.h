@@ -80,8 +80,9 @@ extern "C" {
  * @brief The default for ::GLECMA_Limits::nesting: 256 levels.
  *
  * A level is one statement, one assignment expression, one prefix operator
- * or one pattern inside another. The deepest real source measured (a minified
- * bundle) nests about 40 levels; 256 admits that several times over, and is
+ * or one pattern inside another. The deepest of 1,187 real files measured (the
+ * packages of a Node.js installation, minified and not) nests 53 levels; 256
+ * admits that almost five times over, and is
  * the depth at which the worst shape measured (a chain of nested parenthesized
  * arrow functions, at about 1.9 KiB of native stack per level on x86-64) still
  * fits in half of the default ::GLECMA_Limits::native_stack_bytes.

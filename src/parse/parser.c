@@ -40,6 +40,22 @@
  */
 #define PARSER_STACK_RESERVE ((uint64_t)24 * 1024)
 
+/**
+ * The current position of the native stack, as a number. The frame's own
+ * address, where the compiler offers it: an address-sanitized build moves
+ * locals whose address is taken to a stack of its own, which is not where
+ * the thread's stack is, and a measurement taken from one would be nonsense.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define PARSER_STACK_POSITION() ((uintptr_t)__builtin_frame_address(0))
+#elif defined(_MSC_VER)
+#include <intrin.h>
+#define PARSER_STACK_POSITION() ((uintptr_t)_AddressOfReturnAddress())
+#else
+#define PARSER_STACK_POSITION() ((uintptr_t)&parser_stack_marker)
+static volatile char parser_stack_marker;
+#endif
+
 /* ---- Failure ------------------------------------------------------------- */
 
 static GLECMA_NORETURN void parser_jump(Parser * p) {
@@ -216,14 +232,12 @@ void parser_enter(Parser * p) {
 }
 
 void parser_check_stack(Parser * p) {
-  volatile char marker = 0;
-  uintptr_t here = (uintptr_t)&marker;
+  uintptr_t here = PARSER_STACK_POSITION();
   uintptr_t used = p->stack_base > here ? p->stack_base - here
                                         : here - p->stack_base;
   if ((uint64_t)used + PARSER_STACK_RESERVE > p->native_stack_bytes) {
     parser_fail_limit(p, "native_stack_bytes");
   }
-  (void)marker;
 }
 
 void parser_leave(Parser * p) {
@@ -572,14 +586,12 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
     glecma_tree_destroy(tree);
     return lexed;
   }
-  volatile char base_marker = 0;
-  p->stack_base = (uintptr_t)&base_marker;
+  p->stack_base = PARSER_STACK_POSITION();
 
   bool strict = false;
   if (setjmp(p->jump) == 0) {
     run_parse(p, tree, goal, &strict);
   }
-  (void)base_marker;
 
   if (p->kids != NULL) {
     p->allocator->free_fn(p->allocator->ctx, p->kids);

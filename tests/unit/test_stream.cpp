@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <cstring>
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -66,10 +67,13 @@ GLECMA_Result TrickleRead(void * context, void * buffer, size_t capacity,
 
 void TrickleClose(void * context) { static_cast<Trickle *>(context)->closed++; }
 
+// A memory stream borrows its bytes, so the text is kept for the whole run.
 GLECMA_Stream * Memory(const std::string & text) {
+  static std::deque<std::string> kept;
+  kept.push_back(text);
   GLECMA_Stream * stream = nullptr;
-  EXPECT_EQ(glecma_stream_create_memory(text.data(), text.size(), nullptr,
-                &stream),
+  EXPECT_EQ(glecma_stream_create_memory(kept.back().data(), kept.back().size(),
+                nullptr, &stream),
       GLECMA_OK);
   return stream;
 }
