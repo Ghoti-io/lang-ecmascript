@@ -116,7 +116,7 @@ typedef enum {
  */
 typedef enum {
   GLECMA_KW_NONE = 0,
-  // Reserved words (12.7.2): never an Identifier.
+  // Reserved words (clause 12.7.2): never an Identifier.
   GLECMA_KW_BREAK, GLECMA_KW_CASE, GLECMA_KW_CATCH, GLECMA_KW_CLASS,
   GLECMA_KW_CONST, GLECMA_KW_CONTINUE, GLECMA_KW_DEBUGGER, GLECMA_KW_DEFAULT,
   GLECMA_KW_DELETE, GLECMA_KW_DO, GLECMA_KW_ELSE, GLECMA_KW_ENUM,
@@ -129,7 +129,7 @@ typedef enum {
   // Reserved in some contexts: `await` in a module and in async code,
   // `yield` in strict code and in generators.
   GLECMA_KW_AWAIT, GLECMA_KW_YIELD,
-  // Reserved only in strict code (13.1.1).
+  // Reserved only in strict code (clause 13.1.1).
   GLECMA_KW_IMPLEMENTS, GLECMA_KW_INTERFACE, GLECMA_KW_LET,
   GLECMA_KW_PACKAGE, GLECMA_KW_PRIVATE, GLECMA_KW_PROTECTED,
   GLECMA_KW_PUBLIC, GLECMA_KW_STATIC,
@@ -370,7 +370,7 @@ GLECMA_INTERNAL_API void glecma_token_value_free(
  *
  * Where the grammar needs an Identifier (a binding, a reference, a label)
  * the parser asks here: a reserved word, and a word reserved in the context,
- * is refused, and so is a reserved word written with an escape (12.7.1). A
+ * is refused, and so is a reserved word written with an escape (clause 12.7.1). A
  * name that is not an Identifier in the grammar's sense (a property name
  * after a dot, say) is never asked about.
  *
@@ -391,10 +391,10 @@ GLECMA_INTERNAL_API const char * glecma_token_kind_name(GLECMA_TokenKind kind);
 /** @brief The text a keyword spells; NULL for ::GLECMA_KW_NONE. */
 GLECMA_INTERNAL_API const char * glecma_keyword_text(GLECMA_Keyword keyword);
 
-/** @brief Whether a code point is IdentifierStartChar (12.7). */
+/** @brief Whether a code point is IdentifierStartChar (clause 12.7). */
 GLECMA_INTERNAL_API bool glecma_lex_is_id_start(uint32_t code_point);
 
-/** @brief Whether a code point is IdentifierPartChar (12.7). */
+/** @brief Whether a code point is IdentifierPartChar (clause 12.7). */
 GLECMA_INTERNAL_API bool glecma_lex_is_id_part(uint32_t code_point);
 
 /**

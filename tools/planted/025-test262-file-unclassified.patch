@@ -1,0 +1,10 @@
+--- a/tests/data-test262-classification.tsv
++++ b/tests/data-test262-classification.tsv
+@@ -46,7 +46,6 @@
+ harness/	include	the harness files every test may include	-
+ suffix:_FIXTURE.js	fixture	an imported module	-
+ test/language/	in	the language	-
+-test/annexB/language/	in	Annex B, the language	-
+ test/built-ins/	in	the built-in objects; each must parse, though nothing runs	-
+ test/annexB/built-ins/	in	Annex B, the built-in objects; each must parse, though nothing runs	-
+ test/harness/	in	tests of the harness files; each must parse	-

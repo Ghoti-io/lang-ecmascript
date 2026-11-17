@@ -3,7 +3,8 @@
 // The tokenizer: punctuators, names and keywords, white space and comments,
 // the input element goals, and locations. Every case runs in UTF-8 and in
 // UTF-16 and requires the same tokens (Lex in lex_test_support.h).
-// ECMA-262 clause numbers are the 16th edition's.
+// ECMA-262 clause numbers are the 17th edition's
+// (documentation/clause-concordance.tsv maps them from the 16th).
 
 #include "../lex_test_support.h"
 
@@ -38,7 +39,7 @@ constexpr uint32_t kNewline = GLECMA_TOKF_NEWLINE_BEFORE;
 
 }  // namespace
 
-// 12.8: every punctuator, alone, is its own kind.
+// Clause 12.8: every punctuator, alone, is its own kind.
 TEST(Punctuators, EachIsOneToken) {
   for (int k = GLECMA_TOK_LBRACE; k < GLECMA_TOK_COUNT; ++k) {
     const char * text =
@@ -54,7 +55,7 @@ TEST(Punctuators, EachIsOneToken) {
   }
 }
 
-// 12.8: the longest punctuator wins.
+// Clause 12.8: the longest punctuator wins.
 TEST(Punctuators, LongestMatch) {
   EXPECT_EQ(Texts(Lex("a>>>=b")), "a|>>>=|b");
   EXPECT_EQ(Texts(Lex("a>>>b")), "a|>>>|b");
@@ -71,7 +72,7 @@ TEST(Punctuators, LongestMatch) {
   EXPECT_EQ(Texts(Lex("a---b")), "a|--|-|b");
 }
 
-// 12.8: `?.` is the optional chaining punctuator unless a digit follows.
+// Clause 12.8: `?.` is the optional chaining punctuator unless a digit follows.
 TEST(Punctuators, OptionalChainingIsNotBeforeADigit) {
   EXPECT_EQ(Texts(Lex("a?.b")), "a|?.|b");
   EXPECT_EQ(Texts(Lex("a?.5:1")), "a|?|.5|:|1");
@@ -80,7 +81,7 @@ TEST(Punctuators, OptionalChainingIsNotBeforeADigit) {
   EXPECT_EQ(Texts(Lex("a??.5")), "a|??|.5");
 }
 
-// 12.6: a stray character begins no token.
+// Clause 12.6: a stray character begins no token.
 TEST(Punctuators, AStrayCharacterIsRefused) {
   for (const char * text : {"@", "a @ b", "\\", "a \\ b"}) {
     EXPECT_EQ(Lex(text).result, GLECMA_ERR_SYNTAX) << text;
@@ -95,7 +96,7 @@ TEST(Punctuators, AStrayCharacterIsRefused) {
       static_cast<uint32_t>(GLECMA_RULE_UNEXPECTED_CHARACTER));
 }
 
-// 12.7: every reserved word, strict-mode word and contextual word is
+// Clause 12.7: every reserved word, strict-mode word and contextual word is
 // recognized, and nothing else is.
 TEST(Names, EveryKeywordRoundTrips) {
   for (int k = GLECMA_KW_NONE + 1; k < GLECMA_KW_COUNT; ++k) {
@@ -118,7 +119,7 @@ TEST(Names, EveryKeywordRoundTrips) {
   EXPECT_EQ(glecma_keyword_text(GLECMA_KW_NONE), nullptr);
 }
 
-// 12.7.2: the reserved words of the edition, one by one.
+// Clause 12.7.2: the reserved words of the edition, one by one.
 TEST(Names, EveryReservedWordIsRecognized) {
   for (const char * word : {"break", "case", "catch", "class", "const",
            "continue", "debugger", "default", "delete", "do", "else", "enum",
@@ -146,7 +147,7 @@ TEST(Names, EveryReservedWordIsRecognized) {
   EXPECT_EQ(std::adjacent_find(words.begin(), words.end()), words.end());
 }
 
-// 12.7.1: an identifier may be written with escapes, and an escaped
+// Clause 12.7.1: an identifier may be written with escapes, and an escaped
 // reserved word is flagged and is not the keyword.
 TEST(Names, EscapesAreFlaggedAndDecoded) {
   Lexed lexed = Lex("\\u0069f a\\u{62}c");
@@ -183,7 +184,7 @@ TEST(Names, IdentifierEscapesAreValidated) {
   EXPECT_EQ(Lex("\xE2\x80\x8D" "a").result, GLECMA_ERR_SYNTAX);
 }
 
-// 12.7: identifiers from `unicode` at its one pinned version.
+// Clause 12.7: identifiers from `unicode` at its one pinned version.
 TEST(Names, UnicodeIdentifiers) {
   EXPECT_EQ(Sig(Lex("\xC3\xA9t\xC3\xA9 \xCE\xB1\xCE\xB2\xCE\xB3 $ _ _$1")),
       "NAME NAME NAME NAME NAME");
@@ -315,7 +316,7 @@ TEST(Names, EveryEscapedCodePointIsClassifiedAsUnicodeSays) {
   }
 }
 
-// 12.7: a private name.
+// Clause 12.7: a private name.
 TEST(Names, PrivateNames) {
   Lexed lexed = Lex("#x #\\u0061b a.#c");
   ASSERT_EQ(lexed.result, GLECMA_OK);
@@ -382,7 +383,7 @@ TEST(Names, ReservedWordsAreNotIdentifiers) {
   EXPECT_EQ(glecma_token_identifier_check(nullptr, 0), 0u);
 }
 
-// 12.2: white space is TAB, VT, FF, ZWNBSP and the Space_Separators.
+// Clause 12.2: white space is TAB, VT, FF, ZWNBSP and the Space_Separators.
 TEST(Trivia, WhiteSpace) {
   for (uint32_t cp : {0x09u, 0x0Bu, 0x0Cu, 0x20u, 0xA0u, 0xFEFFu, 0x1680u,
            0x2000u, 0x2005u, 0x200Au, 0x202Fu, 0x205Fu, 0x3000u}) {
@@ -434,7 +435,7 @@ TEST(Trivia, TheNewlineFlag) {
   EXPECT_EQ(lexed.tokens[2].flags & kNewline, 0u);
 }
 
-// 12.4: comments.
+// Clause 12.4: comments.
 TEST(Trivia, Comments) {
   EXPECT_EQ(Sig(Lex("a // c\nb")), "NAME NAME");
   EXPECT_EQ(Sig(Lex("a // c")), "NAME");
@@ -454,7 +455,7 @@ TEST(Trivia, Comments) {
   EXPECT_EQ(Lex("/*/ */").result, GLECMA_OK);
 }
 
-// 12.5: a hashbang comment, only at the very start.
+// Clause 12.5: a hashbang comment, only at the very start.
 TEST(Trivia, Hashbang) {
   EXPECT_EQ(Sig(Lex("#!/usr/bin/env node\nx")), "NAME");
   EXPECT_EQ(Sig(Lex("#!")), "");
@@ -469,7 +470,7 @@ TEST(Trivia, Hashbang) {
   EXPECT_EQ(Lex("#!x\ny", GLECMA_LEXF_MODULE).result, GLECMA_OK);
 }
 
-// B.1.1: HTML-like comments, in the Script goal only.
+// Clause B.1.1: HTML-like comments, in the Script goal only.
 TEST(Html, OpenCommentInScript) {
   EXPECT_EQ(Sig(Lex("a <!-- c\nb")), "NAME NAME");
   EXPECT_EQ(Sig(Lex("<!-- c")), "");
@@ -502,7 +503,7 @@ TEST(Html, StrictScriptStillHasThem) {
   EXPECT_EQ(Sig(Lex("a <!-- b", GLECMA_LEXF_STRICT)), "NAME");
 }
 
-// 12.9.5 and 12.8: where a `/` is division and where it begins a regular
+// Clauses 12.9.5 and 12.8: where a `/` is division and where it begins a regular
 // expression is the goal the caller names.
 TEST(Goals, DivisionOrRegularExpression) {
   GLECMA_Source * source = nullptr;
@@ -537,7 +538,7 @@ TEST(Goals, TheDriverGuessesBothWays) {
   EXPECT_EQ(Sig(Lex("a /= 2")), "NAME /= NUMBER");
 }
 
-// A `}` is a punctuator or the rest of a template by goal (12.9.6).
+// A `}` is a punctuator or the rest of a template by goal (clause 12.9.6).
 TEST(Goals, TemplateTail) {
   GLECMA_Source * source = nullptr;
   const char text[] = "`a${x}b`";

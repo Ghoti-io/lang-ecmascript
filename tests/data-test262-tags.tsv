@@ -1,0 +1,213 @@
+# The test262 feature-tag table: every `features:` tag at the pinned commit,
+# with one of three states (what the gate scores, and why).
+#
+#   in          the 17th edition defines it. cite: the anchor id (sec-...) of the
+#               clause that defines it, which must be a clause of the 17th edition
+#               in clause-concordance.tsv.
+#   out         the 17th edition does not define it. cite: `absent:<text>`, a
+#               string that must not occur in the 17th edition's source text (or,
+#               as `absent:<id>:<text>`, not in that clause); the note says why.
+#   in-when-on  a feature of a later edition that this build implements behind a
+#               feature set. cite: the feature's name, a row of features.def.
+#               No real tag has this state yet (no feature is defined); the
+#               gate's self-test proves it on a synthetic row.
+#
+# The table is built from the edition's text (the clause cited, or the absence
+# checked, by `make check-clauses`), never from which tests happen to pass.
+# test262's own features.txt is the list of tags that exist; the sections of
+# that file are its maintainers' claim and are not used here.
+# tag	state	cite	note
+regexp-duplicate-named-groups	in	sec-patterns-static-semantics-early-errors	Static Semantics: Early Errors (17th 22.2.1.1)
+AggregateError	in	sec-aggregate-error-objects	AggregateError Objects (17th 20.5.7)
+align-detached-buffer-semantics-with-web-reality	in	sec-isvalidintegerindex	IsValidIntegerIndex (17th 10.4.5.16)
+arbitrary-module-namespace-names	in	sec-exports	Exports (17th 16.2.3)
+ArrayBuffer	in	sec-arraybuffer-objects	ArrayBuffer Objects (17th 25.1)
+array-find-from-last	in	sec-array.prototype.findlast	Array.prototype.findLast (17th 23.1.3.11)
+Array.fromAsync	in	sec-array.fromasync	Array.fromAsync (17th 23.1.2.2)
+Array.prototype.at	in	sec-array.prototype.at	Array.prototype.at (17th 23.1.3.1)
+Array.prototype.flat	in	sec-array.prototype.flat	Array.prototype.flat (17th 23.1.3.13)
+Array.prototype.flatMap	in	sec-array.prototype.flatmap	Array.prototype.flatMap (17th 23.1.3.14)
+Array.prototype.includes	in	sec-array.prototype.includes	Array.prototype.includes (17th 23.1.3.16)
+Array.prototype.values	in	sec-array.prototype.values	Array.prototype.values (17th 23.1.3.38)
+Atomics.waitAsync	in	sec-atomics.waitasync	Atomics.waitAsync (17th 25.4.14)
+array-grouping	in	sec-object.groupby	Object.groupBy (17th 20.1.2.13)
+arraybuffer-transfer	in	sec-arraybuffer.prototype.transfer	ArrayBuffer.prototype.transfer (17th 25.1.6.8)
+arrow-function	in	sec-arrow-function-definitions	Arrow Function Definitions (17th 15.3)
+async-iteration	in	sec-asynciterator-interface	The Async Iterator Interface (17th 27.1.1.4)
+async-functions	in	sec-async-function-definitions	Async Function Definitions (17th 15.8)
+Atomics	in	sec-atomics-object	The Atomics Object (17th 25.4)
+BigInt	in	sec-bigint-objects	BigInt Objects (17th 21.2)
+caller	in	sec-addrestrictedfunctionproperties	AddRestrictedFunctionProperties (17th 10.2.4)
+change-array-by-copy	in	sec-array.prototype.toreversed	Array.prototype.toReversed (17th 23.1.3.33)
+class	in	sec-class-definitions	Class Definitions (17th 15.7)
+class-fields-private	in	sec-private-names	Private Names (17th 6.2.12)
+class-fields-private-in	in	sec-relational-operators	Relational Operators (17th 13.10)
+class-fields-public	in	sec-class-definitions	Class Definitions (17th 15.7)
+class-methods-private	in	sec-class-definitions	Class Definitions (17th 15.7)
+class-static-block	in	sec-classstaticblockdefinition-record-specification-type	The ClassStaticBlockDefinition Record Specification Type (17th 6.2.13)
+class-static-fields-private	in	sec-class-definitions	Class Definitions (17th 15.7)
+class-static-fields-public	in	sec-class-definitions	Class Definitions (17th 15.7)
+class-static-methods-private	in	sec-class-definitions	Class Definitions (17th 15.7)
+coalesce-expression	in	sec-binary-logical-operators	Binary Logical Operators (17th 13.13)
+computed-property-names	in	sec-object-initializer	Object Initializer (17th 13.2.5)
+const	in	sec-let-and-const-declarations	Let and Const Declarations (17th 14.3.1)
+cross-realm	in	sec-code-realms	Realms (17th 9.3)
+DataView	in	sec-dataview-objects	DataView Objects (17th 25.3)
+DataView.prototype.getFloat32	in	sec-dataview.prototype.getfloat32	DataView.prototype.getFloat32 (17th 25.3.4.8)
+DataView.prototype.getFloat64	in	sec-dataview.prototype.getfloat64	DataView.prototype.getFloat64 (17th 25.3.4.9)
+DataView.prototype.getInt16	in	sec-dataview.prototype.getint16	DataView.prototype.getInt16 (17th 25.3.4.11)
+DataView.prototype.getInt32	in	sec-dataview.prototype.getint32	DataView.prototype.getInt32 (17th 25.3.4.12)
+DataView.prototype.getInt8	in	sec-dataview.prototype.getint8	DataView.prototype.getInt8 (17th 25.3.4.10)
+DataView.prototype.getUint16	in	sec-dataview.prototype.getuint16	DataView.prototype.getUint16 (17th 25.3.4.14)
+DataView.prototype.getUint32	in	sec-dataview.prototype.getuint32	DataView.prototype.getUint32 (17th 25.3.4.15)
+DataView.prototype.setUint8	in	sec-dataview.prototype.setuint8	DataView.prototype.setUint8 (17th 25.3.4.24)
+default-parameters	in	sec-function-definitions	Function Definitions (17th 15.2)
+destructuring-assignment	in	sec-destructuring-assignment	Destructuring Assignment (17th 13.15.5)
+destructuring-binding	in	sec-destructuring-binding-patterns	Destructuring Binding Patterns (17th 14.3.3)
+dynamic-import	in	sec-import-calls	Import Calls (17th 13.3.10)
+error-cause	in	sec-installerrorcause	InstallErrorCause (17th 20.5.8.1)
+Error.isError	in	sec-error.iserror	Error.isError (17th 20.5.2.1)
+exponentiation	in	sec-exp-operator	Exponentiation Operator (17th 13.6)
+export-star-as-namespace-from-module	in	sec-exports	Exports (17th 16.2.3)
+FinalizationRegistry	in	sec-finalization-registry-objects	FinalizationRegistry Objects (17th 26.2)
+for-in-order	in	sec-enumerate-object-properties	EnumerateObjectProperties (17th 14.7.5.9)
+for-of	in	sec-for-in-and-for-of-statements	The `for`-`in`, `for`-`of`, and `for`-`await`-`of` Statements (17th 14.7.5)
+Float16Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Float32Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Float64Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+generators	in	sec-generator-function-definitions	Generator Function Definitions (17th 15.5)
+globalThis	in	sec-globalthis	globalThis (17th 19.1.1)
+hashbang	in	sec-hashbang	Hashbang Comments (17th 12.5)
+import-attributes	in	sec-imports	Imports (17th 16.2.2)
+import.meta	in	sec-meta-properties	Meta Properties (17th 13.3.12)
+iterator-helpers	in	sec-iterator-objects	Iterator Objects (17th 27.1.3)
+iterator-sequencing	in	sec-iterator.concat	Iterator.concat (17th 27.1.3.2.1)
+Int8Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Int16Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Int32Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+json-modules	in	sec-parse-json-module	ParseJSONModule (17th 16.2.1.8.2)
+json-parse-with-source	in	sec-json.parse	JSON.parse (17th 25.5.2)
+json-superset	in	sec-literals-string-literals	String Literals (17th 12.9.4)
+let	in	sec-let-and-const-declarations	Let and Const Declarations (17th 14.3.1)
+logical-assignment-operators	in	sec-assignment-operators	Assignment Operators (17th 13.15)
+Map	in	sec-map-objects	Map Objects (17th 24.1)
+Math.sumPrecise	in	sec-math.sumprecise	Math.sumPrecise (17th 21.3.2.34)
+new.target	in	sec-built-in-function-objects	Built-in Function Objects (17th 10.3)
+numeric-separator-literal	in	sec-literals-numeric-literals	Numeric Literals (17th 12.9.3)
+object-rest	in	sec-destructuring-assignment	Destructuring Assignment (17th 13.15.5)
+object-spread	in	sec-object-initializer	Object Initializer (17th 13.2.5)
+Object.fromEntries	in	sec-object.fromentries	Object.fromEntries (17th 20.1.2.7)
+Object.hasOwn	in	sec-object.hasown	Object.hasOwn (17th 20.1.2.14)
+Object.is	in	sec-object.is	Object.is (17th 20.1.2.15)
+optional-catch-binding	in	sec-try-statement	The `try` Statement (17th 14.15)
+optional-chaining	in	sec-optional-chains	Optional Chains (17th 13.3.9)
+Promise	in	sec-promise-objects	Promise Objects (17th 27.2)
+Promise.allSettled	in	sec-promise.allsettled	Promise.allSettled (17th 27.2.4.2)
+Promise.any	in	sec-promise.any	Promise.any (17th 27.2.4.3)
+Promise.prototype.finally	in	sec-promise.prototype.finally	Promise.prototype.finally (17th 27.2.5.3)
+promise-with-resolvers	in	sec-promise.withResolvers	Promise.withResolvers (17th 27.2.4.9)
+promise-try	in	sec-promise.try	Promise.try (17th 27.2.4.8)
+Proxy	in	sec-proxy-objects	Proxy Objects (17th 28.2)
+proxy-missing-checks	in	sec-proxy-object-internal-methods-and-internal-slots	Proxy Object Internal Methods and Internal Slots (17th 10.5)
+Reflect	in	sec-reflect-object	The Reflect Object (17th 28.1)
+Reflect.construct	in	sec-reflect.construct	Reflect.construct (17th 28.1.2)
+Reflect.set	in	sec-reflect.set	Reflect.set (17th 28.1.12)
+Reflect.setPrototypeOf	in	sec-reflect.setprototypeof	Reflect.setPrototypeOf (17th 28.1.13)
+regexp-dotall	in	sec-get-regexp.prototype.dotAll	get RegExp.prototype.dotAll (17th 22.2.6.3)
+RegExp.escape	in	sec-regexp.escape	RegExp.escape (17th 22.2.5.1)
+regexp-lookbehind	in	sec-compileassertion	Runtime Semantics: CompileAssertion (17th 22.2.2.4)
+regexp-match-indices	in	sec-makematchindicesindexpairarray	MakeMatchIndicesIndexPairArray (17th 22.2.7.8)
+regexp-modifiers	in	sec-updatemodifiers	UpdateModifiers (17th 22.2.2.7.4)
+regexp-named-groups	in	sec-patterns	Patterns (17th 22.2.1)
+regexp-unicode-property-escapes	in	sec-runtime-semantics-unicodematchproperty-p	UnicodeMatchProperty (17th 22.2.2.9.7)
+regexp-v-flag	in	sec-compiletocharset	Runtime Semantics: CompileToCharSet (17th 22.2.2.9)
+resizable-arraybuffer	in	sec-arraybuffer.prototype.resize	ArrayBuffer.prototype.resize (17th 25.1.6.6)
+rest-parameters	in	sec-function-definitions	Function Definitions (17th 15.2)
+Set	in	sec-set-objects	Set Objects (17th 24.2)
+set-methods	in	sec-set.prototype.union	Set.prototype.union (17th 24.2.4.16)
+SharedArrayBuffer	in	sec-sharedarraybuffer-objects	SharedArrayBuffer Objects (17th 25.2)
+stable-array-sort	in	sec-array.prototype.sort	Array.prototype.sort (17th 23.1.3.30)
+stable-typedarray-sort	in	sec-%typedarray%.prototype.sort	%TypedArray%.prototype.sort (17th 23.2.3.29)
+string-trimming	in	sec-string.prototype.trim	String.prototype.trim (17th 22.1.3.32)
+String.fromCodePoint	in	sec-string.fromcodepoint	String.fromCodePoint (17th 22.1.2.2)
+String.prototype.at	in	sec-string.prototype.at	String.prototype.at (17th 22.1.3.1)
+String.prototype.endsWith	in	sec-string.prototype.endswith	String.prototype.endsWith (17th 22.1.3.7)
+String.prototype.includes	in	sec-string.prototype.includes	String.prototype.includes (17th 22.1.3.8)
+String.prototype.isWellFormed	in	sec-string.prototype.iswellformed	String.prototype.isWellFormed (17th 22.1.3.10)
+String.prototype.matchAll	in	sec-string.prototype.matchall	String.prototype.matchAll (17th 22.1.3.14)
+String.prototype.replaceAll	in	sec-string.prototype.replaceall	String.prototype.replaceAll (17th 22.1.3.20)
+String.prototype.trimEnd	in	sec-string.prototype.trimend	String.prototype.trimEnd (17th 22.1.3.33)
+String.prototype.trimStart	in	sec-string.prototype.trimstart	String.prototype.trimStart (17th 22.1.3.34)
+String.prototype.toWellFormed	in	sec-string.prototype.towellformed	String.prototype.toWellFormed (17th 22.1.3.31)
+super	in	sec-super-keyword	The `super` Keyword (17th 13.3.7)
+Symbol	in	sec-symbol-objects	Symbol Objects (17th 20.4)
+symbols-as-weakmap-keys	in	sec-canbeheldweakly	CanBeHeldWeakly (17th 9.13)
+Symbol.asyncIterator	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.hasInstance	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.isConcatSpreadable	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.iterator	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.match	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.matchAll	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.prototype.description	in	sec-symbol.prototype.description	get Symbol.prototype.description (17th 20.4.3.2)
+Symbol.replace	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.search	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.species	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.split	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.toPrimitive	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.toStringTag	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+Symbol.unscopables	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+tail-call-optimization	in	sec-preparefortailcall	PrepareForTailCall (17th 15.10.3)
+template	in	sec-template-literals	Template Literals (17th 13.2.8)
+top-level-await	in	sec-modules	Modules (17th 16.2)
+TypedArray	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+TypedArray.prototype.at	in	sec-%typedarray%.prototype.at	%TypedArray%.prototype.at (17th 23.2.3.1)
+u180e	in	sec-white-space	White Space (17th 12.2)
+Uint8Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+uint8array-base64	in	sec-uint8array.prototype.tobase64	Uint8Array.prototype.toBase64 (17th 23.3.2.3)
+Uint16Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Uint32Array	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+Uint8ClampedArray	in	sec-typedarray-objects	TypedArray Objects (17th 23.2)
+upsert	in	sec-map.prototype.getorinsert	Map.prototype.getOrInsert (17th 24.1.3.7)
+WeakMap	in	sec-weakmap-objects	WeakMap Objects (17th 24.3)
+WeakRef	in	sec-weak-ref-objects	WeakRef Objects (17th 26.1)
+WeakSet	in	sec-weakset-objects	WeakSet Objects (17th 24.4)
+well-formed-json-stringify	in	sec-quotejsonstring	QuoteJSONString (17th 25.5.4.3)
+__proto__	in	sec-object.prototype.__proto__	Object.prototype.__proto__ (17th 20.1.3.8)
+__getter__	in	sec-object.prototype.__defineGetter__	Object.prototype.__defineGetter__ (17th 20.1.3.9.1)
+__setter__	in	sec-object.prototype.__defineSetter__	Object.prototype.__defineSetter__ (17th 20.1.3.9.2)
+IsHTMLDDA	in	sec-IsHTMLDDA-internal-slot	The [[IsHTMLDDA]] Internal Slot (17th B.3.6)
+host-gc-required	in	sec-weakref-processing-model	a host capability the tests need, not a language feature; the clause is the processing model they exercise (17th 9.9)
+Intl.Era-monthcode	out	absent:monthcode	ECMA-402 and the Temporal calendar work: no clause in the 17th edition
+Intl.Locale-info	out	absent:getCalendars	ECMA-402: not defined by ECMA-262
+Intl.NumberFormat-v3	out	absent:roundingPriority	ECMA-402: not defined by ECMA-262
+legacy-regexp	out	absent:leftContext	a proposal not in the 17th edition (the RegExp legacy static properties)
+Temporal	out	absent:Temporal.Instant	a proposal not in the 17th edition
+ShadowRealm	out	absent:ShadowRealm	a proposal not in the 17th edition
+decorators	out	absent:Decorator	a proposal not in the 17th edition
+explicit-resource-management	out	absent:AsyncDisposableStack	a proposal not in the 17th edition (using and await using, DisposableStack)
+source-phase-imports	out	absent:source phase	a proposal not in the 17th edition
+source-phase-imports-module-source	out	absent:%AbstractModuleSource%	a proposal not in the 17th edition (test262 special specifier for the source-phase tests)
+Atomics.pause	out	absent:Atomics.pause	a proposal not in the 17th edition
+import-defer	out	absent:import.defer	a proposal not in the 17th edition
+import-text	out	absent:type: "text"	a proposal not in the 17th edition
+canonical-tz	out	absent:Etc/	time zone canonicalization: ECMA-402 and Temporal, not ECMA-262
+immutable-arraybuffer	out	absent:transferToImmutable	a proposal not in the 17th edition
+import-bytes	out	absent:type: "bytes"	a proposal not in the 17th edition
+nonextensible-applies-to-private	out	absent:sec-privatefieldadd:IsExtensible	a proposal not in the 17th edition: the 17th edition adds a private field without consulting extensibility
+joint-iteration	out	absent:Iterator.zip	a proposal not in the 17th edition
+await-dictionary	out	absent:Promise.allKeyed	a proposal not in the 17th edition
+Intl-enumeration	out	absent:supportedValuesOf	ECMA-402: not defined by ECMA-262
+intl-normative-optional	out	absent:ChainNumberFormat	ECMA-402: not defined by ECMA-262
+Intl.DateTimeFormat-datetimestyle	out	absent:DateTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.DateTimeFormat-dayPeriod	out	absent:DateTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.DateTimeFormat-extend-timezonename	out	absent:DateTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.DateTimeFormat-formatRange	out	absent:DateTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.DateTimeFormat-fractionalSecondDigits	out	absent:DateTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.DisplayNames	out	absent:DisplayNames	ECMA-402: not defined by ECMA-262
+Intl.DisplayNames-v2	out	absent:DisplayNames	ECMA-402: not defined by ECMA-262
+Intl.DurationFormat	out	absent:DurationFormat	ECMA-402: not defined by ECMA-262
+Intl.ListFormat	out	absent:ListFormat	ECMA-402: not defined by ECMA-262
+Intl.Locale	out	absent:Intl.Locale	ECMA-402: not defined by ECMA-262
+Intl.NumberFormat-unified	out	absent:Intl.NumberFormat	ECMA-402: not defined by ECMA-262
+Intl.RelativeTimeFormat	out	absent:RelativeTimeFormat	ECMA-402: not defined by ECMA-262
+Intl.Segmenter	out	absent:Intl.Segmenter	ECMA-402: not defined by ECMA-262

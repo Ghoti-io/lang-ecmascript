@@ -22,3 +22,15 @@
 019|identifier-start-accepts-digits|A digit is accepted as the first character of a name|019-identifier-start-accepts-digits.patch|test
 020|comment-newline-not-flagged|A multi-line comment holding a line terminator does not set the newline flag|020-comment-newline-not-flagged.patch|test
 021|template-invalid-escape-cooked-defined|A template with an invalid escape keeps a defined cooked value|021-template-invalid-escape-cooked-defined.patch|test
+# Story 3 (test262, the pin and the parse score) registers 022-032. The corpus itself is never altered by a plant (it is read through a link); a corpus defect is planted as the committed list that describes it.
+022|test262-file-altered|A file's committed checksum differs from the file (an altered file)|022-test262-file-altered.patch|check-test262
+023|test262-file-missing|The committed list names a file the corpus does not hold (a missing file)|023-test262-file-missing.patch|check-test262
+024|test262-file-extra|A file of the corpus is not in the committed list (an extra file)|024-test262-file-extra.patch|check-test262
+025|test262-file-unclassified|A directory of the corpus has no row in the classification table|025-test262-file-unclassified.patch|check-test262
+026|test262-tag-without-row|A features: tag has no row in the tag table|026-test262-tag-without-row.patch|check-test262
+027|test262-failing-pair-unledgered|Failing pairs are not in the pending ledger|027-test262-failing-pair-unledgered.patch|check-test262
+028|test262-ledger-pair-passes|The driver accepts everything, so pairs the ledger lists now pass|028-test262-ledger-pair-passes.patch|check-test262
+029|test262-negative-any-refusal-scores|A parse-negative test scores a pass for any refusal, not only GLECMA_ERR_SYNTAX|029-test262-negative-any-refusal-scores.patch|check-test262
+030|clause-cited-not-in-concordance|The rule table cites a clause the concordance lacks|030-clause-cited-not-in-concordance.patch|check-clauses
+031|tag-cites-unknown-clause|A tag row cites a clause the concordance lacks|031-tag-cites-unknown-clause.patch|check-clauses
+032|out-tag-defined-by-the-text|A tag marked out has a probe that the 17th edition's text contains|032-out-tag-defined-by-the-text.patch|check-clauses

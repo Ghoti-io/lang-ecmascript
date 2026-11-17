@@ -1,0 +1,11 @@
+--- a/src/core/failure.c
++++ b/src/core/failure.c
+@@ -94,7 +94,7 @@
+       "Unexpected character"},
+   {GLECMA_RULE_UNTERMINATED_COMMENT, "unterminated-comment", "12.4",
+       "Unterminated comment"},
+-  {GLECMA_RULE_UNTERMINATED_STRING, "unterminated-string", "12.9.4",
++  {GLECMA_RULE_UNTERMINATED_STRING, "unterminated-string", "12.99.4",
+       "Unterminated string literal"},
+   {GLECMA_RULE_UNTERMINATED_TEMPLATE, "unterminated-template", "12.9.6",
+       "Unterminated template literal"},

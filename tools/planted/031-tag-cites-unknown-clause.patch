@@ -1,0 +1,11 @@
+--- a/tests/data-test262-tags.tsv
++++ b/tests/data-test262-tags.tsv
+@@ -142,7 +142,7 @@
+ super	in	sec-super-keyword	The `super` Keyword (17th 13.3.7)
+ Symbol	in	sec-symbol-objects	Symbol Objects (17th 20.4)
+ symbols-as-weakmap-keys	in	sec-canbeheldweakly	CanBeHeldWeakly (17th 9.13)
+-Symbol.asyncIterator	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
++Symbol.asyncIterator	in	sec-no-such-clause	Well-Known Symbols (17th 6.1.5.1)
+ Symbol.hasInstance	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+ Symbol.isConcatSpreadable	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+ Symbol.iterator	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)

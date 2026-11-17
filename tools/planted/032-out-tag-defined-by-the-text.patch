@@ -1,0 +1,11 @@
+--- a/tests/data-test262-tags.tsv
++++ b/tests/data-test262-tags.tsv
+@@ -181,7 +181,7 @@
+ Intl.Locale-info	out	absent:getCalendars	ECMA-402: not defined by ECMA-262
+ Intl.NumberFormat-v3	out	absent:roundingPriority	ECMA-402: not defined by ECMA-262
+ legacy-regexp	out	absent:leftContext	a proposal not in the 17th edition (the RegExp legacy static properties)
+-Temporal	out	absent:Temporal.Instant	a proposal not in the 17th edition
++Temporal	out	absent:Temporal	a proposal not in the 17th edition
+ ShadowRealm	out	absent:ShadowRealm	a proposal not in the 17th edition
+ decorators	out	absent:Decorator	a proposal not in the 17th edition
+ explicit-resource-management	out	absent:AsyncDisposableStack	a proposal not in the 17th edition (using and await using, DisposableStack)

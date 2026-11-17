@@ -52,12 +52,12 @@ bool glecma_lex_is_id_part(uint32_t cp) {
   if (cp < 128u) {
     return (glecma_lex_ascii_class[cp] & GLECMA_LEXC_PART) != 0;
   }
-  // ZWNJ and ZWJ are IdentifierPartChars (12.7); they are not ID_Continue.
+  // ZWNJ and ZWJ are IdentifierPartChars (clause 12.7); they are not ID_Continue.
   return cp == 0x200Cu || cp == 0x200Du ||
       guni_has_property(cp, GUNI_PROP_ID_CONTINUE);
 }
 
-// WhiteSpace (12.2): TAB, VT, FF, ZWNBSP and any Space_Separator (which
+// WhiteSpace (clause 12.2): TAB, VT, FF, ZWNBSP and any Space_Separator (which
 // includes SP and NBSP).
 static bool is_white_space(uint32_t cp) {
   if (cp < 128u) {
@@ -374,17 +374,17 @@ static GLECMA_Result skip_trivia(GLECMA_Lexer * lexer,
       if (html && u == '<' && glecma_lex_unit(text, offset + 1) == '!' &&
           glecma_lex_unit(text, offset + 2) == '-' &&
           glecma_lex_unit(text, offset + 3) == '-') {
-        offset += 4; // `<!--`: SingleLineHTMLOpenComment (B.1.1)
+        offset += 4; // `<!--`: SingleLineHTMLOpenComment (clause B.1.1)
         goto single_line;
       }
       if (html && u == '-' && lexer->line_start &&
           glecma_lex_unit(text, offset + 1) == '-' &&
           glecma_lex_unit(text, offset + 2) == '>') {
-        offset += 3; // `-->`: HTMLCloseComment, at the start of a line (B.1.1)
+        offset += 3; // `-->`: HTMLCloseComment, at the start of a line (clause B.1.1)
         goto single_line;
       }
       if (u == '#' && offset == 0 && glecma_lex_unit(text, 1) == '!') {
-        offset += 2; // HashbangComment (12.5)
+        offset += 2; // HashbangComment (clause 12.5)
         goto single_line;
       }
       break;

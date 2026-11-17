@@ -24,6 +24,10 @@ fresh_copy() {
   (cd "$root" && git ls-files -z --cached --others --exclude-standard | xargs -0 cp --parents -t "$work")
   # Reuse the built objects so a plant rebuilds only what it touches.
   [ -d "$root/build" ] && cp -a "$root/build" "$work/build"
+  # The fetched corpora are read through a link: a plant is a patch to a
+  # tracked file, and never touches the real corpus.
+  [ -d "$root/third_party" ] && ln -s "$root/third_party" "$work/third_party"
+  return 0
 }
 
 controlled=" "

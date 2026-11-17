@@ -218,7 +218,7 @@ LIBOBJECTS := $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
 
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-gtest-full fuzz-replay
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-test262 check-clauses check-gtest-full fuzz-replay
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
@@ -323,7 +323,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-stamps check-aliasing check-labels check-edges
 .PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
-.PHONY: check-limit-names check-planted
+.PHONY: check-limit-names check-planted check-test262 check-clauses fetch-test262 fetch-ecma262
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
 .PHONY: fuzz fuzz-clean fuzz-replay fuzz-replay-asan help
 
@@ -377,6 +377,38 @@ check-edges: $(APP_DIR)/$(TARGET) ## Fail on a dependency outside cutil and runt
 
 check-limit-names: ## Fail if the limit-name registry and GLECMA_Limits disagree, or a name was removed
 	@tools/check-limit-names.sh .
+
+# test262, the conformance gate (see documentation/design.md, "test262"). The
+# corpus is fetched by tools/test262/fetch.sh (`make fetch-test262`), never by
+# a gate: a gate that fetched would pass wherever there is a network and fail
+# elsewhere, so a missing corpus fails and says which script to run.
+T262_COMMIT := $(shell cat tools/test262/TEST262_COMMIT 2>/dev/null)
+T262_ROOT := third_party/test262/$(T262_COMMIT)
+T262_FEATURES ?=
+T262_DRIVER := $(APP_DIR)/t262/t262_driver$(EXE_EXTENSION)
+-include $(APP_DIR)/t262/t262_driver.d
+
+$(T262_DRIVER): tests/t262/t262_driver.c $(APP_DIR)/$(STATIC_TARGET) $(FLAGS_STAMP) | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE) -MMD -MP -MF $(@D)/t262_driver.d -o $@ $< $(LDFLAGS) $(ECMALIBRARY)
+
+fetch-test262: ## Fetch the pinned test262 corpus (needs the network)
+	@tools/test262/fetch.sh
+
+fetch-ecma262: ## Fetch the 16th and 17th edition sources the clause concordance is built from (needs the network)
+	@tools/ecma262/fetch.sh
+
+check-test262: $(T262_DRIVER) ## The test262 parse score: pin, classification, pending ledger
+	@python3 tools/test-check-test262.py
+	@LD_LIBRARY_PATH="$(TEST_LD_PATH)" python3 tools/check-test262.py check \
+		--root $(T262_ROOT) --sums tools/test262/SHA256SUMS \
+		--classification tests/data-test262-classification.tsv \
+		--tags tests/data-test262-tags.tsv --pending tests/data-test262-pending.tsv \
+		--driver $(T262_DRIVER) --features "$(T262_FEATURES)"
+
+check-clauses: ## Fail if the clause concordance is stale, or a cited clause is not in it
+	@python3 tools/test-check-clauses.py
+	@python3 tools/check-clauses.py
 
 check-planted: ## Apply each planted defect to a scratch tree; its gate must fail (slow; run before closing a change that adds a check)
 	@tools/check-planted.sh

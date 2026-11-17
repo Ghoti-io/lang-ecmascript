@@ -1,0 +1,2284 @@
+# The ECMA-262 clause concordance, 16th edition to 17th.
+# id	16th	17th	title	note
+# An empty 17th number: the clause is not in the 17th edition. An empty
+# 16th number: it is new. A title is the 17th's, or the 16th's for a
+# clause only the 16th has.
+String.prototype.trimleft	B.2.2.15	B.2.2.15	String.prototype.trimLeft	
+String.prototype.trimright	B.2.2.16	B.2.2.16	String.prototype.trimRight	
+await	27.7.5.3	27.7.5.3	Await	
+sec-%arrayiteratorprototype%-%symbol.tostringtag%	23.1.5.2.2	23.1.5.2.2	%ArrayIteratorPrototype% [ %Symbol.toStringTag% ]	
+sec-%arrayiteratorprototype%-object	23.1.5.2	23.1.5.2	The %ArrayIteratorPrototype% Object	
+sec-%arrayiteratorprototype%.next	23.1.5.2.1	23.1.5.2.1	%ArrayIteratorPrototype%.next	
+sec-%asyncfromsynciteratorprototype%-object	27.1.6.2	27.1.5.2	The %AsyncFromSyncIteratorPrototype% Object	
+sec-%asyncfromsynciteratorprototype%.next	27.1.6.2.1	27.1.5.2.1	%AsyncFromSyncIteratorPrototype%.next	
+sec-%asyncfromsynciteratorprototype%.return	27.1.6.2.2	27.1.5.2.2	%AsyncFromSyncIteratorPrototype%.return	
+sec-%asyncfromsynciteratorprototype%.throw	27.1.6.2.3	27.1.5.2.3	%AsyncFromSyncIteratorPrototype%.throw	
+sec-%asynciteratorprototype%-%symbol.asynciterator%	27.1.5.1	27.1.4.1	%AsyncIteratorPrototype% [ %Symbol.asyncIterator% ]	
+sec-%foriniteratorprototype%-object	14.7.5.10.2	14.7.5.10.2	The %ForInIteratorPrototype% Object	
+sec-%foriniteratorprototype%.next	14.7.5.10.2.1	14.7.5.10.2.1	%ForInIteratorPrototype%.next	
+sec-%iterator.prototype%-object	27.1.4	27.1.3.3	Properties of the Iterator Prototype Object	
+sec-%iteratorhelperprototype%-%symbol.tostringtag%	27.1.2.1.3	27.1.2.1.3	%IteratorHelperPrototype% [ %Symbol.toStringTag% ]	
+sec-%iteratorhelperprototype%-object	27.1.2.1	27.1.2.1	The %IteratorHelperPrototype% Object	
+sec-%iteratorhelperprototype%.next	27.1.2.1.1	27.1.2.1.1	%IteratorHelperPrototype%.next	
+sec-%iteratorhelperprototype%.return	27.1.2.1.2	27.1.2.1.2	%IteratorHelperPrototype%.return	
+sec-%mapiteratorprototype%-%symbol.tostringtag%	24.1.5.2.2	24.1.5.2.2	%MapIteratorPrototype% [ %Symbol.toStringTag% ]	
+sec-%mapiteratorprototype%-object	24.1.5.2	24.1.5.2	The %MapIteratorPrototype% Object	
+sec-%mapiteratorprototype%.next	24.1.5.2.1	24.1.5.2.1	%MapIteratorPrototype%.next	
+sec-%regexpstringiteratorprototype%-%symbol.tostringtag%	22.2.9.2.2	22.2.9.2.2	%RegExpStringIteratorPrototype% [ %Symbol.toStringTag% ]	
+sec-%regexpstringiteratorprototype%-object	22.2.9.2	22.2.9.2	The %RegExpStringIteratorPrototype% Object	
+sec-%regexpstringiteratorprototype%.next	22.2.9.2.1	22.2.9.2.1	%RegExpStringIteratorPrototype%.next	
+sec-%setiteratorprototype%-%symbol.tostringtag%	24.2.6.2.2	24.2.6.2.2	%SetIteratorPrototype% [ %Symbol.toStringTag% ]	
+sec-%setiteratorprototype%-object	24.2.6.2	24.2.6.2	The %SetIteratorPrototype% Object	
+sec-%setiteratorprototype%.next	24.2.6.2.1	24.2.6.2.1	%SetIteratorPrototype%.next	
+sec-%stringiteratorprototype%-%symbol.tostringtag%	22.1.5.1.2	22.1.5.1.2	%StringIteratorPrototype% [ %Symbol.toStringTag% ]	
+sec-%stringiteratorprototype%-object	22.1.5.1	22.1.5.1	The %StringIteratorPrototype% Object	
+sec-%stringiteratorprototype%.next	22.1.5.1.1	22.1.5.1.1	%StringIteratorPrototype%.next	
+sec-%symbol.tostringtag%	28.3.1	28.3.1	%Symbol.toStringTag%	
+sec-%throwtypeerror%	10.2.4.1	10.2.4.1	%ThrowTypeError%	
+sec-%typedarray%	23.2.1.1	23.2.1.1	%TypedArray%	
+sec-%typedarray%-intrinsic-object	23.2.1	23.2.1	The %TypedArray% Intrinsic Object	
+sec-%typedarray%.from	23.2.2.1	23.2.2.1	%TypedArray%.from	
+sec-%typedarray%.of	23.2.2.2	23.2.2.2	%TypedArray%.of	
+sec-%typedarray%.prototype	23.2.2.3	23.2.2.3	%TypedArray%.prototype	
+sec-%typedarray%.prototype-%symbol.iterator%	23.2.3.37	23.2.3.37	%TypedArray%.prototype [ %Symbol.iterator% ]	
+sec-%typedarray%.prototype.at	23.2.3.1	23.2.3.1	%TypedArray%.prototype.at	
+sec-%typedarray%.prototype.constructor	23.2.3.5	23.2.3.5	%TypedArray%.prototype.constructor	
+sec-%typedarray%.prototype.copywithin	23.2.3.6	23.2.3.6	%TypedArray%.prototype.copyWithin	
+sec-%typedarray%.prototype.entries	23.2.3.7	23.2.3.7	%TypedArray%.prototype.entries	
+sec-%typedarray%.prototype.every	23.2.3.8	23.2.3.8	%TypedArray%.prototype.every	
+sec-%typedarray%.prototype.fill	23.2.3.9	23.2.3.9	%TypedArray%.prototype.fill	
+sec-%typedarray%.prototype.filter	23.2.3.10	23.2.3.10	%TypedArray%.prototype.filter	
+sec-%typedarray%.prototype.find	23.2.3.11	23.2.3.11	%TypedArray%.prototype.find	
+sec-%typedarray%.prototype.findindex	23.2.3.12	23.2.3.12	%TypedArray%.prototype.findIndex	
+sec-%typedarray%.prototype.findlast	23.2.3.13	23.2.3.13	%TypedArray%.prototype.findLast	
+sec-%typedarray%.prototype.findlastindex	23.2.3.14	23.2.3.14	%TypedArray%.prototype.findLastIndex	
+sec-%typedarray%.prototype.foreach	23.2.3.15	23.2.3.15	%TypedArray%.prototype.forEach	
+sec-%typedarray%.prototype.includes	23.2.3.16	23.2.3.16	%TypedArray%.prototype.includes	
+sec-%typedarray%.prototype.indexof	23.2.3.17	23.2.3.17	%TypedArray%.prototype.indexOf	
+sec-%typedarray%.prototype.join	23.2.3.18	23.2.3.18	%TypedArray%.prototype.join	
+sec-%typedarray%.prototype.keys	23.2.3.19	23.2.3.19	%TypedArray%.prototype.keys	
+sec-%typedarray%.prototype.lastindexof	23.2.3.20	23.2.3.20	%TypedArray%.prototype.lastIndexOf	
+sec-%typedarray%.prototype.map	23.2.3.22	23.2.3.22	%TypedArray%.prototype.map	
+sec-%typedarray%.prototype.reduce	23.2.3.23	23.2.3.23	%TypedArray%.prototype.reduce	
+sec-%typedarray%.prototype.reduceright	23.2.3.24	23.2.3.24	%TypedArray%.prototype.reduceRight	
+sec-%typedarray%.prototype.reverse	23.2.3.25	23.2.3.25	%TypedArray%.prototype.reverse	
+sec-%typedarray%.prototype.set	23.2.3.26	23.2.3.26	%TypedArray%.prototype.set	
+sec-%typedarray%.prototype.slice	23.2.3.27	23.2.3.27	%TypedArray%.prototype.slice	
+sec-%typedarray%.prototype.some	23.2.3.28	23.2.3.28	%TypedArray%.prototype.some	
+sec-%typedarray%.prototype.sort	23.2.3.29	23.2.3.29	%TypedArray%.prototype.sort	
+sec-%typedarray%.prototype.subarray	23.2.3.30	23.2.3.30	%TypedArray%.prototype.subarray	
+sec-%typedarray%.prototype.tolocalestring	23.2.3.31	23.2.3.31	%TypedArray%.prototype.toLocaleString	
+sec-%typedarray%.prototype.toreversed	23.2.3.32	23.2.3.32	%TypedArray%.prototype.toReversed	
+sec-%typedarray%.prototype.tosorted	23.2.3.33	23.2.3.33	%TypedArray%.prototype.toSorted	
+sec-%typedarray%.prototype.tostring	23.2.3.34	23.2.3.34	%TypedArray%.prototype.toString	
+sec-%typedarray%.prototype.values	23.2.3.35	23.2.3.35	%TypedArray%.prototype.values	
+sec-%typedarray%.prototype.with	23.2.3.36	23.2.3.36	%TypedArray%.prototype.with	
+sec-%wrapforvaliditeratorprototype%-object	27.1.3.2.1.1	27.1.3.2.2.1	The %WrapForValidIteratorPrototype% Object	
+sec-%wrapforvaliditeratorprototype%.next	27.1.3.2.1.1.1	27.1.3.2.2.1.1	%WrapForValidIteratorPrototype%.next	
+sec-%wrapforvaliditeratorprototype%.return	27.1.3.2.1.1.2	27.1.3.2.2.1.2	%WrapForValidIteratorPrototype%.return	
+sec-AllImportAttributesSupported	16.2.1.12	16.2.1.12	AllImportAttributesSupported	
+sec-ContinueDynamicImport	13.3.10.3	13.3.10.3	ContinueDynamicImport	
+sec-ContinueModuleLoading	16.2.1.6.1.1.2	16.2.1.6.1.1.2	ContinueModuleLoading	
+sec-EvaluateModuleSync		16.2.1.5.1	EvaluateModuleSync	
+sec-FinishLoadingImportedModule	16.2.1.11	16.2.1.11	FinishLoadingImportedModule	
+sec-GetImportedModule	16.2.1.9	16.2.1.9	GetImportedModule	
+sec-HostLoadImportedModule	16.2.1.10	16.2.1.10	HostLoadImportedModule	
+sec-IncrementModuleAsyncEvaluationCount	9.6.3	9.6.3	IncrementModuleAsyncEvaluationCount	
+sec-InnerModuleLinking	16.2.1.6.1.2.1	16.2.1.6.1.2.1	InnerModuleLinking	
+sec-InnerModuleLoading	16.2.1.6.1.1.1	16.2.1.6.1.1.1	InnerModuleLoading	
+sec-IsHTMLDDA-internal-slot	B.3.6	B.3.6	The [[IsHTMLDDA]] Internal Slot	
+sec-IsHTMLDDA-internal-slot-aec	B.3.6.2	7.2.13	Changes to IsLooselyEqual	merged into sec-islooselyequal
+sec-IsHTMLDDA-internal-slot-to-boolean	B.3.6.1	7.1.2	Changes to ToBoolean	merged into sec-toboolean
+sec-IsHTMLDDA-internal-slot-typeof	B.3.6.3	13.5.3.1	Changes to the `typeof` Operator	merged into sec-typeof-operator-runtime-semantics-evaluation
+sec-LoadRequestedModules	16.2.1.6.1.1	16.2.1.6.1.1	LoadRequestedModules	
+sec-ModuleRequestsEqual	16.2.1.3.1	16.2.1.3.1	ModuleRequestsEqual	
+sec-ParseJSON	25.5.1.1	25.5.2.1	ParseJSON	
+sec-SetterThatIgnoresPrototypeProperties	7.3.36	7.3.37	SetterThatIgnoresPrototypeProperties	
+sec-abstract-closure	6.2.8	6.2.8	The Abstract Closure Specification Type	
+sec-abstract-module-records	16.2.1.5	16.2.1.5	Abstract Module Records	
+sec-abstract-operations	7	7	Abstract Operations	
+sec-abstract-operations-for-arraybuffer-objects	25.1.3	25.1.3	Abstract Operations For ArrayBuffer Objects	
+sec-abstract-operations-for-atomics	25.4.3	25.4.3	Abstract Operations for Atomics	
+sec-abstract-operations-for-dataview-objects	25.3.1	25.3.1	Abstract Operations For DataView Objects	
+sec-abstract-operations-for-error-objects	20.5.8	20.5.8	Abstract Operations for Error Objects	
+sec-abstract-operations-for-keyed-collections	24.5	24.5	Abstract Operations for Keyed Collections	
+sec-abstract-operations-for-regexp-creation	22.2.3	22.2.3	Abstract Operations for RegExp Creation	
+sec-abstract-operations-for-regexp-matching	22.2.7	22.2.7	Abstract Operations for RegExp Matching	
+sec-abstract-operations-for-set-objects	24.2.1	24.2.1	Abstract Operations For Set Objects	
+sec-abstract-operations-for-sharedarraybuffer-objects	25.2.2	25.2.2	Abstract Operations for SharedArrayBuffer Objects	
+sec-abstract-operations-for-symbols	20.4.5	20.4.5	Abstract Operations for Symbols	
+sec-abstract-operations-for-the-memory-model	29.5	29.5	Abstract Operations for the Memory Model	
+sec-abstract-operations-for-typedarray-objects	23.2.4	23.2.4	Abstract Operations for TypedArray Objects	
+sec-abstract-operations-for-uint8array-objects		23.3.3	Abstract Operations for Uint8Array Objects	
+sec-add-entries-from-iterable	24.1.1.2	24.1.1.2	AddEntriesFromIterable	
+sec-add-value-to-keyed-group	7.3.34	7.3.34	AddValueToKeyedGroup	
+sec-addition-operator-plus	13.8.1	13.8.1	The Addition Operator	
+sec-addition-operator-plus-runtime-semantics-evaluation	13.8.1.1	13.8.1.1	Runtime Semantics: Evaluation	
+sec-additional-built-in-properties	B.2	B.2	Additional Built-in Properties	
+sec-additional-ecmascript-features-for-web-browsers	B	B	Additional ECMAScript Features for Web Browsers	
+sec-additional-properties-of-the-date.prototype-object	B.2.3	B.2.3	Additional Properties of the Date.prototype Object	
+sec-additional-properties-of-the-global-object	B.2.1	B.2.1	Additional Properties of the Global Object	
+sec-additional-properties-of-the-regexp.prototype-object	B.2.4	B.2.4	Additional Properties of the RegExp.prototype Object	
+sec-additional-properties-of-the-string.prototype-object	B.2.2	B.2.2	Additional Properties of the String.prototype Object	
+sec-additional-properties-of-the-uint8array-constructor		23.3.1	Additional Properties of the Uint8Array Constructor	
+sec-additional-properties-of-the-uint8array-prototype-object		23.3.2	Additional Properties of the Uint8Array Prototype Object	
+sec-additional-syntax	B.1	B.1	Additional Syntax	
+sec-additions-and-changes-that-introduce-incompatibilities-with-prior-editions	F	F	Additions and Changes That Introduce Incompatibilities with Prior Editions	
+sec-additive-operators	13.8	13.8	Additive Operators	
+sec-addrestrictedfunctionproperties	10.2.4	10.2.4	AddRestrictedFunctionProperties	
+sec-addtokeptobjects	9.11	9.11	AddToKeptObjects	
+sec-addwaiter	25.4.3.8	25.4.3.8	AddWaiter	
+sec-advancestringindex	22.2.7.3	22.2.7.3	AdvanceStringIndex	
+sec-agent-clusters	9.7	9.7	Agent Clusters	
+sec-agent-event-records	29.2	29.2	Agent Events Records	
+sec-agent-order	29.6.1	29.6.1	is-agent-order-before	
+sec-agentcansuspend	9.6.2	9.6.2	AgentCanSuspend	
+sec-agents	9.6	9.6	Agents	
+sec-agentsignifier	9.6.1	9.6.1	AgentSignifier	
+sec-aggregate-error	20.5.7.1.1	20.5.7.1.1	AggregateError	
+sec-aggregate-error-constructor	20.5.7.1	20.5.7.1	The AggregateError Constructor	
+sec-aggregate-error-objects	20.5.7	20.5.7	AggregateError Objects	
+sec-aggregate-error.prototype	20.5.7.2.1	20.5.7.2.1	AggregateError.prototype	
+sec-aggregate-error.prototype.constructor	20.5.7.3.1	20.5.7.3.1	AggregateError.prototype.constructor	
+sec-aggregate-error.prototype.message	20.5.7.3.2	20.5.7.3.2	AggregateError.prototype.message	
+sec-aggregate-error.prototype.name	20.5.7.3.3	20.5.7.3.3	AggregateError.prototype.name	
+sec-algorithm-conventions	5.2	5.2	Algorithm Conventions	
+sec-algorithm-conventions-abstract-operations	5.2.1	5.2.2	Abstract Operations	
+sec-algorithm-conventions-syntax-directed-operations	5.2.2	5.2.3	Syntax-Directed Operations	
+sec-allcharacters	22.2.2.9.4	22.2.2.9.4	AllCharacters	
+sec-allocatearraybuffer	25.1.3.1	25.1.3.1	AllocateArrayBuffer	
+sec-allocatesharedarraybuffer	25.2.2.1	25.2.2.1	AllocateSharedArrayBuffer	
+sec-allocatetypedarray	23.2.5.1.1	23.2.5.1.1	AllocateTypedArray	
+sec-allocatetypedarraybuffer	23.2.5.1.6	23.2.5.1.6	AllocateTypedArrayBuffer	
+sec-applystringornumericbinaryoperator	13.15.3	13.15.3	ApplyStringOrNumericBinaryOperator	
+sec-argument-lists	13.3.8	13.3.8	Argument Lists	
+sec-arguments-exotic-objects	10.4.4	10.4.4	Arguments Exotic Objects	
+sec-arguments-exotic-objects-defineownproperty-p-desc	10.4.4.2	10.4.4.2	[[DefineOwnProperty]]	
+sec-arguments-exotic-objects-delete-p	10.4.4.5	10.4.4.5	[[Delete]]	
+sec-arguments-exotic-objects-get-p-receiver	10.4.4.3	10.4.4.3	[[Get]]	
+sec-arguments-exotic-objects-getownproperty-p	10.4.4.1	10.4.4.1	[[GetOwnProperty]]	
+sec-arguments-exotic-objects-set-p-v-receiver	10.4.4.4	10.4.4.4	[[Set]]	
+sec-array	23.1.1.1	23.1.1.1	Array	
+sec-array-constructor	23.1.1	23.1.1	The Array Constructor	
+sec-array-exotic-objects	10.4.2	10.4.2	Array Exotic Objects	
+sec-array-exotic-objects-defineownproperty-p-desc	10.4.2.1	10.4.2.1	[[DefineOwnProperty]]	
+sec-array-initializer	13.2.4	13.2.4	Array Initializer	
+sec-array-initializer-runtime-semantics-evaluation	13.2.4.2	13.2.4.2	Runtime Semantics: Evaluation	
+sec-array-iterator-objects	23.1.5	23.1.5	Array Iterator Objects	
+sec-array-objects	23.1	23.1	Array Objects	
+sec-array.from	23.1.2.1	23.1.2.1	Array.from	
+sec-array.fromasync		23.1.2.2	Array.fromAsync	
+sec-array.isarray	23.1.2.2	23.1.2.3	Array.isArray	
+sec-array.of	23.1.2.3	23.1.2.4	Array.of	
+sec-array.prototype	23.1.2.4	23.1.2.5	Array.prototype	
+sec-array.prototype-%symbol.iterator%	23.1.3.40	23.1.3.40	Array.prototype [ %Symbol.iterator% ]	
+sec-array.prototype-%symbol.unscopables%	23.1.3.41	23.1.3.41	Array.prototype [ %Symbol.unscopables% ]	
+sec-array.prototype.at	23.1.3.1	23.1.3.1	Array.prototype.at	
+sec-array.prototype.concat	23.1.3.2	23.1.3.2	Array.prototype.concat	
+sec-array.prototype.constructor	23.1.3.3	23.1.3.3	Array.prototype.constructor	
+sec-array.prototype.copywithin	23.1.3.4	23.1.3.4	Array.prototype.copyWithin	
+sec-array.prototype.entries	23.1.3.5	23.1.3.5	Array.prototype.entries	
+sec-array.prototype.every	23.1.3.6	23.1.3.6	Array.prototype.every	
+sec-array.prototype.fill	23.1.3.7	23.1.3.7	Array.prototype.fill	
+sec-array.prototype.filter	23.1.3.8	23.1.3.8	Array.prototype.filter	
+sec-array.prototype.find	23.1.3.9	23.1.3.9	Array.prototype.find	
+sec-array.prototype.findindex	23.1.3.10	23.1.3.10	Array.prototype.findIndex	
+sec-array.prototype.findlast	23.1.3.11	23.1.3.11	Array.prototype.findLast	
+sec-array.prototype.findlastindex	23.1.3.12	23.1.3.12	Array.prototype.findLastIndex	
+sec-array.prototype.flat	23.1.3.13	23.1.3.13	Array.prototype.flat	
+sec-array.prototype.flatmap	23.1.3.14	23.1.3.14	Array.prototype.flatMap	
+sec-array.prototype.foreach	23.1.3.15	23.1.3.15	Array.prototype.forEach	
+sec-array.prototype.includes	23.1.3.16	23.1.3.16	Array.prototype.includes	
+sec-array.prototype.indexof	23.1.3.17	23.1.3.17	Array.prototype.indexOf	
+sec-array.prototype.join	23.1.3.18	23.1.3.18	Array.prototype.join	
+sec-array.prototype.keys	23.1.3.19	23.1.3.19	Array.prototype.keys	
+sec-array.prototype.lastindexof	23.1.3.20	23.1.3.20	Array.prototype.lastIndexOf	
+sec-array.prototype.map	23.1.3.21	23.1.3.21	Array.prototype.map	
+sec-array.prototype.pop	23.1.3.22	23.1.3.22	Array.prototype.pop	
+sec-array.prototype.push	23.1.3.23	23.1.3.23	Array.prototype.push	
+sec-array.prototype.reduce	23.1.3.24	23.1.3.24	Array.prototype.reduce	
+sec-array.prototype.reduceright	23.1.3.25	23.1.3.25	Array.prototype.reduceRight	
+sec-array.prototype.reverse	23.1.3.26	23.1.3.26	Array.prototype.reverse	
+sec-array.prototype.shift	23.1.3.27	23.1.3.27	Array.prototype.shift	
+sec-array.prototype.slice	23.1.3.28	23.1.3.28	Array.prototype.slice	
+sec-array.prototype.some	23.1.3.29	23.1.3.29	Array.prototype.some	
+sec-array.prototype.sort	23.1.3.30	23.1.3.30	Array.prototype.sort	
+sec-array.prototype.splice	23.1.3.31	23.1.3.31	Array.prototype.splice	
+sec-array.prototype.tolocalestring	23.1.3.32	23.1.3.32	Array.prototype.toLocaleString	
+sec-array.prototype.toreversed	23.1.3.33	23.1.3.33	Array.prototype.toReversed	
+sec-array.prototype.tosorted	23.1.3.34	23.1.3.34	Array.prototype.toSorted	
+sec-array.prototype.tospliced	23.1.3.35	23.1.3.35	Array.prototype.toSpliced	
+sec-array.prototype.tostring	23.1.3.36	23.1.3.36	Array.prototype.toString	
+sec-array.prototype.unshift	23.1.3.37	23.1.3.37	Array.prototype.unshift	
+sec-array.prototype.values	23.1.3.38	23.1.3.38	Array.prototype.values	
+sec-array.prototype.with	23.1.3.39	23.1.3.39	Array.prototype.with	
+sec-arraybuffer-constructor	25.1.4	25.1.4	The ArrayBuffer Constructor	
+sec-arraybuffer-length	25.1.4.1	25.1.4.1	ArrayBuffer	
+sec-arraybuffer-notation	25.1.1	25.1.1	Notation	
+sec-arraybuffer-objects	25.1	25.1	ArrayBuffer Objects	
+sec-arraybuffer.isview	25.1.5.1	25.1.5.1	ArrayBuffer.isView	
+sec-arraybuffer.prototype	25.1.5.2	25.1.5.2	ArrayBuffer.prototype	
+sec-arraybuffer.prototype-%symbol.tostringtag%	25.1.6.10	25.1.6.10	ArrayBuffer.prototype [ %Symbol.toStringTag% ]	
+sec-arraybuffer.prototype.constructor	25.1.6.2	25.1.6.2	ArrayBuffer.prototype.constructor	
+sec-arraybuffer.prototype.resize	25.1.6.6	25.1.6.6	ArrayBuffer.prototype.resize	
+sec-arraybuffer.prototype.slice	25.1.6.7	25.1.6.7	ArrayBuffer.prototype.slice	
+sec-arraybuffer.prototype.transfer	25.1.6.8	25.1.6.8	ArrayBuffer.prototype.transfer	
+sec-arraybuffer.prototype.transfertofixedlength	25.1.6.9	25.1.6.9	ArrayBuffer.prototype.transferToFixedLength	
+sec-arraybufferbytelength	25.1.3.2	25.1.3.2	ArrayBufferByteLength	
+sec-arraybuffercopyanddetach	25.1.3.3	25.1.3.3	ArrayBufferCopyAndDetach	
+sec-arraycreate	10.4.2.2	10.4.2.2	ArrayCreate	
+sec-arraysetlength	10.4.2.4	10.4.2.4	ArraySetLength	
+sec-arrayspeciescreate	10.4.2.3	10.4.2.3	ArraySpeciesCreate	
+sec-arrow-function-definitions	15.3	15.3	Arrow Function Definitions	
+sec-arrow-function-definitions-runtime-semantics-evaluation	15.3.5	15.3.5	Runtime Semantics: Evaluation	
+sec-arrow-function-definitions-static-semantics-early-errors	15.3.1	15.3.1	Static Semantics: Early Errors	
+sec-asi-cases-with-no-lineterminator-here	12.10.3.2	12.10.3.2	Cases of Automatic Semicolon Insertion and “[no |LineTerminator| here]”	
+sec-asi-interesting-cases-in-statement-lists	12.10.3.1	12.10.3.1	Interesting Cases of Automatic Semicolon Insertion in Statement Lists	
+sec-assignment-operators	13.15	13.15	Assignment Operators	
+sec-assignment-operators-runtime-semantics-evaluation	13.15.2	13.15.2	Runtime Semantics: Evaluation	
+sec-assignment-operators-static-semantics-early-errors	13.15.1	13.15.1	Static Semantics: Early Errors	
+sec-async-arrow-function-definitions	15.9	15.9	Async Arrow Function Definitions	
+sec-async-arrow-function-definitions-runtime-semantics-evaluation	15.9.5	15.9.5	Runtime Semantics: Evaluation	
+sec-async-arrow-function-definitions-static-semantics-early-errors	15.9.1	15.9.1	Static Semantics: Early Errors	
+sec-async-from-sync-iterator-objects	27.1.6	27.1.5	Async-from-Sync Iterator Objects	
+sec-async-function-constructor	27.7.1	27.7.1	The AsyncFunction Constructor	
+sec-async-function-constructor-arguments	27.7.1.1	27.7.1.1	AsyncFunction	
+sec-async-function-constructor-properties	27.7.2	27.7.2	Properties of the AsyncFunction Constructor	
+sec-async-function-constructor-prototype	27.7.2.1	27.7.2.1	AsyncFunction.prototype	
+sec-async-function-definitions	15.8	15.8	Async Function Definitions	
+sec-async-function-definitions-runtime-semantics-evaluation	15.8.5	15.8.5	Runtime Semantics: Evaluation	
+sec-async-function-definitions-static-semantics-early-errors	15.8.1	15.8.1	Static Semantics: Early Errors	
+sec-async-function-instances	27.7.4	27.7.4	AsyncFunction Instances	
+sec-async-function-instances-length	27.7.4.1	27.7.4.1	length	
+sec-async-function-instances-name	27.7.4.2	27.7.4.2	name	
+sec-async-function-objects	27.7	27.7	AsyncFunction Objects	
+sec-async-function-prototype-%symbol.tostringtag%	27.7.3.2	27.7.3.2	AsyncFunction.prototype [ %Symbol.toStringTag% ]	
+sec-async-function-prototype-properties	27.7.3	27.7.3	Properties of the AsyncFunction Prototype Object	
+sec-async-function-prototype-properties-constructor	27.7.3.1	27.7.3.1	AsyncFunction.prototype.constructor	
+sec-async-functions-abstract-operations	27.7.5	27.7.5	Async Functions Abstract Operations	
+sec-async-functions-abstract-operations-async-function-start	27.7.5.1	27.7.5.1	AsyncFunctionStart	
+sec-async-generator-function-definitions	15.6	15.6	Async Generator Function Definitions	
+sec-async-generator-function-definitions-static-semantics-early-errors	15.6.1	15.6.1	Static Semantics: Early Errors	
+sec-async-module-execution-fulfilled	16.2.1.6.1.3.4	16.2.1.6.1.3.4	AsyncModuleExecutionFulfilled	
+sec-async-module-execution-rejected	16.2.1.6.1.3.5	16.2.1.6.1.3.5	AsyncModuleExecutionRejected	
+sec-asyncblockstart	27.7.5.2	27.7.5.2	AsyncBlockStart	
+sec-asyncfromsynciteratorcontinuation	27.1.6.4	27.1.5.4	AsyncFromSyncIteratorContinuation	
+sec-asyncgenerator-abstract-operations	27.6.3	27.6.3	AsyncGenerator Abstract Operations	
+sec-asyncgenerator-definitions-evaluation	15.6.5	15.6.5	Runtime Semantics: Evaluation	
+sec-asyncgenerator-objects	27.6	27.6	AsyncGenerator Objects	
+sec-asyncgenerator-prototype-%symbol.tostringtag%	27.6.1.5	27.6.1.5	%AsyncGeneratorPrototype% [ %Symbol.toStringTag% ]	
+sec-asyncgenerator-prototype-constructor	27.6.1.1	27.6.1.1	%AsyncGeneratorPrototype%.constructor	
+sec-asyncgenerator-prototype-next	27.6.1.2	27.6.1.2	%AsyncGeneratorPrototype%.next	
+sec-asyncgenerator-prototype-return	27.6.1.3	27.6.1.3	%AsyncGeneratorPrototype%.return	
+sec-asyncgenerator-prototype-throw	27.6.1.4	27.6.1.4	%AsyncGeneratorPrototype%.throw	
+sec-asyncgeneratorawaitreturn	27.6.3.9	27.6.3.9	AsyncGeneratorAwaitReturn	
+sec-asyncgeneratorcompletestep	27.6.3.5	27.6.3.5	AsyncGeneratorCompleteStep	
+sec-asyncgeneratordrainqueue	27.6.3.10	27.6.3.10	AsyncGeneratorDrainQueue	
+sec-asyncgeneratorenqueue	27.6.3.4	27.6.3.4	AsyncGeneratorEnqueue	
+sec-asyncgeneratorfunction	27.4.1.1	27.4.1.1	AsyncGeneratorFunction	
+sec-asyncgeneratorfunction-constructor	27.4.1	27.4.1	The AsyncGeneratorFunction Constructor	
+sec-asyncgeneratorfunction-instance-length	27.4.4.1	27.4.4.1	length	
+sec-asyncgeneratorfunction-instance-name	27.4.4.2	27.4.4.2	name	
+sec-asyncgeneratorfunction-instance-prototype	27.4.4.3	27.4.4.3	prototype	
+sec-asyncgeneratorfunction-instances	27.4.4	27.4.4	AsyncGeneratorFunction Instances	
+sec-asyncgeneratorfunction-objects	27.4	27.4	AsyncGeneratorFunction Objects	
+sec-asyncgeneratorfunction-prototype	27.4.2.1	27.4.2.1	AsyncGeneratorFunction.prototype	
+sec-asyncgeneratorfunction-prototype-%symbol.tostringtag%	27.4.3.3	27.4.3.3	AsyncGeneratorFunction.prototype [ %Symbol.toStringTag% ]	
+sec-asyncgeneratorfunction-prototype-constructor	27.4.3.1	27.4.3.1	AsyncGeneratorFunction.prototype.constructor	
+sec-asyncgeneratorfunction-prototype-prototype	27.4.3.2	27.4.3.2	AsyncGeneratorFunction.prototype.prototype	
+sec-asyncgeneratorrequest-records	27.6.3.1	27.6.3.1	AsyncGeneratorRequest Records	
+sec-asyncgeneratorresume	27.6.3.6	27.6.3.6	AsyncGeneratorResume	
+sec-asyncgeneratorstart	27.6.3.2	27.6.3.2	AsyncGeneratorStart	
+sec-asyncgeneratorunwrapyieldresumption	27.6.3.7	27.6.3.7	AsyncGeneratorUnwrapYieldResumption	
+sec-asyncgeneratorvalidate	27.6.3.3	27.6.3.3	AsyncGeneratorValidate	
+sec-asyncgeneratoryield	27.6.3.8	27.6.3.8	AsyncGeneratorYield	
+sec-asynciterable-interface	27.1.1.3	27.1.1.3	The Async Iterable Interface	
+sec-asynciterator-interface	27.1.1.4	27.1.1.4	The Async Iterator Interface	
+sec-asynciteratorclose	7.4.13	7.4.14	AsyncIteratorClose	
+sec-asynciteratorprototype	27.1.5	27.1.4	The %AsyncIteratorPrototype% Object	
+sec-atomiccompareexchangeinsharedblock	25.4.3.16	25.4.3.16	AtomicCompareExchangeInSharedBlock	
+sec-atomicreadmodifywrite	25.4.3.17	25.4.3.17	AtomicReadModifyWrite	
+sec-atomics	19.4.1	19.4.1	Atomics	
+sec-atomics-%symbol.tostringtag%	25.4.17	25.4.17	Atomics [ %Symbol.toStringTag% ]	
+sec-atomics-object	25.4	25.4	The Atomics Object	
+sec-atomics.add	25.4.4	25.4.4	Atomics.add	
+sec-atomics.and	25.4.5	25.4.5	Atomics.and	
+sec-atomics.compareexchange	25.4.6	25.4.6	Atomics.compareExchange	
+sec-atomics.exchange	25.4.7	25.4.7	Atomics.exchange	
+sec-atomics.islockfree	25.4.8	25.4.8	Atomics.isLockFree	
+sec-atomics.load	25.4.9	25.4.9	Atomics.load	
+sec-atomics.notify	25.4.15	25.4.15	Atomics.notify	
+sec-atomics.or	25.4.10	25.4.10	Atomics.or	
+sec-atomics.store	25.4.11	25.4.11	Atomics.store	
+sec-atomics.sub	25.4.12	25.4.12	Atomics.sub	
+sec-atomics.wait	25.4.13	25.4.13	Atomics.wait	
+sec-atomics.waitasync	25.4.14	25.4.14	Atomics.waitAsync	
+sec-atomics.xor	25.4.16	25.4.16	Atomics.xor	
+sec-attribute	4.4.40	4.4.40	attribute	
+sec-automatic-semicolon-insertion	12.10	12.10	Automatic Semicolon Insertion	
+sec-availablenamedtimezoneidentifiers	21.4.1.23	21.4.1.23	AvailableNamedTimeZoneIdentifiers	
+sec-backreference-matcher	22.2.2.7.2	22.2.2.7.2	BackreferenceMatcher	
+sec-bibliography	G	G	Bibliography	
+sec-bigint-constructor	21.2.1	21.2.1	The BigInt Constructor	
+sec-bigint-constructor-number-value	21.2.1.1	21.2.1.1	BigInt	
+sec-bigint-object	4.4.30	4.4.30	BigInt object	
+sec-bigint-objects	21.2	21.2	BigInt Objects	
+sec-bigint.asintn	21.2.2.1	21.2.2.1	BigInt.asIntN	
+sec-bigint.asuintn	21.2.2.2	21.2.2.2	BigInt.asUintN	
+sec-bigint.prototype	21.2.2.3	21.2.2.3	BigInt.prototype	
+sec-bigint.prototype-%symbol.tostringtag%	21.2.3.5	21.2.3.5	BigInt.prototype [ %Symbol.toStringTag% ]	
+sec-bigint.prototype.constructor	21.2.3.1	21.2.3.1	BigInt.prototype.constructor	
+sec-bigint.prototype.tolocalestring	21.2.3.2	21.2.3.2	BigInt.prototype.toLocaleString	
+sec-bigint.prototype.tostring	21.2.3.3	21.2.3.3	BigInt.prototype.toString	
+sec-bigint.prototype.valueof	21.2.3.4	21.2.3.4	BigInt.prototype.valueOf	
+sec-bigintbitwiseop	6.1.6.2.17	6.1.6.2.17	BigIntBitwiseOp	
+sec-binary-bitwise-operators	13.12	13.12	Binary Bitwise Operators	
+sec-binary-bitwise-operators-runtime-semantics-evaluation	13.12.1	13.12.1	Runtime Semantics: Evaluation	
+sec-binary-logical-operators	13.13	13.13	Binary Logical Operators	
+sec-binary-logical-operators-runtime-semantics-evaluation	13.13.1	13.13.1	Runtime Semantics: Evaluation	
+sec-binaryand	6.1.6.2.14	6.1.6.2.14	BinaryAnd	
+sec-binaryor	6.1.6.2.15	6.1.6.2.15	BinaryOr	
+sec-binaryxor	6.1.6.2.16	6.1.6.2.16	BinaryXor	
+sec-bindthisvalue	9.1.1.3.1	9.1.1.3.1	BindThisValue	
+sec-bitwise-not-operator	13.5.6	13.5.6	Bitwise NOT Operator	
+sec-bitwise-not-operator-runtime-semantics-evaluation	13.5.6.1	13.5.6.1	Runtime Semantics: Evaluation	
+sec-bitwise-shift-operators	13.9	13.9	Bitwise Shift Operators	
+sec-block	14.2	14.2	Block	
+sec-block-duplicates-allowed-static-semantics	B.3.2.4	14.2.1	Changes to Block Static Semantics: Early Errors	merged into sec-block-static-semantics-early-errors
+sec-block-level-function-declarations-web-legacy-compatibility-semantics	B.3.2	B.3.2	Block-Level Function Declarations Web Legacy Compatibility Semantics	
+sec-block-runtime-semantics-evaluation	14.2.2	14.2.2	Runtime Semantics: Evaluation	
+sec-block-static-semantics-early-errors	14.2.1	14.2.1	Static Semantics: Early Errors	
+sec-blockdeclarationinstantiation	14.2.3	14.2.3	BlockDeclarationInstantiation	
+sec-boolean-constructor	20.3.1	20.3.1	The Boolean Constructor	
+sec-boolean-constructor-boolean-value	20.3.1.1	20.3.1.1	Boolean	
+sec-boolean-literals	12.9.2	12.9.2	Boolean Literals	
+sec-boolean-object	4.4.19	4.4.19	Boolean object	
+sec-boolean-objects	20.3	20.3	Boolean Objects	
+sec-boolean.prototype	20.3.2.1	20.3.2.1	Boolean.prototype	
+sec-boolean.prototype.constructor	20.3.3.1	20.3.3.1	Boolean.prototype.constructor	
+sec-boolean.prototype.tostring	20.3.3.2	20.3.3.2	Boolean.prototype.toString	
+sec-boolean.prototype.valueof	20.3.3.3	20.3.3.3	Boolean.prototype.valueOf	
+sec-bound-function-exotic-objects	10.4.1	10.4.1	Bound Function Exotic Objects	
+sec-bound-function-exotic-objects-call-thisargument-argumentslist	10.4.1.1	10.4.1.1	[[Call]]	
+sec-bound-function-exotic-objects-construct-argumentslist-newtarget	10.4.1.2	10.4.1.2	[[Construct]]	
+sec-boundfunctioncreate	10.4.1.3	10.4.1.3	BoundFunctionCreate	
+sec-break-statement	14.9	14.9	The `break` Statement	
+sec-break-statement-runtime-semantics-evaluation	14.9.2	14.9.2	Runtime Semantics: Evaluation	
+sec-break-statement-static-semantics-early-errors	14.9.1	14.9.1	Static Semantics: Early Errors	
+sec-built-in-constructor	4.4.36	4.4.36	built-in constructor	
+sec-built-in-exotic-object-internal-methods-and-slots	10.4	10.4	Built-in Exotic Object Internal Methods and Slots	
+sec-built-in-function	4.4.35	4.4.35	built-in function	
+sec-built-in-function-objects	10.3	10.3	Built-in Function Objects	
+sec-built-in-function-objects-call-thisargument-argumentslist	10.3.1	10.3.1	[[Call]]	
+sec-built-in-function-objects-construct-argumentslist-newtarget	10.3.2	10.3.2	[[Construct]]	
+sec-built-in-method	4.4.39	4.4.39	built-in method	
+sec-built-in-object	4.4.12	4.4.12	built-in object	
+sec-builtincallorconstruct	10.3.3	10.3.3	BuiltinCallOrConstruct	
+sec-but-not	5.1.5.9	5.1.5.9	but not	
+sec-bytelistbitwiseop	25.4.3.18	25.4.3.18	ByteListBitwiseOp	
+sec-bytelistequal	25.4.3.19	25.4.3.19	ByteListEqual	
+sec-call	7.3.13	7.3.13	Call	
+sec-canbeheldweakly	9.13	9.13	CanBeHeldWeakly	
+sec-candeclareglobalfunction	9.1.1.4.15	9.1.1.4.15	CanDeclareGlobalFunction	
+sec-candeclareglobalvar	9.1.1.4.14	9.1.1.4.14	CanDeclareGlobalVar	
+sec-candidate-executions	29.4	29.4	Candidate Executions	
+sec-canonicalizekeyedcollectionkey	24.5.1	24.5.1	CanonicalizeKeyedCollectionKey	
+sec-canonicalnumericindexstring	7.1.21	7.1.21	CanonicalNumericIndexString	
+sec-charactercomplement	22.2.2.9.6	22.2.2.9.6	CharacterComplement	
+sec-chosen-value-records	29.3	29.3	Chosen Value Records	
+sec-class-definitions	15.7	15.7	Class Definitions	
+sec-class-definitions-runtime-semantics-evaluation	15.7.16	15.7.16	Runtime Semantics: Evaluation	
+sec-class-definitions-static-semantics-early-errors	15.7.1	15.7.1	Static Semantics: Early Errors	
+sec-classfielddefinition-record-specification-type	6.2.11	6.2.11	The ClassFieldDefinition Record Specification Type	
+sec-classstaticblockdefinition-record-specification-type	6.2.13	6.2.13	The ClassStaticBlockDefinition Record Specification Type	
+sec-cleanup-finalization-registry	9.12	9.12	CleanupFinalizationRegistry	
+sec-clear-kept-objects	9.10	9.10	ClearKeptObjects	
+sec-clonearraybuffer	25.1.3.6	25.1.3.6	CloneArrayBuffer	
+sec-code-realms	9.3	9.3	Realms	
+sec-codepointat	11.1.4	11.1.4	Static Semantics: CodePointAt	
+sec-codepointstostring	11.1.2	11.1.2	Static Semantics: CodePointsToString	
+sec-coherent-reads	29.7.2	29.7.2	Coherent Reads	
+sec-colophon	H	H	Colophon	
+sec-comma-operator	13.16	13.16	Comma Operator	
+sec-comma-operator-runtime-semantics-evaluation	13.16.1	13.16.1	Runtime Semantics: Evaluation	
+sec-comments	12.4	12.4	Comments	
+sec-common-iteration-interfaces	27.1.1	27.1.1	Common Iteration Interfaces	
+sec-comparearrayelements	23.1.3.30.2	23.1.3.30.2	CompareArrayElements	
+sec-comparetypedarrayelements	23.2.4.7	23.2.4.7	CompareTypedArrayElements	
+sec-compileassertion	22.2.2.4	22.2.2.4	Runtime Semantics: CompileAssertion	
+sec-compileassertion-annexb	B.1.2.6	B.1.2.6	Runtime Semantics: CompileAssertion	
+sec-compileatom	22.2.2.7	22.2.2.7	Runtime Semantics: CompileAtom	
+sec-compileatom-annexb	B.1.2.7	B.1.2.7	Runtime Semantics: CompileAtom	
+sec-compilecharacterclass	22.2.2.8	22.2.2.8	Runtime Semantics: CompileCharacterClass	
+sec-compileclasssetstring	22.2.2.10	22.2.2.10	Runtime Semantics: CompileClassSetString	
+sec-compilepattern	22.2.2.2	22.2.2.2	Runtime Semantics: CompilePattern	
+sec-compilequantifier	22.2.2.5	22.2.2.5	Runtime Semantics: CompileQuantifier	
+sec-compilequantifierprefix	22.2.2.6	22.2.2.6	Runtime Semantics: CompileQuantifierPrefix	
+sec-compilesubpattern	22.2.2.3	22.2.2.3	Runtime Semantics: CompileSubpattern	
+sec-compilesubpattern-annexb	B.1.2.5	B.1.2.5	Runtime Semantics: CompileSubpattern	
+sec-compiletocharset	22.2.2.9	22.2.2.9	Runtime Semantics: CompileToCharSet	
+sec-compiletocharset-annexb	B.1.2.8	B.1.2.8	Runtime Semantics: CompileToCharSet	
+sec-completepropertydescriptor	6.2.6.6	6.2.6.6	CompletePropertyDescriptor	
+sec-completion-ao	5.2.3.1	5.2.4.1	Completion	
+sec-completion-record-specification-type	6.2.4	6.2.4	The Completion Record Specification Type	
+sec-composewriteeventbytes	29.5.4	29.5.4	ComposeWriteEventBytes	
+sec-conditional-operator	13.14	13.14	Conditional Operator	
+sec-conditional-operator-runtime-semantics-evaluation	13.14.1	13.14.1	Runtime Semantics: Evaluation	
+sec-conformance	2	2	Conformance	
+sec-conformance-legacy	2.2	2.2	Example Legacy Clause Heading	
+sec-conformance-legacy-normative-optional	2.3	2.3	Example Legacy Normative Optional Clause Heading	
+sec-conformance-normative-optional	2.1	2.1	Example Normative Optional Clause Heading	
+sec-construct	7.3.14	7.3.14	Construct	
+sec-constructor	4.4.7	4.4.7	constructor	
+sec-constructor-properties-of-the-global-object	19.3	19.3	Constructor Properties of the Global Object	
+sec-constructor-properties-of-the-global-object-aggregate-error	19.3.1	19.3.1	AggregateError	
+sec-constructor-properties-of-the-global-object-array	19.3.2	19.3.2	Array	
+sec-constructor-properties-of-the-global-object-arraybuffer	19.3.3	19.3.3	ArrayBuffer	
+sec-constructor-properties-of-the-global-object-bigint	19.3.4	19.3.4	BigInt	
+sec-constructor-properties-of-the-global-object-bigint64array	19.3.5	19.3.5	BigInt64Array	
+sec-constructor-properties-of-the-global-object-biguint64array	19.3.6	19.3.6	BigUint64Array	
+sec-constructor-properties-of-the-global-object-boolean	19.3.7	19.3.7	Boolean	
+sec-constructor-properties-of-the-global-object-dataview	19.3.8	19.3.8	DataView	
+sec-constructor-properties-of-the-global-object-date	19.3.9	19.3.9	Date	
+sec-constructor-properties-of-the-global-object-error	19.3.10	19.3.10	Error	
+sec-constructor-properties-of-the-global-object-evalerror	19.3.11	19.3.11	EvalError	
+sec-constructor-properties-of-the-global-object-finalization-registry	19.3.12	19.3.12	FinalizationRegistry	
+sec-constructor-properties-of-the-global-object-function	19.3.16	19.3.16	Function	
+sec-constructor-properties-of-the-global-object-iterator	19.3.20	19.3.20	Iterator	
+sec-constructor-properties-of-the-global-object-number	19.3.22	19.3.22	Number	
+sec-constructor-properties-of-the-global-object-object	19.3.23	19.3.23	Object	
+sec-constructor-properties-of-the-global-object-promise	19.3.24	19.3.24	Promise	
+sec-constructor-properties-of-the-global-object-proxy	19.3.25	19.3.25	Proxy	
+sec-constructor-properties-of-the-global-object-rangeerror	19.3.26	19.3.26	RangeError	
+sec-constructor-properties-of-the-global-object-referenceerror	19.3.27	19.3.27	ReferenceError	
+sec-constructor-properties-of-the-global-object-regexp	19.3.28	19.3.28	RegExp	
+sec-constructor-properties-of-the-global-object-sharedarraybuffer	19.3.30	19.3.30	SharedArrayBuffer	
+sec-constructor-properties-of-the-global-object-string	19.3.31	19.3.31	String	
+sec-constructor-properties-of-the-global-object-symbol	19.3.32	19.3.32	Symbol	
+sec-constructor-properties-of-the-global-object-syntaxerror	19.3.33	19.3.33	SyntaxError	
+sec-constructor-properties-of-the-global-object-typeerror	19.3.34	19.3.34	TypeError	
+sec-constructor-properties-of-the-global-object-uint8array		19.3.35	Uint8Array	
+sec-constructor-properties-of-the-global-object-urierror	19.3.39	19.3.39	URIError	
+sec-constructor-properties-of-the-global-object-weakmap	19.3.40	19.3.40	WeakMap	
+sec-constructor-properties-of-the-global-object-weakref	19.3.41	19.3.41	WeakRef	
+sec-constructor-properties-of-the-global-object-weakset	19.3.42	19.3.42	WeakSet	
+sec-context-free-grammars	5.1.1	5.1.1	Context-Free Grammars	
+sec-continue-statement	14.8	14.8	The `continue` Statement	
+sec-continue-statement-runtime-semantics-evaluation	14.8.2	14.8.2	Runtime Semantics: Evaluation	
+sec-continue-statement-static-semantics-early-errors	14.8.1	14.8.1	Static Semantics: Early Errors	
+sec-control-abstraction-objects	27	27	Control Abstraction Objects	
+sec-copydatablockbytes	6.2.9.3	6.2.9.3	CopyDataBlockBytes	
+sec-copydataproperties	7.3.25	7.3.25	CopyDataProperties	
+sec-corrections-and-clarifications-in-ecmascript-2015-with-possible-compatibility-impact	E	E	Corrections and Clarifications in ECMAScript 2015 with Possible Compatibility Impact	
+sec-countleftcapturingparens-annexb	B.1.2.2	B.1.2.2	Static Semantics: CountLeftCapturingParensWithin and CountLeftCapturingParensBefore	
+sec-countleftcapturingparensbefore	22.2.1.3	22.2.1.3	Static Semantics: CountLeftCapturingParensBefore	
+sec-countleftcapturingparenswithin	22.2.1.2	22.2.1.2	Static Semantics: CountLeftCapturingParensWithin	
+sec-create-default-export-synthetic-module	16.2.1.8.1	16.2.1.8.1	CreateDefaultExportSyntheticModule	
+sec-createarrayfromlist	7.3.17	7.3.17	CreateArrayFromList	
+sec-createarrayiterator	23.1.5.1	23.1.5.1	CreateArrayIterator	
+sec-createasyncfromsynciterator	27.1.6.1	27.1.5.1	CreateAsyncFromSyncIterator	
+sec-createasynciteratorfromclosure	27.6.3.11		CreateAsyncIteratorFromClosure	removed
+sec-createbuiltinfunction	10.3.4	10.3.4	CreateBuiltinFunction	
+sec-createbytedatablock	6.2.9.1	6.2.9.1	CreateByteDataBlock	
+sec-createdataproperty	7.3.5	7.3.5	CreateDataProperty	
+sec-createdatapropertyorthrow	7.3.6	7.3.6	CreateDataPropertyOrThrow	
+sec-createdynamicfunction	20.2.1.1.1	20.2.1.1.1	CreateDynamicFunction	
+sec-createforiniterator	14.7.5.10.1	14.7.5.10.1	CreateForInIterator	
+sec-createglobalfunctionbinding	9.1.1.4.17	9.1.1.4.17	CreateGlobalFunctionBinding	
+sec-createglobalvarbinding	9.1.1.4.16	9.1.1.4.16	CreateGlobalVarBinding	
+sec-createhtml	B.2.2.2.1	B.2.2.2.1	CreateHTML	
+sec-createimportbinding	9.1.1.5.5	9.1.1.5.5	CreateImportBinding	
+sec-createintrinsics	9.3.2	9.3.2	CreateIntrinsics	
+sec-createiteratorfromclosure	27.5.3.8	27.5.3.8	CreateIteratorFromClosure	
+sec-createiterresultobject	7.4.14	7.4.16	CreateIteratorResultObject	
+sec-createjsonparserecord		25.5.2.3	CreateJSONParseRecord	
+sec-createlistfromarraylike	7.3.19	7.3.19	CreateListFromArrayLike	
+sec-createlistiteratorRecord	7.4.15	7.4.17	CreateListIteratorRecord	
+sec-createmapiterator	24.1.5.1	24.1.5.1	CreateMapIterator	
+sec-createmappedargumentsobject	10.4.4.7	10.4.4.7	CreateMappedArgumentsObject	
+sec-createnonenumerabledatapropertyorthrow	7.3.7	7.3.7	CreateNonEnumerableDataPropertyOrThrow	
+sec-createperiterationenvironment	14.7.4.4	14.7.4.4	CreatePerIterationEnvironment	
+sec-createregexpstringiterator	22.2.9.1	22.2.9.1	CreateRegExpStringIterator	
+sec-createresolvingfunctions	27.2.1.3	27.2.1.3	CreateResolvingFunctions	
+sec-createsetiterator	24.2.6.1	24.2.6.1	CreateSetIterator	
+sec-createsharedbytedatablock	6.2.9.2	6.2.9.2	CreateSharedByteDataBlock	
+sec-createunmappedargumentsobject	10.4.4.6	10.4.4.6	CreateUnmappedArgumentsObject	
+sec-cyclic-module-record-module-record-methods	16.2.1.6.1	16.2.1.6.1	Implementation of Module Record Abstract Methods	
+sec-cyclic-module-records	16.2.1.6	16.2.1.6	Cyclic Module Records	
+sec-data-blocks	6.2.9	6.2.9	Data Blocks	
+sec-data-race-freedom	29.10	29.10	Data Race Freedom	
+sec-data-races	29.9	29.9	Data Races	
+sec-dataview-buffer-byteoffset-bytelength	25.3.2.1	25.3.2.1	DataView	
+sec-dataview-constructor	25.3.2	25.3.2	The DataView Constructor	
+sec-dataview-objects	25.3	25.3	DataView Objects	
+sec-dataview-with-buffer-witness-records	25.3.1.1	25.3.1.1	DataView With Buffer Witness Records	
+sec-dataview.prototype	25.3.3.1	25.3.3.1	DataView.prototype	
+sec-dataview.prototype-%symbol.tostringtag%	25.3.4.27	25.3.4.27	DataView.prototype [ %Symbol.toStringTag% ]	
+sec-dataview.prototype.constructor	25.3.4.4	25.3.4.4	DataView.prototype.constructor	
+sec-dataview.prototype.getbigint64	25.3.4.5	25.3.4.5	DataView.prototype.getBigInt64	
+sec-dataview.prototype.getbiguint64	25.3.4.6	25.3.4.6	DataView.prototype.getBigUint64	
+sec-dataview.prototype.getfloat16	25.3.4.7	25.3.4.7	DataView.prototype.getFloat16	
+sec-dataview.prototype.getfloat32	25.3.4.8	25.3.4.8	DataView.prototype.getFloat32	
+sec-dataview.prototype.getfloat64	25.3.4.9	25.3.4.9	DataView.prototype.getFloat64	
+sec-dataview.prototype.getint16	25.3.4.11	25.3.4.11	DataView.prototype.getInt16	
+sec-dataview.prototype.getint32	25.3.4.12	25.3.4.12	DataView.prototype.getInt32	
+sec-dataview.prototype.getint8	25.3.4.10	25.3.4.10	DataView.prototype.getInt8	
+sec-dataview.prototype.getuint16	25.3.4.14	25.3.4.14	DataView.prototype.getUint16	
+sec-dataview.prototype.getuint32	25.3.4.15	25.3.4.15	DataView.prototype.getUint32	
+sec-dataview.prototype.getuint8	25.3.4.13	25.3.4.13	DataView.prototype.getUint8	
+sec-dataview.prototype.setbigint64	25.3.4.16	25.3.4.16	DataView.prototype.setBigInt64	
+sec-dataview.prototype.setbiguint64	25.3.4.17	25.3.4.17	DataView.prototype.setBigUint64	
+sec-dataview.prototype.setfloat16	25.3.4.18	25.3.4.18	DataView.prototype.setFloat16	
+sec-dataview.prototype.setfloat32	25.3.4.19	25.3.4.19	DataView.prototype.setFloat32	
+sec-dataview.prototype.setfloat64	25.3.4.20	25.3.4.20	DataView.prototype.setFloat64	
+sec-dataview.prototype.setint16	25.3.4.22	25.3.4.22	DataView.prototype.setInt16	
+sec-dataview.prototype.setint32	25.3.4.23	25.3.4.23	DataView.prototype.setInt32	
+sec-dataview.prototype.setint8	25.3.4.21	25.3.4.21	DataView.prototype.setInt8	
+sec-dataview.prototype.setuint16	25.3.4.25	25.3.4.25	DataView.prototype.setUint16	
+sec-dataview.prototype.setuint32	25.3.4.26	25.3.4.26	DataView.prototype.setUint32	
+sec-dataview.prototype.setuint8	25.3.4.24	25.3.4.24	DataView.prototype.setUint8	
+sec-date	21.4.2.1	21.4.2.1	Date	
+sec-date-constructor	21.4.2	21.4.2	The Date Constructor	
+sec-date-objects	21.4	21.4	Date Objects	
+sec-date-time-string-format	21.4.1.32	21.4.1.32	Date Time String Format	
+sec-date.now	21.4.3.1	21.4.3.1	Date.now	
+sec-date.parse	21.4.3.2	21.4.3.2	Date.parse	
+sec-date.prototype	21.4.3.3	21.4.3.3	Date.prototype	
+sec-date.prototype-%symbol.toprimitive%	21.4.4.45	21.4.4.45	Date.prototype [ %Symbol.toPrimitive% ]	
+sec-date.prototype.constructor	21.4.4.1	21.4.4.1	Date.prototype.constructor	
+sec-date.prototype.getdate	21.4.4.2	21.4.4.2	Date.prototype.getDate	
+sec-date.prototype.getday	21.4.4.3	21.4.4.3	Date.prototype.getDay	
+sec-date.prototype.getfullyear	21.4.4.4	21.4.4.4	Date.prototype.getFullYear	
+sec-date.prototype.gethours	21.4.4.5	21.4.4.5	Date.prototype.getHours	
+sec-date.prototype.getmilliseconds	21.4.4.6	21.4.4.6	Date.prototype.getMilliseconds	
+sec-date.prototype.getminutes	21.4.4.7	21.4.4.7	Date.prototype.getMinutes	
+sec-date.prototype.getmonth	21.4.4.8	21.4.4.8	Date.prototype.getMonth	
+sec-date.prototype.getseconds	21.4.4.9	21.4.4.9	Date.prototype.getSeconds	
+sec-date.prototype.gettime	21.4.4.10	21.4.4.10	Date.prototype.getTime	
+sec-date.prototype.gettimezoneoffset	21.4.4.11	21.4.4.11	Date.prototype.getTimezoneOffset	
+sec-date.prototype.getutcdate	21.4.4.12	21.4.4.12	Date.prototype.getUTCDate	
+sec-date.prototype.getutcday	21.4.4.13	21.4.4.13	Date.prototype.getUTCDay	
+sec-date.prototype.getutcfullyear	21.4.4.14	21.4.4.14	Date.prototype.getUTCFullYear	
+sec-date.prototype.getutchours	21.4.4.15	21.4.4.15	Date.prototype.getUTCHours	
+sec-date.prototype.getutcmilliseconds	21.4.4.16	21.4.4.16	Date.prototype.getUTCMilliseconds	
+sec-date.prototype.getutcminutes	21.4.4.17	21.4.4.17	Date.prototype.getUTCMinutes	
+sec-date.prototype.getutcmonth	21.4.4.18	21.4.4.18	Date.prototype.getUTCMonth	
+sec-date.prototype.getutcseconds	21.4.4.19	21.4.4.19	Date.prototype.getUTCSeconds	
+sec-date.prototype.getyear	B.2.3.1	B.2.3.1	Date.prototype.getYear	
+sec-date.prototype.setdate	21.4.4.20	21.4.4.20	Date.prototype.setDate	
+sec-date.prototype.setfullyear	21.4.4.21	21.4.4.21	Date.prototype.setFullYear	
+sec-date.prototype.sethours	21.4.4.22	21.4.4.22	Date.prototype.setHours	
+sec-date.prototype.setmilliseconds	21.4.4.23	21.4.4.23	Date.prototype.setMilliseconds	
+sec-date.prototype.setminutes	21.4.4.24	21.4.4.24	Date.prototype.setMinutes	
+sec-date.prototype.setmonth	21.4.4.25	21.4.4.25	Date.prototype.setMonth	
+sec-date.prototype.setseconds	21.4.4.26	21.4.4.26	Date.prototype.setSeconds	
+sec-date.prototype.settime	21.4.4.27	21.4.4.27	Date.prototype.setTime	
+sec-date.prototype.setutcdate	21.4.4.28	21.4.4.28	Date.prototype.setUTCDate	
+sec-date.prototype.setutcfullyear	21.4.4.29	21.4.4.29	Date.prototype.setUTCFullYear	
+sec-date.prototype.setutchours	21.4.4.30	21.4.4.30	Date.prototype.setUTCHours	
+sec-date.prototype.setutcmilliseconds	21.4.4.31	21.4.4.31	Date.prototype.setUTCMilliseconds	
+sec-date.prototype.setutcminutes	21.4.4.32	21.4.4.32	Date.prototype.setUTCMinutes	
+sec-date.prototype.setutcmonth	21.4.4.33	21.4.4.33	Date.prototype.setUTCMonth	
+sec-date.prototype.setutcseconds	21.4.4.34	21.4.4.34	Date.prototype.setUTCSeconds	
+sec-date.prototype.setyear	B.2.3.2	B.2.3.2	Date.prototype.setYear	
+sec-date.prototype.todatestring	21.4.4.35	21.4.4.35	Date.prototype.toDateString	
+sec-date.prototype.togmtstring	B.2.3.3	B.2.3.3	Date.prototype.toGMTString	
+sec-date.prototype.toisostring	21.4.4.36	21.4.4.36	Date.prototype.toISOString	
+sec-date.prototype.tojson	21.4.4.37	21.4.4.37	Date.prototype.toJSON	
+sec-date.prototype.tolocaledatestring	21.4.4.38	21.4.4.38	Date.prototype.toLocaleDateString	
+sec-date.prototype.tolocalestring	21.4.4.39	21.4.4.39	Date.prototype.toLocaleString	
+sec-date.prototype.tolocaletimestring	21.4.4.40	21.4.4.40	Date.prototype.toLocaleTimeString	
+sec-date.prototype.tostring	21.4.4.41	21.4.4.41	Date.prototype.toString	
+sec-date.prototype.totimestring	21.4.4.42	21.4.4.42	Date.prototype.toTimeString	
+sec-date.prototype.toutcstring	21.4.4.43	21.4.4.43	Date.prototype.toUTCString	
+sec-date.prototype.valueof	21.4.4.44	21.4.4.44	Date.prototype.valueOf	
+sec-date.utc	21.4.3.4	21.4.3.4	Date.UTC	
+sec-datefromtime	21.4.1.12	21.4.1.12	DateFromTime	
+sec-datestring	21.4.4.41.2	21.4.4.41.2	DateString	
+sec-day	21.4.1.3	21.4.1.3	Day	
+sec-dayfromyear	21.4.1.6	21.4.1.6	DayFromYear	
+sec-daysinyear	21.4.1.5	21.4.1.5	DaysInYear	
+sec-daywithinyear	21.4.1.9	21.4.1.9	DayWithinYear	
+sec-debugger-statement	14.16	14.16	The `debugger` Statement	
+sec-debugger-statement-runtime-semantics-evaluation	14.16.1	14.16.1	Runtime Semantics: Evaluation	
+sec-declarations-and-the-variable-statement	14.3	14.3	Declarations and the Variable Statement	
+sec-declarative-environment-records	9.1.1.1	9.1.1.1	Declarative Environment Records	
+sec-declarative-environment-records-createimmutablebinding-n-s	9.1.1.1.3	9.1.1.1.3	CreateImmutableBinding	
+sec-declarative-environment-records-createmutablebinding-n-d	9.1.1.1.2	9.1.1.1.2	CreateMutableBinding	
+sec-declarative-environment-records-deletebinding-n	9.1.1.1.7	9.1.1.1.7	DeleteBinding	
+sec-declarative-environment-records-getbindingvalue-n-s	9.1.1.1.6	9.1.1.1.6	GetBindingValue	
+sec-declarative-environment-records-getthisbinding		9.1.1.1.9	GetThisBinding	
+sec-declarative-environment-records-hasbinding-n	9.1.1.1.1	9.1.1.1.1	HasBinding	
+sec-declarative-environment-records-hassuperbinding	9.1.1.1.9	9.1.1.1.10	HasSuperBinding	
+sec-declarative-environment-records-hasthisbinding	9.1.1.1.8	9.1.1.1.8	HasThisBinding	
+sec-declarative-environment-records-initializebinding-n-v	9.1.1.1.4	9.1.1.1.4	InitializeBinding	
+sec-declarative-environment-records-setmutablebinding-n-v-s	9.1.1.1.5	9.1.1.1.5	SetMutableBinding	
+sec-declarative-environment-records-withbaseobject	9.1.1.1.10	9.1.1.1.11	WithBaseObject	
+sec-decode	19.2.6.6	19.2.6.6	Decode	
+sec-decodefinalbase64chunk		23.3.3.5	DecodeFinalBase64Chunk	
+sec-decodefulllengthbase64chunk		23.3.3.6	DecodeFullLengthBase64Chunk	
+sec-decodeuri-encodeduri	19.2.6.1	19.2.6.1	decodeURI	
+sec-decodeuricomponent-encodeduricomponent	19.2.6.2	19.2.6.2	decodeURIComponent	
+sec-definefield	7.3.32	7.3.32	DefineField	
+sec-definemethodproperty	10.2.8	10.2.8	DefineMethodProperty	
+sec-definepropertyorthrow	7.3.8	7.3.8	DefinePropertyOrThrow	
+sec-delete-operator	13.5.1	13.5.1	The `delete` Operator	
+sec-delete-operator-runtime-semantics-evaluation	13.5.1.2	13.5.1.2	Runtime Semantics: Evaluation	
+sec-delete-operator-static-semantics-early-errors	13.5.1.1	13.5.1.1	Static Semantics: Early Errors	
+sec-deletepropertyorthrow	7.3.9	7.3.9	DeletePropertyOrThrow	
+sec-descriptive-phrases	5.1.5.10	5.1.5.10	Descriptive Phrases	
+sec-destructuring-assignment	13.15.5	13.15.5	Destructuring Assignment	
+sec-destructuring-assignment-static-semantics-early-errors	13.15.5.1	13.15.5.1	Static Semantics: Early Errors	
+sec-destructuring-binding-patterns	14.3.3	14.3.3	Destructuring Binding Patterns	
+sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization	14.3.3.1	14.3.3.1	Runtime Semantics: PropertyBindingInitialization	
+sec-destructuring-binding-patterns-runtime-semantics-restbindinginitialization	14.3.3.2	14.3.3.2	Runtime Semantics: RestBindingInitialization	
+sec-detacharraybuffer	25.1.3.5	25.1.3.5	DetachArrayBuffer	
+sec-directive-prologues-and-the-use-strict-directive	11.2.1	11.2.1	Directive Prologues and the Use Strict Directive	
+sec-do-while-statement	14.7.2	14.7.2	The `do`-`while` Statement	
+sec-do-while-statement-static-semantics-early-errors	14.7.2.1	14.7.2.1	Static Semantics: Early Errors	
+sec-dowait	25.4.3.14	25.4.3.14	DoWait	
+sec-ecmascript-data-types-and-values	6	6	ECMAScript Data Types and Values	
+sec-ecmascript-function-objects	10.2	10.2	ECMAScript Function Objects	
+sec-ecmascript-function-objects-call-thisargument-argumentslist	10.2.1	10.2.1	[[Call]]	
+sec-ecmascript-function-objects-construct-argumentslist-newtarget	10.2.2	10.2.2	[[Construct]]	
+sec-ecmascript-language-expressions	13	13	ECMAScript Language: Expressions	
+sec-ecmascript-language-functions-and-classes	15	15	ECMAScript Language: Functions and Classes	
+sec-ecmascript-language-lexical-grammar	12	12	ECMAScript Language: Lexical Grammar	
+sec-ecmascript-language-lexical-grammar-literals	12.9	12.9	Literals	
+sec-ecmascript-language-scripts-and-modules	16	16	ECMAScript Language: Scripts and Modules	
+sec-ecmascript-language-source-code	11	11	ECMAScript Language: Source Text	
+sec-ecmascript-language-statements-and-declarations	14	14	ECMAScript Language: Statements and Declarations	
+sec-ecmascript-language-types	6.1	6.1	ECMAScript Language Types	
+sec-ecmascript-language-types-bigint-type	6.1.6.2	6.1.6.2	The BigInt Type	
+sec-ecmascript-language-types-boolean-type	6.1.3	6.1.3	The Boolean Type	
+sec-ecmascript-language-types-null-type	6.1.2	6.1.2	The Null Type	
+sec-ecmascript-language-types-number-type	6.1.6.1	6.1.6.1	The Number Type	
+sec-ecmascript-language-types-string-type	6.1.4	6.1.4	The String Type	
+sec-ecmascript-language-types-symbol-type	6.1.5	6.1.5	The Symbol Type	
+sec-ecmascript-language-types-undefined-type	6.1.1	6.1.1	The Undefined Type	
+sec-ecmascript-overview	4.3	4.3	ECMAScript Overview	
+sec-ecmascript-specification-types	6.2	6.2	ECMAScript Specification Types	
+sec-ecmascript-standard-built-in-objects	18	18	ECMAScript Standard Built-in Objects	
+sec-empty	5.1.5.6	5.1.5.6	[empty]	
+sec-empty-statement	14.4	14.4	Empty Statement	
+sec-empty-statement-runtime-semantics-evaluation	14.4.1	14.4.1	Runtime Semantics: Evaluation	
+sec-emptymatcher	22.2.2.3.2	22.2.2.3.2	EmptyMatcher	
+sec-encode	19.2.6.5	19.2.6.5	Encode	
+sec-encodeforregexpescape	22.2.5.1.1	22.2.5.1.1	EncodeForRegExpEscape	
+sec-encodeuri-uri	19.2.6.3	19.2.6.3	encodeURI	
+sec-encodeuricomponent-uricomponent	19.2.6.4	19.2.6.4	encodeURIComponent	
+sec-enqueueatomicswaitasynctimeoutjob	25.4.3.15	25.4.3.15	EnqueueAtomicsWaitAsyncTimeoutJob	
+sec-enqueueresolveinagentjob	25.4.3.13	25.4.3.13	EnqueueResolveInAgentJob	
+sec-entercriticalsection	25.4.3.6	25.4.3.6	EnterCriticalSection	
+sec-enum-specification-type	6.2.1	6.2.1	The Enum Specification Type	
+sec-enumerableownproperties	7.3.23	7.3.23	EnumerableOwnProperties	
+sec-enumerate-object-properties	14.7.5.9	14.7.5.9	EnumerateObjectProperties	
+sec-environment-record-operations	9.1.2	9.1.2	Environment Record Operations	
+sec-environment-records	9.1	9.1	Environment Records	
+sec-equality-operators	13.11	13.11	Equality Operators	
+sec-equality-operators-runtime-semantics-evaluation	13.11.1	13.11.1	Runtime Semantics: Evaluation	
+sec-error-constructor	20.5.1	20.5.1	The Error Constructor	
+sec-error-handling-and-language-extensions	17	17	Error Handling and Language Extensions	
+sec-error-message	20.5.1.1	20.5.1.1	Error	
+sec-error-objects	20.5	20.5	Error Objects	
+sec-error.iserror		20.5.2.1	Error.isError	
+sec-error.prototype	20.5.2.1	20.5.2.2	Error.prototype	
+sec-error.prototype.constructor	20.5.3.1	20.5.3.1	Error.prototype.constructor	
+sec-error.prototype.message	20.5.3.2	20.5.3.2	Error.prototype.message	
+sec-error.prototype.name	20.5.3.3	20.5.3.3	Error.prototype.name	
+sec-error.prototype.tostring	20.5.3.4	20.5.3.4	Error.prototype.toString	
+sec-escape-string	B.2.1.1	B.2.1.1	escape	
+sec-escaperegexppattern	22.2.6.13.1	22.2.6.13.1	EscapeRegExpPattern	
+sec-eval-x	19.2.1	19.2.1	eval	
+sec-evaldeclarationinstantiation	19.2.1.3	19.2.1.3	EvalDeclarationInstantiation	
+sec-evaluate-import-call	13.3.10.2	13.3.10.2	EvaluateImportCall	
+sec-evaluate-property-access-with-expression-key	13.3.3	13.3.3	EvaluatePropertyAccessWithExpressionKey	
+sec-evaluate-property-access-with-identifier-key	13.3.4	13.3.4	EvaluatePropertyAccessWithIdentifierKey	
+sec-evaluatecall	13.3.6.2	13.3.6.2	EvaluateCall	
+sec-evaluatenew	13.3.5.1.1	13.3.5.1.1	EvaluateNew	
+sec-evaluatestringornumericbinaryexpression	13.15.4	13.15.4	EvaluateStringOrNumericBinaryExpression	
+sec-evaluation	8.1	8.1	Runtime Semantics: Evaluation	
+sec-evaluation-order		5.2.1	Evaluation Order	
+sec-event-set	29.5.1	29.5.1	EventSet	
+sec-example-cyclic-module-record-graphs	16.2.1.6.2	16.2.1.6.2	Example Cyclic Module Record Graphs	
+sec-examples-of-automatic-semicolon-insertion	12.10.2	12.10.2	Examples of Automatic Semicolon Insertion	
+sec-executable-code-and-execution-contexts	9	9	Executable Code and Execution Contexts	
+sec-execute-async-module	16.2.1.6.1.3.2	16.2.1.6.1.3.2	ExecuteAsyncModule	
+sec-execution-contexts	9.4	9.4	Execution Contexts	
+sec-exotic-object	4.4.10	4.4.10	exotic object	
+sec-exp-operator	13.6	13.6	Exponentiation Operator	
+sec-exp-operator-runtime-semantics-evaluation	13.6.1	13.6.1	Runtime Semantics: Evaluation	
+sec-expanded-years	21.4.1.32.1	21.4.1.32.1	Expanded Years	
+sec-exports	16.2.3	16.2.3	Exports	
+sec-exports-runtime-semantics-evaluation	16.2.3.7	16.2.3.7	Runtime Semantics: Evaluation	
+sec-exports-static-semantics-early-errors	16.2.3.1	16.2.3.1	Static Semantics: Early Errors	
+sec-expression-statement	14.5	14.5	Expression Statement	
+sec-expression-statement-runtime-semantics-evaluation	14.5.1	14.5.1	Runtime Semantics: Evaluation	
+sec-expressions	A.2	A.2	Expressions	
+sec-finalization-registry-cleanup-callback	26.2.1.1	26.2.1.1	FinalizationRegistry	
+sec-finalization-registry-constructor	26.2.1	26.2.1	The FinalizationRegistry Constructor	
+sec-finalization-registry-objects	26.2	26.2	FinalizationRegistry Objects	
+sec-finalization-registry.prototype	26.2.2.1	26.2.2.1	FinalizationRegistry.prototype	
+sec-finalization-registry.prototype-%symbol.tostringtag%	26.2.3.4	26.2.3.4	FinalizationRegistry.prototype [ %Symbol.toStringTag% ]	
+sec-finalization-registry.prototype.constructor	26.2.3.1	26.2.3.1	FinalizationRegistry.prototype.constructor	
+sec-finalization-registry.prototype.register	26.2.3.2	26.2.3.2	FinalizationRegistry.prototype.register	
+sec-finalization-registry.prototype.unregister	26.2.3.3	26.2.3.3	FinalizationRegistry.prototype.unregister	
+sec-findviapredicate	23.1.3.12.1	23.1.3.12.1	FindViaPredicate	
+sec-fixed-length-and-growable-sharedarraybuffer-objects	25.2.1	25.2.1	Fixed-length and Growable SharedArrayBuffer Objects	
+sec-fixed-length-and-resizable-arraybuffer-objects	25.1.2	25.1.2	Fixed-length and Resizable ArrayBuffer Objects	
+sec-flattenintoarray	23.1.3.13.1	23.1.3.13.1	FlattenIntoArray	
+sec-float16array	19.3.13	19.3.13	Float16Array	
+sec-float32array	19.3.14	19.3.14	Float32Array	
+sec-float64array	19.3.15	19.3.15	Float64Array	
+sec-for-in-and-for-of-statements	14.7.5	14.7.5	The `for`-`in`, `for`-`of`, and `for`-`await`-`of` Statements	
+sec-for-in-and-for-of-statements-runtime-semantics-evaluation	14.7.5.8	14.7.5.8	Runtime Semantics: Evaluation	
+sec-for-in-and-for-of-statements-static-semantics-early-errors	14.7.5.1	14.7.5.1	Static Semantics: Early Errors	
+sec-for-in-iterator-objects	14.7.5.10	14.7.5.10	For-In Iterator Objects	
+sec-for-statement	14.7.4	14.7.4	The `for` Statement	
+sec-for-statement-static-semantics-early-errors	14.7.4.1	14.7.4.1	Static Semantics: Early Errors	
+sec-forbidden-extensions	17.1	17.1	Forbidden Extensions	
+sec-forbodyevaluation	14.7.4.3	14.7.4.3	ForBodyEvaluation	
+sec-forward-progress	9.8	9.8	Forward Progress	
+sec-frombase64		23.3.3.7	FromBase64	
+sec-fromhex		23.3.3.8	FromHex	
+sec-frompropertydescriptor	6.2.6.4	6.2.6.4	FromPropertyDescriptor	
+sec-fulfillpromise	27.2.1.4	27.2.1.4	FulfillPromise	
+sec-function-calls	13.3.6	13.3.6	Function Calls	
+sec-function-calls-runtime-semantics-evaluation	13.3.6.1	13.3.6.1	Runtime Semantics: Evaluation	
+sec-function-constructor	20.2.1	20.2.1	The Function Constructor	
+sec-function-defining-expressions	13.2.6	13.2.6	Function Defining Expressions	
+sec-function-definitions	15.2	15.2	Function Definitions	
+sec-function-definitions-runtime-semantics-evaluation	15.2.6	15.2.6	Runtime Semantics: Evaluation	
+sec-function-definitions-static-semantics-early-errors	15.2.1	15.2.1	Static Semantics: Early Errors	
+sec-function-environment-records	9.1.1.3	9.1.1.3	Function Environment Records	
+sec-function-environment-records-getthisbinding	9.1.1.3.4	9.1.1.3.3	GetThisBinding	
+sec-function-environment-records-hassuperbinding	9.1.1.3.3	9.1.1.3.4	HasSuperBinding	
+sec-function-environment-records-hasthisbinding	9.1.1.3.2	9.1.1.3.2	HasThisBinding	
+sec-function-instances	20.2.4	20.2.4	Function Instances	
+sec-function-instances-length	20.2.4.1	20.2.4.1	length	
+sec-function-instances-name	20.2.4.2	20.2.4.2	name	
+sec-function-instances-prototype	20.2.4.3	20.2.4.3	prototype	
+sec-function-objects	20.2	20.2	Function Objects	
+sec-function-p1-p2-pn-body	20.2.1.1	20.2.1.1	Function	
+sec-function-properties-of-the-global-object	19.2	19.2	Function Properties of the Global Object	
+sec-function-properties-of-the-math-object	21.3.2	21.3.2	Function Properties of the Math Object	
+sec-function.prototype	20.2.2.1	20.2.2.1	Function.prototype	
+sec-function.prototype-%symbol.hasinstance%	20.2.3.6	20.2.3.6	Function.prototype [ %Symbol.hasInstance% ]	
+sec-function.prototype.apply	20.2.3.1	20.2.3.1	Function.prototype.apply	
+sec-function.prototype.bind	20.2.3.2	20.2.3.2	Function.prototype.bind	
+sec-function.prototype.call	20.2.3.3	20.2.3.3	Function.prototype.call	
+sec-function.prototype.constructor	20.2.3.4	20.2.3.4	Function.prototype.constructor	
+sec-function.prototype.tostring	20.2.3.5	20.2.3.5	Function.prototype.toString	
+sec-functiondeclarationinstantiation	10.2.11	10.2.11	FunctionDeclarationInstantiation	
+sec-functiondeclarations-in-ifstatement-statement-clauses	B.3.3	B.3.3	FunctionDeclarations in IfStatement Statement Clauses	
+sec-functions-and-classes	A.4	A.4	Functions and Classes	
+sec-fundamental-objects	20	20	Fundamental Objects	
+sec-gather-available-ancestors	16.2.1.6.1.3.3	16.2.1.6.1.3.3	GatherAvailableAncestors	
+sec-generator-abstract-operations	27.5.3	27.5.3	Generator Abstract Operations	
+sec-generator-function-definitions	15.5	15.5	Generator Function Definitions	
+sec-generator-function-definitions-runtime-semantics-evaluation	15.5.5	15.5.5	Runtime Semantics: Evaluation	
+sec-generator-function-definitions-static-semantics-early-errors	15.5.1	15.5.1	Static Semantics: Early Errors	
+sec-generator-objects	27.5	27.5	Generator Objects	
+sec-generator.prototype-%symbol.tostringtag%	27.5.1.5	27.5.1.5	%GeneratorPrototype% [ %Symbol.toStringTag% ]	
+sec-generator.prototype.constructor	27.5.1.1	27.5.1.1	%GeneratorPrototype%.constructor	
+sec-generator.prototype.next	27.5.1.2	27.5.1.2	%GeneratorPrototype%.next	
+sec-generator.prototype.return	27.5.1.3	27.5.1.3	%GeneratorPrototype%.return	
+sec-generator.prototype.throw	27.5.1.4	27.5.1.4	%GeneratorPrototype%.throw	
+sec-generatorfunction	27.3.1.1	27.3.1.1	GeneratorFunction	
+sec-generatorfunction-constructor	27.3.1	27.3.1	The GeneratorFunction Constructor	
+sec-generatorfunction-instances	27.3.4	27.3.4	GeneratorFunction Instances	
+sec-generatorfunction-instances-length	27.3.4.1	27.3.4.1	length	
+sec-generatorfunction-instances-name	27.3.4.2	27.3.4.2	name	
+sec-generatorfunction-instances-prototype	27.3.4.3	27.3.4.3	prototype	
+sec-generatorfunction-objects	27.3	27.3	GeneratorFunction Objects	
+sec-generatorfunction.prototype	27.3.2.1	27.3.2.1	GeneratorFunction.prototype	
+sec-generatorfunction.prototype-%symbol.tostringtag%	27.3.3.3	27.3.3.3	GeneratorFunction.prototype [ %Symbol.toStringTag% ]	
+sec-generatorfunction.prototype.constructor	27.3.3.1	27.3.3.1	GeneratorFunction.prototype.constructor	
+sec-generatorfunction.prototype.prototype	27.3.3.2	27.3.3.2	GeneratorFunction.prototype.prototype	
+sec-generatorresume	27.5.3.3	27.5.3.3	GeneratorResume	
+sec-generatorresumeabrupt	27.5.3.4	27.5.3.4	GeneratorResumeAbrupt	
+sec-generatorstart	27.5.3.1	27.5.3.1	GeneratorStart	
+sec-generatorvalidate	27.5.3.2	27.5.3.2	GeneratorValidate	
+sec-generatoryield	27.5.3.6	27.5.3.6	GeneratorYield	
+sec-get-%typedarray%-%symbol.species%	23.2.2.4	23.2.2.4	get %TypedArray% [ %Symbol.species% ]	
+sec-get-%typedarray%.prototype-%symbol.tostringtag%	23.2.3.38	23.2.3.38	get %TypedArray%.prototype [ %Symbol.toStringTag% ]	
+sec-get-%typedarray%.prototype.buffer	23.2.3.2	23.2.3.2	get %TypedArray%.prototype.buffer	
+sec-get-%typedarray%.prototype.bytelength	23.2.3.3	23.2.3.3	get %TypedArray%.prototype.byteLength	
+sec-get-%typedarray%.prototype.byteoffset	23.2.3.4	23.2.3.4	get %TypedArray%.prototype.byteOffset	
+sec-get-%typedarray%.prototype.length	23.2.3.21	23.2.3.21	get %TypedArray%.prototype.length	
+sec-get-array-%symbol.species%	23.1.2.5	23.1.2.6	get Array [ %Symbol.species% ]	
+sec-get-arraybuffer-%symbol.species%	25.1.5.3	25.1.5.3	get ArrayBuffer [ %Symbol.species% ]	
+sec-get-arraybuffer.prototype.bytelength	25.1.6.1	25.1.6.1	get ArrayBuffer.prototype.byteLength	
+sec-get-arraybuffer.prototype.detached	25.1.6.3	25.1.6.3	get ArrayBuffer.prototype.detached	
+sec-get-arraybuffer.prototype.maxbytelength	25.1.6.4	25.1.6.4	get ArrayBuffer.prototype.maxByteLength	
+sec-get-arraybuffer.prototype.resizable	25.1.6.5	25.1.6.5	get ArrayBuffer.prototype.resizable	
+sec-get-dataview.prototype.buffer	25.3.4.1	25.3.4.1	get DataView.prototype.buffer	
+sec-get-dataview.prototype.bytelength	25.3.4.2	25.3.4.2	get DataView.prototype.byteLength	
+sec-get-dataview.prototype.byteoffset	25.3.4.3	25.3.4.3	get DataView.prototype.byteOffset	
+sec-get-iterator.prototype-%symbol.tostringtag%	27.1.4.14.1	27.1.3.3.14.1	get Iterator.prototype [ %Symbol.toStringTag% ]	
+sec-get-iterator.prototype.constructor	27.1.4.1.1	27.1.3.3.1.1	get Iterator.prototype.constructor	
+sec-get-map-%symbol.species%	24.1.2.3	24.1.2.3	get Map [ %Symbol.species% ]	
+sec-get-map.prototype.size	24.1.3.10	24.1.3.12	get Map.prototype.size	
+sec-get-o-p	7.3.2	7.3.2	Get	
+sec-get-object.prototype.__proto__	20.1.3.8.1	20.1.3.8.1	get Object.prototype.__proto__	
+sec-get-promise-%symbol.species%	27.2.4.10	27.2.4.10	get Promise [ %Symbol.species% ]	
+sec-get-regexp-%symbol.species%	22.2.5.3	22.2.5.3	get RegExp [ %Symbol.species% ]	
+sec-get-regexp.prototype.dotAll	22.2.6.3	22.2.6.3	get RegExp.prototype.dotAll	
+sec-get-regexp.prototype.flags	22.2.6.4	22.2.6.4	get RegExp.prototype.flags	
+sec-get-regexp.prototype.global	22.2.6.5	22.2.6.5	get RegExp.prototype.global	
+sec-get-regexp.prototype.hasIndices	22.2.6.6	22.2.6.6	get RegExp.prototype.hasIndices	
+sec-get-regexp.prototype.ignorecase	22.2.6.7	22.2.6.7	get RegExp.prototype.ignoreCase	
+sec-get-regexp.prototype.multiline	22.2.6.10	22.2.6.10	get RegExp.prototype.multiline	
+sec-get-regexp.prototype.source	22.2.6.13	22.2.6.13	get RegExp.prototype.source	
+sec-get-regexp.prototype.sticky	22.2.6.15	22.2.6.15	get RegExp.prototype.sticky	
+sec-get-regexp.prototype.unicode	22.2.6.18	22.2.6.18	get RegExp.prototype.unicode	
+sec-get-regexp.prototype.unicodesets	22.2.6.19	22.2.6.19	get RegExp.prototype.unicodeSets	
+sec-get-set-%symbol.species%	24.2.3.2	24.2.3.2	get Set [ %Symbol.species% ]	
+sec-get-set.prototype.size	24.2.4.14	24.2.4.14	get Set.prototype.size	
+sec-get-sharedarraybuffer.prototype.bytelength	25.2.5.1	25.2.5.1	get SharedArrayBuffer.prototype.byteLength	
+sec-get-sharedarraybuffer.prototype.growable	25.2.5.4	25.2.5.4	get SharedArrayBuffer.prototype.growable	
+sec-get-sharedarraybuffer.prototype.maxbytelength	25.2.5.5	25.2.5.5	get SharedArrayBuffer.prototype.maxByteLength	
+sec-getactivescriptormodule	9.4.1	9.4.1	GetActiveScriptOrModule	
+sec-getarraybuffermaxbytelengthoption	25.1.3.7	25.1.3.7	GetArrayBufferMaxByteLengthOption	
+sec-getexportednames	16.2.1.7.2.1	16.2.1.7.2.1	GetExportedNames	
+sec-getfunctionrealm	7.3.24	7.3.24	GetFunctionRealm	
+sec-getgeneratorkind	27.5.3.5	27.5.3.5	GetGeneratorKind	
+sec-getglobalobject	9.4.6	9.4.6	GetGlobalObject	
+sec-getidentifierreference	9.1.2.1	9.1.2.1	GetIdentifierReference	
+sec-getiterator	7.4.4	7.4.4	GetIterator	
+sec-getiteratordirect	7.4.2	7.4.2	GetIteratorDirect	
+sec-getiteratorflattenable	7.4.5	7.4.5	GetIteratorFlattenable	
+sec-getiteratorfrommethod	7.4.3	7.4.3	GetIteratorFromMethod	
+sec-getmatchindexpair	22.2.7.7	22.2.7.7	GetMatchIndexPair	
+sec-getmatchstring	22.2.7.6	22.2.7.6	GetMatchString	
+sec-getmethod	7.3.10	7.3.10	GetMethod	
+sec-getmodifysetvalueinbuffer	25.1.3.19	25.1.3.19	GetModifySetValueInBuffer	
+sec-getmodulenamespace	16.2.1.13	16.2.1.13	GetModuleNamespace	
+sec-getnamedtimezoneepochnanoseconds	21.4.1.20	21.4.1.20	GetNamedTimeZoneEpochNanoseconds	
+sec-getnamedtimezoneoffsetnanoseconds	21.4.1.21	21.4.1.21	GetNamedTimeZoneOffsetNanoseconds	
+sec-getnewtarget	9.4.5	9.4.5	GetNewTarget	
+sec-getoptionsobject		7.3.36	GetOptionsObject	
+sec-getownpropertykeys	20.1.2.11.1	20.1.2.11.1	GetOwnPropertyKeys	
+sec-getpromiseresolve	27.2.4.1.1	27.2.4.1.1	GetPromiseResolve	
+sec-getprototypefromconstructor	10.1.14	10.1.14	GetPrototypeFromConstructor	
+sec-getrawbytesfromsharedblock	25.1.3.15	25.1.3.15	GetRawBytesFromSharedBlock	
+sec-getsetrecord	24.2.1.2	24.2.1.2	GetSetRecord	
+sec-getstringindex	22.2.7.4	22.2.7.4	GetStringIndex	
+sec-getsubstitution	22.1.3.19.1	22.1.3.19.1	GetSubstitution	
+sec-getsuperbase	9.1.1.3.5	9.1.1.3.5	GetSuperBase	
+sec-getsuperconstructor	13.3.7.2	13.3.7.2	GetSuperConstructor	
+sec-gettemplateobject	13.2.8.4	13.2.8.4	GetTemplateObject	
+sec-getthisenvironment	9.4.3	9.4.3	GetThisEnvironment	
+sec-getthisvalue	6.2.5.7	6.2.5.7	GetThisValue	
+sec-getuint8arraybytes		23.3.3.2	GetUint8ArrayBytes	
+sec-getutcepochnanoseconds	21.4.1.18	21.4.1.18	GetUTCEpochNanoseconds	
+sec-getv	7.3.3	7.3.3	GetV	
+sec-getvalue	6.2.5.5	6.2.5.5	GetValue	
+sec-getvaluefrombuffer	25.1.3.16	25.1.3.16	GetValueFromBuffer	
+sec-getviewbytelength	25.3.1.3	25.3.1.3	GetViewByteLength	
+sec-getviewvalue	25.3.1.5	25.3.1.5	GetViewValue	
+sec-getwaiterlist	25.4.3.5	25.4.3.5	GetWaiterList	
+sec-global-environment-records	9.1.1.4	9.1.1.4	Global Environment Records	
+sec-global-environment-records-createimmutablebinding-n-s	9.1.1.4.3	9.1.1.4.3	CreateImmutableBinding	
+sec-global-environment-records-createmutablebinding-n-d	9.1.1.4.2	9.1.1.4.2	CreateMutableBinding	
+sec-global-environment-records-deletebinding-n	9.1.1.4.7	9.1.1.4.7	DeleteBinding	
+sec-global-environment-records-getbindingvalue-n-s	9.1.1.4.6	9.1.1.4.6	GetBindingValue	
+sec-global-environment-records-getthisbinding	9.1.1.4.11	9.1.1.4.9	GetThisBinding	
+sec-global-environment-records-hasbinding-n	9.1.1.4.1	9.1.1.4.1	HasBinding	
+sec-global-environment-records-hassuperbinding	9.1.1.4.9	9.1.1.4.10	HasSuperBinding	
+sec-global-environment-records-hasthisbinding	9.1.1.4.8	9.1.1.4.8	HasThisBinding	
+sec-global-environment-records-initializebinding-n-v	9.1.1.4.4	9.1.1.4.4	InitializeBinding	
+sec-global-environment-records-setmutablebinding-n-v-s	9.1.1.4.5	9.1.1.4.5	SetMutableBinding	
+sec-global-environment-records-withbaseobject	9.1.1.4.10	9.1.1.4.11	WithBaseObject	
+sec-global-object	19	19	The Global Object	
+sec-globaldeclarationinstantiation	16.1.7	16.1.7	GlobalDeclarationInstantiation	
+sec-globalthis	19.1.1	19.1.1	globalThis	
+sec-grammar-notation	5.1.5	5.1.5	Grammar Notation	
+sec-grammar-summary	A	A	Grammar Summary	
+sec-grammatical-parameters	5.1.5.4	5.1.5.4	Grammatical Parameters	
+sec-groupby	7.3.35	7.3.35	GroupBy	
+sec-grouping-operator	13.2.9	13.2.9	The Grouping Operator	
+sec-grouping-operator-runtime-semantics-evaluation	13.2.9.2	13.2.9.2	Runtime Semantics: Evaluation	
+sec-grouping-operator-static-semantics-early-errors	13.2.9.1	13.2.9.1	Static Semantics: Early Errors	
+sec-groupspecifiersthatmatch	22.2.1.9	22.2.1.9	Static Semantics: GroupSpecifiersThatMatch	
+sec-growable-sharedarraybuffer-guidelines	25.2.7	25.2.7	Growable SharedArrayBuffer Guidelines	
+sec-happens-before	29.6.6	29.6.6	happens-before	
+sec-hashbang	12.5	12.5	Hashbang Comments	
+sec-haslexicaldeclaration	9.1.1.4.12	9.1.1.4.12	HasLexicalDeclaration	
+sec-hasownproperty	7.3.12	7.3.12	HasOwnProperty	
+sec-hasproperty	7.3.11	7.3.11	HasProperty	
+sec-hasrestrictedglobalproperty	9.1.1.4.13	9.1.1.4.13	HasRestrictedGlobalProperty	
+sec-host-built-in-objects-and-methods	D.6	D.6	Built-in Objects and Methods	
+sec-host-cleanup-finalization-registry	9.9.4.1	9.9.4.1	HostEnqueueFinalizationRegistryCleanupJob	
+sec-host-defined-fields-summary	D.2	D.2	Host-defined Fields	
+sec-host-defined-objects-summary	D.3	D.3	Host-defined Objects	
+sec-host-hooks-summary	D.1	D.1	Host Hooks	
+sec-host-internal-methods-of-exotic-objects	D.5	D.5	Internal Methods of Exotic Objects	
+sec-host-layering-points	D	D	Host Layering Points	
+sec-host-promise-rejection-tracker	27.2.1.9	27.2.1.9	HostPromiseRejectionTracker	
+sec-host-running-jobs	D.4	D.4	Running Jobs	
+sec-host-synchronizes-with	29.6.4	29.6.4	host-synchronizes-with	
+sec-hostcalljobcallback	9.5.3	9.5.3	HostCallJobCallback	
+sec-hostenqueuegenericjob	9.5.4	9.5.4	HostEnqueueGenericJob	
+sec-hostenqueuepromisejob	9.5.5	9.5.5	HostEnqueuePromiseJob	
+sec-hostenqueuetimeoutjob	9.5.6	9.5.6	HostEnqueueTimeoutJob	
+sec-hostensurecanaddprivateelement	7.3.29	7.3.29	HostEnsureCanAddPrivateElement	
+sec-hostensurecancompilestrings	19.2.1.2	19.2.1.2	HostEnsureCanCompileStrings	
+sec-hosteventset	29.5.3	29.5.3	HostEventSet	
+sec-hostfinalizeimportmeta	13.3.12.1.2	13.3.12.1.2	HostFinalizeImportMeta	
+sec-hostgetimportmetaproperties	13.3.12.1.1	13.3.12.1.1	HostGetImportMetaProperties	
+sec-hostgetsupportedimportattributes	16.2.1.12.1	16.2.1.12.1	HostGetSupportedImportAttributes	
+sec-hostgrowsharedarraybuffer	25.2.2.3	25.2.2.4	HostGrowSharedArrayBuffer	
+sec-hosthassourcetextavailable	20.2.5	20.2.5	HostHasSourceTextAvailable	
+sec-hostmakejobcallback	9.5.2	9.5.2	HostMakeJobCallback	
+sec-hostresizearraybuffer	25.1.3.8	25.1.3.8	HostResizeArrayBuffer	
+sec-hosts-and-implementations	4.2	4.2	Hosts and Implementations	
+sec-hourfromtime	21.4.1.14	21.4.1.14	HourFromTime	
+sec-html-like-comments	B.1.1	B.1.1	HTML-like Comments	
+sec-identifier-names	12.7.1	12.7.1	Identifier Names	
+sec-identifier-names-static-semantics-early-errors	12.7.1.1	12.7.1.1	Static Semantics: Early Errors	
+sec-identifier-reference	13.2.2	13.2.2	Identifier Reference	
+sec-identifiercodepoint	12.7.1.3	12.7.1.3	Static Semantics: IdentifierCodePoint	
+sec-identifiercodepoints	12.7.1.2	12.7.1.2	Static Semantics: IdentifierCodePoints	
+sec-identifiers	13.1	13.1	Identifiers	
+sec-identifiers-runtime-semantics-evaluation	13.1.3	13.1.3	Runtime Semantics: Evaluation	
+sec-identifiers-static-semantics-early-errors	13.1.1	13.1.1	Static Semantics: Early Errors	
+sec-identity	5.2.7	5.2.8	Identity	
+sec-if-statement	14.6	14.6	The `if` Statement	
+sec-if-statement-runtime-semantics-evaluation	14.6.2	14.6.2	Runtime Semantics: Evaluation	
+sec-if-statement-static-semantics-early-errors	14.6.1	14.6.1	Static Semantics: Early Errors	
+sec-ifabruptcloseasynciterator		7.4.15	IfAbruptCloseAsyncIterator	
+sec-ifabruptcloseiterator	7.4.12	7.4.13	IfAbruptCloseIterator	
+sec-ifabruptrejectpromise	27.2.1.1.1	27.2.1.1.1	IfAbruptRejectPromise	
+sec-immutable-prototype-exotic-objects	10.4.7	10.4.7	Immutable Prototype Exotic Objects	
+sec-immutable-prototype-exotic-objects-setprototypeof-v	10.4.7.1	10.4.7.1	[[SetPrototypeOf]]	
+sec-implicit-normal-completion	5.2.3.5	5.2.4.4	Implicit Normal Completion	
+sec-import-call-runtime-semantics-evaluation	13.3.10.1	13.3.10.1	Runtime Semantics: Evaluation	
+sec-import-calls	13.3.10	13.3.10	Import Calls	
+sec-importedlocalnames	16.2.1.2	16.2.1.2	Static Semantics: ImportedLocalNames	
+sec-imports	16.2.2	16.2.2	Imports	
+sec-imports-static-semantics-early-errors	16.2.2.1	16.2.2.1	Static Semantics: Early Errors	
+sec-indexed-collections	23	23	Indexed Collections	
+sec-inherited-property	4.4.42	4.4.42	inherited property	
+sec-initializeboundname	8.6.2.1	8.6.2.1	InitializeBoundName	
+sec-initializehostdefinedrealm	9.3.1	9.3.1	InitializeHostDefinedRealm	
+sec-initializeinstanceelements	7.3.33	7.3.33	InitializeInstanceElements	
+sec-initializereferencedbinding	6.2.5.8	6.2.5.8	InitializeReferencedBinding	
+sec-initializers-in-forin-statement-heads	B.3.5	B.3.5	Initializers in ForIn Statement Heads	
+sec-initializetypedarrayfromarraybuffer	23.2.5.1.3	23.2.5.1.3	InitializeTypedArrayFromArrayBuffer	
+sec-initializetypedarrayfromarraylike	23.2.5.1.5	23.2.5.1.5	InitializeTypedArrayFromArrayLike	
+sec-initializetypedarrayfromlist	23.2.5.1.4	23.2.5.1.4	InitializeTypedArrayFromList	
+sec-initializetypedarrayfromtypedarray	23.2.5.1.2	23.2.5.1.2	InitializeTypedArrayFromTypedArray	
+sec-inleapyear	21.4.1.10	21.4.1.10	InLeapYear	
+sec-innermoduleevaluation	16.2.1.6.1.3.1	16.2.1.6.1.3.1	InnerModuleEvaluation	
+sec-installerrorcause	20.5.8.1	20.5.8.1	InstallErrorCause	
+sec-instanceofoperator	13.10.2	13.10.2	InstanceofOperator	
+sec-int16array	19.3.18	19.3.18	Int16Array	
+sec-int32array	19.3.19	19.3.19	Int32Array	
+sec-int8array	19.3.17	19.3.17	Int8Array	
+sec-interesting-cases-of-automatic-semicolon-insertion	12.10.3	12.10.3	Interesting Cases of Automatic Semicolon Insertion	
+sec-internalizejsonproperty	25.5.1.2	25.5.2.4	InternalizeJSONProperty	
+sec-invariants-of-the-essential-internal-methods	6.1.7.3	6.1.7.3	Invariants of the Essential Internal Methods	
+sec-invoke	7.3.20	7.3.20	Invoke	
+sec-isaccessordescriptor	6.2.6.1	6.2.6.1	IsAccessorDescriptor	
+sec-isanonymousfunctiondefinition	8.4.3	8.4.3	Static Semantics: IsAnonymousFunctionDefinition	
+sec-isarray	7.2.2	7.2.2	IsArray	
+sec-isarraybufferviewoutofbounds	10.4.5.19	10.4.5.19	IsArrayBufferViewOutOfBounds	
+sec-isbigintelementtype	25.1.3.12	25.1.3.12	IsBigIntElementType	
+sec-iscallable	7.2.3	7.2.3	IsCallable	
+sec-iscompatiblepropertydescriptor	10.1.6.2	10.1.6.2	IsCompatiblePropertyDescriptor	
+sec-isconcatspreadable	23.1.3.2.1	23.1.3.2.1	IsConcatSpreadable	
+sec-isconstructor	7.2.4	7.2.4	IsConstructor	
+sec-isdatadescriptor	6.2.6.2	6.2.6.2	IsDataDescriptor	
+sec-isdetachedbuffer	25.1.3.4	25.1.3.4	IsDetachedBuffer	
+sec-isextensible-o	7.2.5	7.2.5	IsExtensible	
+sec-isfinite-number	19.2.2	19.2.2	isFinite	
+sec-isfixedlengtharraybuffer	25.1.3.9	25.1.3.9	IsFixedLengthArrayBuffer	
+sec-isgenericdescriptor	6.2.6.3	6.2.6.3	IsGenericDescriptor	
+sec-isgrowablesharedarraybuffer		25.2.2.3	IsGrowableSharedArrayBuffer	
+sec-isintailposition	15.10.1	15.10.1	Static Semantics: IsInTailPosition	
+sec-islabelledfunction	14.13.2	14.13.2	Static Semantics: IsLabelledFunction	
+sec-islessthan	7.2.12	7.2.12	IsLessThan	
+sec-islooselyequal	7.2.13	7.2.13	IsLooselyEqual	
+sec-isnan-number	19.2.3	19.2.3	isNaN	
+sec-isnotearconfiguration	25.1.3.13	25.1.3.13	IsNoTearConfiguration	
+sec-isprivatereference	6.2.5.4	6.2.5.4	IsPrivateReference	
+sec-ispromise	27.2.1.6	27.2.1.6	IsPromise	
+sec-ispropertyreference	6.2.5.1	6.2.5.1	IsPropertyReference	
+sec-isregexp	7.2.6	7.2.6	IsRegExp	
+sec-issharedarraybuffer	25.2.2.2	25.2.2.2	IsSharedArrayBuffer	
+sec-isstrict	11.2.2.1	11.2.2.1	Static Semantics: IsStrict	
+sec-isstrictlyequal	7.2.14	7.2.14	IsStrictlyEqual	
+sec-isstringwellformedunicode	7.2.7	7.2.7	Static Semantics: IsStringWellFormedUnicode	
+sec-issuperreference	6.2.5.3	6.2.5.3	IsSuperReference	
+sec-istimezoneoffsetstring	21.4.1.33.1	21.4.1.33.1	IsTimeZoneOffsetString	
+sec-istypedarrayfixedlength	10.4.5.15	10.4.5.15	IsTypedArrayFixedLength	
+sec-istypedarrayoutofbounds	10.4.5.14	10.4.5.14	IsTypedArrayOutOfBounds	
+sec-isunclampedintegerelementtype	25.1.3.11	25.1.3.11	IsUnclampedIntegerElementType	
+sec-isunresolvablereference	6.2.5.2	6.2.5.2	IsUnresolvableReference	
+sec-isunsignedelementtype	25.1.3.10	25.1.3.10	IsUnsignedElementType	
+sec-isvalidintegerindex	10.4.5.16	10.4.5.16	IsValidIntegerIndex	
+sec-isvalidregularexpressionliteral	13.2.7.2	13.2.7.2	Static Semantics: IsValidRegularExpressionLiteral	
+sec-isviewoutofbounds	25.3.1.4	25.3.1.4	IsViewOutOfBounds	
+sec-iterable-interface	27.1.1.1	27.1.1.1	The Iterable Interface	
+sec-iteration	27.1	27.1	Iteration	
+sec-iteration-statements	14.7	14.7	Iteration Statements	
+sec-iteration-statements-semantics	14.7.1	14.7.1	Semantics	
+sec-iterator	27.1.3.1.1	27.1.3.1.1	Iterator	
+sec-iterator-constructor	27.1.3.1	27.1.3.1	The Iterator Constructor	
+sec-iterator-helper-objects	27.1.2	27.1.2	Iterator Helper Objects	
+sec-iterator-interface	27.1.1.2	27.1.1.2	The Iterator Interface	
+sec-iterator-objects	27.1.3	27.1.3	Iterator Objects	
+sec-iterator-records	7.4.1	7.4.1	Iterator Records	
+sec-iterator.concat		27.1.3.2.1	Iterator.concat	
+sec-iterator.from	27.1.3.2.1	27.1.3.2.2	Iterator.from	
+sec-iterator.prototype	27.1.3.2.2	27.1.3.2.3	Iterator.prototype	
+sec-iterator.prototype-%symbol.iterator%	27.1.4.13	27.1.3.3.13	Iterator.prototype [ %Symbol.iterator% ]	
+sec-iterator.prototype-%symbol.tostringtag%	27.1.4.14	27.1.3.3.14	Iterator.prototype [ %Symbol.toStringTag% ]	
+sec-iterator.prototype.constructor	27.1.4.1	27.1.3.3.1	Iterator.prototype.constructor	
+sec-iterator.prototype.drop	27.1.4.2	27.1.3.3.2	Iterator.prototype.drop	
+sec-iterator.prototype.every	27.1.4.3	27.1.3.3.3	Iterator.prototype.every	
+sec-iterator.prototype.filter	27.1.4.4	27.1.3.3.4	Iterator.prototype.filter	
+sec-iterator.prototype.find	27.1.4.5	27.1.3.3.5	Iterator.prototype.find	
+sec-iterator.prototype.flatmap	27.1.4.6	27.1.3.3.6	Iterator.prototype.flatMap	
+sec-iterator.prototype.foreach	27.1.4.7	27.1.3.3.7	Iterator.prototype.forEach	
+sec-iterator.prototype.map	27.1.4.8	27.1.3.3.8	Iterator.prototype.map	
+sec-iterator.prototype.reduce	27.1.4.9	27.1.3.3.9	Iterator.prototype.reduce	
+sec-iterator.prototype.some	27.1.4.10	27.1.3.3.10	Iterator.prototype.some	
+sec-iterator.prototype.take	27.1.4.11	27.1.3.3.11	Iterator.prototype.take	
+sec-iterator.prototype.toarray	27.1.4.12	27.1.3.3.12	Iterator.prototype.toArray	
+sec-iteratorclose	7.4.11	7.4.11	IteratorClose	
+sec-iteratorcloseall		7.4.12	IteratorCloseAll	
+sec-iteratorcomplete	7.4.7	7.4.7	IteratorComplete	
+sec-iteratornext	7.4.6	7.4.6	IteratorNext	
+sec-iteratorresult-interface	27.1.1.5	27.1.1.5	The IteratorResult Interface	
+sec-iteratorstep	7.4.9	7.4.9	IteratorStep	
+sec-iteratorstepvalue	7.4.10	7.4.10	IteratorStepValue	
+sec-iteratortolist	7.4.16	7.4.18	IteratorToList	
+sec-iteratorvalue	7.4.8	7.4.8	IteratorValue	
+sec-jobcallback-records	9.5.1	9.5.1	JobCallback Records	
+sec-jobs	9.5	9.5	Jobs and Host Operations to Enqueue Jobs	
+sec-json	19.4.2	19.4.2	JSON	
+sec-json-%symbol.tostringtag%	25.5.3	25.5.5	JSON [ %Symbol.toStringTag% ]	
+sec-json-object	25.5	25.5	The JSON Object	
+sec-json-parse-record		25.5.2.2	JSON Parse Record	
+sec-json-serialization-record	25.5.2.1	25.5.4.1	JSON Serialization Record	
+sec-json.israwjson		25.5.1	JSON.isRawJSON	
+sec-json.parse	25.5.1	25.5.2	JSON.parse	
+sec-json.rawjson		25.5.3	JSON.rawJSON	
+sec-json.stringify	25.5.2	25.5.4	JSON.stringify	
+sec-keyed-collections	24	24	Keyed Collections	
+sec-keyforsymbol	20.4.5.1	20.4.5.1	KeyForSymbol	
+sec-keywords-and-reserved-words	12.7.2	12.7.2	Keywords and Reserved Words	
+sec-labelled-function-declarations	B.3.1	B.3.1	Labelled Function Declarations	
+sec-labelled-statements	14.13	14.13	Labelled Statements	
+sec-labelled-statements-runtime-semantics-evaluation	14.13.3	14.13.3	Runtime Semantics: Evaluation	
+sec-labelled-statements-static-semantics-early-errors	14.13.1	14.13.1	Static Semantics: Early Errors	
+sec-lastindex	22.2.8.1	22.2.8.1	lastIndex	
+sec-leavecriticalsection	25.4.3.7	25.4.3.7	LeaveCriticalSection	
+sec-left-hand-side-expressions	13.3	13.3	Left-Hand-Side Expressions	
+sec-left-hand-side-expressions-static-semantics-early-errors	13.3.1.1	13.3.1.1	Static Semantics: Early Errors	
+sec-left-shift-operator	13.9.1	13.9.1	The Left Shift Operator	
+sec-left-shift-operator-runtime-semantics-evaluation	13.9.1.1	13.9.1.1	Runtime Semantics: Evaluation	
+sec-lengthofarraylike	7.3.18	7.3.18	LengthOfArrayLike	
+sec-let-and-const-declarations	14.3.1	14.3.1	Let and Const Declarations	
+sec-let-and-const-declarations-runtime-semantics-evaluation	14.3.1.2	14.3.1.2	Runtime Semantics: Evaluation	
+sec-let-and-const-declarations-static-semantics-early-errors	14.3.1.1	14.3.1.1	Static Semantics: Early Errors	
+sec-lexical-and-regexp-grammars	5.1.2	5.1.2	The Lexical and RegExp Grammars	
+sec-lexical-environment-and-environment-record-specification-types	6.2.7	6.2.7	The Environment Record Specification Type	
+sec-lexical-grammar	A.1	A.1	Lexical Grammar	
+sec-line-terminators	12.3	12.3	Line Terminators	
+sec-list-and-record-specification-type	6.2.2	6.2.2	The List and Record Specification Types	
+sec-literals-numeric-literals	12.9.3	12.9.3	Numeric Literals	
+sec-literals-regular-expression-literals	12.9.5	12.9.5	Regular Expression Literals	
+sec-literals-runtime-semantics-evaluation	13.2.3.1	13.2.3.1	Runtime Semantics: Evaluation	
+sec-literals-string-literals	12.9.4	12.9.4	String Literals	
+sec-liveness	9.9.2	9.9.2	Liveness	
+sec-localtime	21.4.1.25	21.4.1.25	LocalTime	
+sec-logical-not-operator	13.5.7	13.5.7	Logical NOT Operator	
+sec-logical-not-operator-runtime-semantics-evaluation	13.5.7.1	13.5.7.1	Runtime Semantics: Evaluation	
+sec-lookahead-restrictions	5.1.5.7	5.1.5.7	Lookahead Restrictions	
+sec-loopcontinues	14.7.1.1	14.7.1.1	LoopContinues	
+sec-makearggetter	10.4.4.7.1	10.4.4.7.1	MakeArgGetter	
+sec-makeargsetter	10.4.4.7.2	10.4.4.7.2	MakeArgSetter	
+sec-makebasicobject	7.3.1	7.3.1	MakeBasicObject	
+sec-makeclassconstructor	10.2.6	10.2.6	MakeClassConstructor	
+sec-makeconstructor	10.2.5	10.2.5	MakeConstructor	
+sec-makedataviewwithbufferwitnessrecord	25.3.1.2	25.3.1.2	MakeDataViewWithBufferWitnessRecord	
+sec-makedate	21.4.1.29	21.4.1.29	MakeDate	
+sec-makeday	21.4.1.28	21.4.1.28	MakeDay	
+sec-makefullyear	21.4.1.30	21.4.1.30	MakeFullYear	
+sec-makematchindicesindexpairarray	22.2.7.8	22.2.7.8	MakeMatchIndicesIndexPairArray	
+sec-makemethod	10.2.7	10.2.7	MakeMethod	
+sec-makeprivatereference	6.2.5.9	6.2.5.9	MakePrivateReference	
+sec-makesuperpropertyreference	13.3.7.3	13.3.7.3	MakeSuperPropertyReference	
+sec-maketime	21.4.1.27	21.4.1.27	MakeTime	
+sec-maketypedarraywithbufferwitnessrecord	10.4.5.10	10.4.5.10	MakeTypedArrayWithBufferWitnessRecord	
+sec-managing-memory	26	26	Managing Memory	
+sec-map	19.3.21	19.3.21	Map	
+sec-map-constructor	24.1.1	24.1.1	The Map Constructor	
+sec-map-iterable	24.1.1.1	24.1.1.1	Map	
+sec-map-iterator-objects	24.1.5	24.1.5	Map Iterator Objects	
+sec-map-objects	24.1	24.1	Map Objects	
+sec-map.groupby	24.1.2.1	24.1.2.1	Map.groupBy	
+sec-map.prototype	24.1.2.2	24.1.2.2	Map.prototype	
+sec-map.prototype-%symbol.iterator%	24.1.3.12	24.1.3.14	Map.prototype [ %Symbol.iterator% ]	
+sec-map.prototype-%symbol.tostringtag%	24.1.3.13	24.1.3.15	Map.prototype [ %Symbol.toStringTag% ]	
+sec-map.prototype.clear	24.1.3.1	24.1.3.1	Map.prototype.clear	
+sec-map.prototype.constructor	24.1.3.2	24.1.3.2	Map.prototype.constructor	
+sec-map.prototype.delete	24.1.3.3	24.1.3.3	Map.prototype.delete	
+sec-map.prototype.entries	24.1.3.4	24.1.3.4	Map.prototype.entries	
+sec-map.prototype.foreach	24.1.3.5	24.1.3.5	Map.prototype.forEach	
+sec-map.prototype.get	24.1.3.6	24.1.3.6	Map.prototype.get	
+sec-map.prototype.getorinsert		24.1.3.7	Map.prototype.getOrInsert	
+sec-map.prototype.getorinsertcomputed		24.1.3.8	Map.prototype.getOrInsertComputed	
+sec-map.prototype.has	24.1.3.7	24.1.3.9	Map.prototype.has	
+sec-map.prototype.keys	24.1.3.8	24.1.3.10	Map.prototype.keys	
+sec-map.prototype.set	24.1.3.9	24.1.3.11	Map.prototype.set	
+sec-map.prototype.values	24.1.3.11	24.1.3.13	Map.prototype.values	
+sec-match-records	22.2.7.5	22.2.7.5	Match Records	
+sec-matchsequence	22.2.2.3.4	22.2.2.3.4	MatchSequence	
+sec-matchtwoalternatives	22.2.2.3.3	22.2.2.3.3	MatchTwoAlternatives	
+sec-math	19.4.3	19.4.3	Math	
+sec-math-%symbol.tostringtag%	21.3.1.9	21.3.1.9	Math [ %Symbol.toStringTag% ]	
+sec-math-object	21.3	21.3	The Math Object	
+sec-math.abs	21.3.2.1	21.3.2.1	Math.abs	
+sec-math.acos	21.3.2.2	21.3.2.2	Math.acos	
+sec-math.acosh	21.3.2.3	21.3.2.3	Math.acosh	
+sec-math.asin	21.3.2.4	21.3.2.4	Math.asin	
+sec-math.asinh	21.3.2.5	21.3.2.5	Math.asinh	
+sec-math.atan	21.3.2.6	21.3.2.6	Math.atan	
+sec-math.atan2	21.3.2.8	21.3.2.8	Math.atan2	
+sec-math.atanh	21.3.2.7	21.3.2.7	Math.atanh	
+sec-math.cbrt	21.3.2.9	21.3.2.9	Math.cbrt	
+sec-math.ceil	21.3.2.10	21.3.2.10	Math.ceil	
+sec-math.clz32	21.3.2.11	21.3.2.11	Math.clz32	
+sec-math.cos	21.3.2.12	21.3.2.12	Math.cos	
+sec-math.cosh	21.3.2.13	21.3.2.13	Math.cosh	
+sec-math.e	21.3.1.1	21.3.1.1	Math.E	
+sec-math.exp	21.3.2.14	21.3.2.14	Math.exp	
+sec-math.expm1	21.3.2.15	21.3.2.15	Math.expm1	
+sec-math.f16round	21.3.2.18	21.3.2.18	Math.f16round	
+sec-math.floor	21.3.2.16	21.3.2.16	Math.floor	
+sec-math.fround	21.3.2.17	21.3.2.17	Math.fround	
+sec-math.hypot	21.3.2.19	21.3.2.19	Math.hypot	
+sec-math.imul	21.3.2.20	21.3.2.20	Math.imul	
+sec-math.ln10	21.3.1.2	21.3.1.2	Math.LN10	
+sec-math.ln2	21.3.1.3	21.3.1.3	Math.LN2	
+sec-math.log	21.3.2.21	21.3.2.21	Math.log	
+sec-math.log10	21.3.2.23	21.3.2.23	Math.log10	
+sec-math.log10e	21.3.1.4	21.3.1.4	Math.LOG10E	
+sec-math.log1p	21.3.2.22	21.3.2.22	Math.log1p	
+sec-math.log2	21.3.2.24	21.3.2.24	Math.log2	
+sec-math.log2e	21.3.1.5	21.3.1.5	Math.LOG2E	
+sec-math.max	21.3.2.25	21.3.2.25	Math.max	
+sec-math.min	21.3.2.26	21.3.2.26	Math.min	
+sec-math.pi	21.3.1.6	21.3.1.6	Math.PI	
+sec-math.pow	21.3.2.27	21.3.2.27	Math.pow	
+sec-math.random	21.3.2.28	21.3.2.28	Math.random	
+sec-math.round	21.3.2.29	21.3.2.29	Math.round	
+sec-math.sign	21.3.2.30	21.3.2.30	Math.sign	
+sec-math.sin	21.3.2.31	21.3.2.31	Math.sin	
+sec-math.sinh	21.3.2.32	21.3.2.32	Math.sinh	
+sec-math.sqrt	21.3.2.33	21.3.2.33	Math.sqrt	
+sec-math.sqrt1_2	21.3.1.7	21.3.1.7	Math.SQRT1_2	
+sec-math.sqrt2	21.3.1.8	21.3.1.8	Math.SQRT2	
+sec-math.sumprecise		21.3.2.34	Math.sumPrecise	
+sec-math.tan	21.3.2.34	21.3.2.35	Math.tan	
+sec-math.tanh	21.3.2.35	21.3.2.36	Math.tanh	
+sec-math.trunc	21.3.2.36	21.3.2.37	Math.trunc	
+sec-mathematical-operations	5.2.5	5.2.6	Mathematical Operations	
+sec-maybesimplecasefolding	22.2.2.9.5	22.2.2.9.5	MaybeSimpleCaseFolding	
+sec-memory-model	29	29	Memory Model	
+sec-memory-model-fundamentals	29.1	29.1	Memory Model Fundamentals	
+sec-memory-order	29.7.4	29.7.4	Sequentially Consistent Atomics	
+sec-meta-properties	13.3.12	13.3.12	Meta Properties	
+sec-meta-properties-runtime-semantics-evaluation	13.3.12.1	13.3.12.1	Runtime Semantics: Evaluation	
+sec-method	4.4.38	4.4.38	method	
+sec-method-definitions	15.4	15.4	Method Definitions	
+sec-method-definitions-static-semantics-early-errors	15.4.1	15.4.1	Static Semantics: Early Errors	
+sec-mightbothparticipate	22.2.1.4	22.2.1.4	Static Semantics: MightBothParticipate	
+sec-minfromtime	21.4.1.15	21.4.1.15	MinFromTime	
+sec-module-environment-records	9.1.1.5	9.1.1.5	Module Environment Records	
+sec-module-environment-records-deletebinding-n	9.1.1.5.2	9.1.1.5.2	DeleteBinding	
+sec-module-environment-records-getbindingvalue-n-s	9.1.1.5.1	9.1.1.5.1	GetBindingValue	
+sec-module-environment-records-getthisbinding	9.1.1.5.4	9.1.1.5.4	GetThisBinding	
+sec-module-environment-records-hasthisbinding	9.1.1.5.3	9.1.1.5.3	HasThisBinding	
+sec-module-namespace-exotic-objects	10.4.6	10.4.6	Module Namespace Exotic Objects	
+sec-module-namespace-exotic-objects-defineownproperty-p-desc	10.4.6.6	10.4.6.6	[[DefineOwnProperty]]	
+sec-module-namespace-exotic-objects-delete-p	10.4.6.10	10.4.6.10	[[Delete]]	
+sec-module-namespace-exotic-objects-get-p-receiver	10.4.6.8	10.4.6.8	[[Get]]	
+sec-module-namespace-exotic-objects-getownproperty-p	10.4.6.5	10.4.6.5	[[GetOwnProperty]]	
+sec-module-namespace-exotic-objects-getprototypeof	10.4.6.1	10.4.6.1	[[GetPrototypeOf]]	
+sec-module-namespace-exotic-objects-hasproperty-p	10.4.6.7	10.4.6.7	[[HasProperty]]	
+sec-module-namespace-exotic-objects-isextensible	10.4.6.3	10.4.6.3	[[IsExtensible]]	
+sec-module-namespace-exotic-objects-ownpropertykeys	10.4.6.11	10.4.6.11	[[OwnPropertyKeys]]	
+sec-module-namespace-exotic-objects-preventextensions	10.4.6.4	10.4.6.4	[[PreventExtensions]]	
+sec-module-namespace-exotic-objects-set-p-v-receiver	10.4.6.9	10.4.6.9	[[Set]]	
+sec-module-namespace-exotic-objects-setprototypeof-v	10.4.6.2	10.4.6.2	[[SetPrototypeOf]]	
+sec-module-namespace-objects	28.3	28.3	Module Namespace Objects	
+sec-module-semantics	16.2.1	16.2.1	Module Semantics	
+sec-module-semantics-runtime-semantics-evaluation	16.2.1.14	16.2.1.14	Runtime Semantics: Evaluation	
+sec-module-semantics-static-semantics-early-errors	16.2.1.1	16.2.1.1	Static Semantics: Early Errors	
+sec-moduledeclarationlinking	16.2.1.6.1.2	16.2.1.6.1.2	Link	
+sec-moduleevaluation	16.2.1.6.1.3	16.2.1.6.1.3	Evaluate	
+sec-modulenamespacecreate	10.4.6.12	10.4.6.12	ModuleNamespaceCreate	
+sec-modulerequest-record	16.2.1.3	16.2.1.3	ModuleRequest Records	
+sec-modules	16.2	16.2	Modules	
+sec-monthfromtime	21.4.1.11	21.4.1.11	MonthFromTime	
+sec-msfromtime	21.4.1.17	21.4.1.17	msFromTime	
+sec-multiplicative-operators	13.7	13.7	Multiplicative Operators	
+sec-multiplicative-operators-runtime-semantics-evaluation	13.7.1	13.7.1	Runtime Semantics: Evaluation	
+sec-names-and-keywords	12.7	12.7	Names and Keywords	
+sec-native-error-types-used-in-this-standard	20.5.5	20.5.5	Native Error Types Used in This Standard	
+sec-native-error-types-used-in-this-standard-evalerror	20.5.5.1	20.5.5.1	EvalError	
+sec-native-error-types-used-in-this-standard-rangeerror	20.5.5.2	20.5.5.2	RangeError	
+sec-native-error-types-used-in-this-standard-referenceerror	20.5.5.3	20.5.5.3	ReferenceError	
+sec-native-error-types-used-in-this-standard-syntaxerror	20.5.5.4	20.5.5.4	SyntaxError	
+sec-native-error-types-used-in-this-standard-typeerror	20.5.5.5	20.5.5.5	TypeError	
+sec-native-error-types-used-in-this-standard-urierror	20.5.5.6	20.5.5.6	URIError	
+sec-nativeerror	20.5.6.1.1	20.5.6.1.1	_NativeError_	
+sec-nativeerror-constructors	20.5.6.1	20.5.6.1	The _NativeError_ Constructors	
+sec-nativeerror-object-structure	20.5.6	20.5.6	_NativeError_ Object Structure	
+sec-nativeerror.prototype	20.5.6.2.1	20.5.6.2.1	_NativeError_.prototype	
+sec-nativeerror.prototype.constructor	20.5.6.3.1	20.5.6.3.1	_NativeError_.prototype.constructor	
+sec-nativeerror.prototype.message	20.5.6.3.2	20.5.6.3.2	_NativeError_.prototype.message	
+sec-nativeerror.prototype.name	20.5.6.3.3	20.5.6.3.3	_NativeError_.prototype.name	
+sec-new-operator	13.3.5	13.3.5	The `new` Operator	
+sec-new-operator-runtime-semantics-evaluation	13.3.5.1	13.3.5.1	Runtime Semantics: Evaluation	
+sec-newdeclarativeenvironment	9.1.2.2	9.1.2.2	NewDeclarativeEnvironment	
+sec-newfunctionenvironment	9.1.2.4	9.1.2.4	NewFunctionEnvironment	
+sec-newglobalenvironment	9.1.2.5	9.1.2.5	NewGlobalEnvironment	
+sec-newmoduleenvironment	9.1.2.6	9.1.2.6	NewModuleEnvironment	
+sec-newobjectenvironment	9.1.2.3	9.1.2.3	NewObjectEnvironment	
+sec-newprivateenvironment	9.2.1.1	9.2.1.1	NewPrivateEnvironment	
+sec-newpromisecapability	27.2.1.5	27.2.1.5	NewPromiseCapability	
+sec-newpromisereactionjob	27.2.2.1	27.2.2.1	NewPromiseReactionJob	
+sec-newpromiseresolvethenablejob	27.2.2.2	27.2.2.2	NewPromiseResolveThenableJob	
+sec-no-lineterminator-here	5.1.5.8	5.1.5.8	[no |LineTerminator| here]	
+sec-no-lineterminator-here-automatic-semicolon-insertion-list	12.10.3.2.1	12.10.3.2.1	List of Grammar Productions with Optional Operands and “[no |LineTerminator| here]”	
+sec-non-ecmascript-functions	11.2.3	11.2.3	Non-ECMAScript Functions	
+sec-nonterminal-symbols-and-productions	5.1.5.2	5.1.5.2	Nonterminal Symbols and Productions	
+sec-normalcompletion	6.2.4.1	6.2.4.1	NormalCompletion	
+sec-normative-references	3	3	Normative References	
+sec-notational-conventions	5	5	Notational Conventions	
+sec-notifywaiter	25.4.3.12	25.4.3.12	NotifyWaiter	
+sec-null-literals	12.9.1	12.9.1	Null Literals	
+sec-null-value	4.4.15	4.4.15	null value	
+sec-number-constructor	21.1.1	21.1.1	The Number Constructor	
+sec-number-constructor-number-value	21.1.1.1	21.1.1.1	Number	
+sec-number-conversions	A.6	A.6	Number Conversions	
+sec-number-object	4.4.25	4.4.25	Number object	
+sec-number-objects	21.1	21.1	Number Objects	
+sec-number.epsilon	21.1.2.1	21.1.2.1	Number.EPSILON	
+sec-number.isfinite	21.1.2.2	21.1.2.2	Number.isFinite	
+sec-number.isinteger	21.1.2.3	21.1.2.3	Number.isInteger	
+sec-number.isnan	21.1.2.4	21.1.2.4	Number.isNaN	
+sec-number.issafeinteger	21.1.2.5	21.1.2.5	Number.isSafeInteger	
+sec-number.max_safe_integer	21.1.2.6	21.1.2.6	Number.MAX_SAFE_INTEGER	
+sec-number.max_value	21.1.2.7	21.1.2.7	Number.MAX_VALUE	
+sec-number.min_safe_integer	21.1.2.8	21.1.2.8	Number.MIN_SAFE_INTEGER	
+sec-number.min_value	21.1.2.9	21.1.2.9	Number.MIN_VALUE	
+sec-number.nan	21.1.2.10	21.1.2.10	Number.NaN	
+sec-number.negative_infinity	21.1.2.11	21.1.2.11	Number.NEGATIVE_INFINITY	
+sec-number.parsefloat	21.1.2.12	21.1.2.12	Number.parseFloat	
+sec-number.parseint	21.1.2.13	21.1.2.13	Number.parseInt	
+sec-number.positive_infinity	21.1.2.14	21.1.2.14	Number.POSITIVE_INFINITY	
+sec-number.prototype	21.1.2.15	21.1.2.15	Number.prototype	
+sec-number.prototype.constructor	21.1.3.1	21.1.3.1	Number.prototype.constructor	
+sec-number.prototype.toexponential	21.1.3.2	21.1.3.2	Number.prototype.toExponential	
+sec-number.prototype.tofixed	21.1.3.3	21.1.3.3	Number.prototype.toFixed	
+sec-number.prototype.tolocalestring	21.1.3.4	21.1.3.4	Number.prototype.toLocaleString	
+sec-number.prototype.toprecision	21.1.3.5	21.1.3.5	Number.prototype.toPrecision	
+sec-number.prototype.tostring	21.1.3.6	21.1.3.6	Number.prototype.toString	
+sec-number.prototype.valueof	21.1.3.7	21.1.3.7	Number.prototype.valueOf	
+sec-numberbitwiseop	6.1.6.1.16	6.1.6.1.16	NumberBitwiseOp	
+sec-numbers-and-dates	21	21	Numbers and Dates	
+sec-numbertobigint	21.2.1.1.1	21.2.1.1.1	NumberToBigInt	
+sec-numeric-literals-early-errors	12.9.3.1	12.9.3.1	Static Semantics: Early Errors	
+sec-numeric-string-grammar	5.1.3	5.1.3	The Numeric String Grammar	
+sec-numeric-types	6.1.6	6.1.6	Numeric Types	
+sec-numeric-types-bigint-add	6.1.6.2.7	6.1.6.2.7	BigInt::add	
+sec-numeric-types-bigint-bitwiseAND	6.1.6.2.18	6.1.6.2.18	BigInt::bitwiseAND	
+sec-numeric-types-bigint-bitwiseNOT	6.1.6.2.2	6.1.6.2.2	BigInt::bitwiseNOT	
+sec-numeric-types-bigint-bitwiseOR	6.1.6.2.20	6.1.6.2.20	BigInt::bitwiseOR	
+sec-numeric-types-bigint-bitwiseXOR	6.1.6.2.19	6.1.6.2.19	BigInt::bitwiseXOR	
+sec-numeric-types-bigint-divide	6.1.6.2.5	6.1.6.2.5	BigInt::divide	
+sec-numeric-types-bigint-equal	6.1.6.2.13	6.1.6.2.13	BigInt::equal	
+sec-numeric-types-bigint-exponentiate	6.1.6.2.3	6.1.6.2.3	BigInt::exponentiate	
+sec-numeric-types-bigint-leftShift	6.1.6.2.9	6.1.6.2.9	BigInt::leftShift	
+sec-numeric-types-bigint-lessThan	6.1.6.2.12	6.1.6.2.12	BigInt::lessThan	
+sec-numeric-types-bigint-multiply	6.1.6.2.4	6.1.6.2.4	BigInt::multiply	
+sec-numeric-types-bigint-remainder	6.1.6.2.6	6.1.6.2.6	BigInt::remainder	
+sec-numeric-types-bigint-signedRightShift	6.1.6.2.10	6.1.6.2.10	BigInt::signedRightShift	
+sec-numeric-types-bigint-subtract	6.1.6.2.8	6.1.6.2.8	BigInt::subtract	
+sec-numeric-types-bigint-tostring	6.1.6.2.21	6.1.6.2.21	BigInt::toString	
+sec-numeric-types-bigint-unaryMinus	6.1.6.2.1	6.1.6.2.1	BigInt::unaryMinus	
+sec-numeric-types-bigint-unsignedRightShift	6.1.6.2.11	6.1.6.2.11	BigInt::unsignedRightShift	
+sec-numeric-types-number-add	6.1.6.1.7	6.1.6.1.7	Number::add	
+sec-numeric-types-number-bitwiseAND	6.1.6.1.17	6.1.6.1.17	Number::bitwiseAND	
+sec-numeric-types-number-bitwiseNOT	6.1.6.1.2	6.1.6.1.2	Number::bitwiseNOT	
+sec-numeric-types-number-bitwiseOR	6.1.6.1.19	6.1.6.1.19	Number::bitwiseOR	
+sec-numeric-types-number-bitwiseXOR	6.1.6.1.18	6.1.6.1.18	Number::bitwiseXOR	
+sec-numeric-types-number-divide	6.1.6.1.5	6.1.6.1.5	Number::divide	
+sec-numeric-types-number-equal	6.1.6.1.13	6.1.6.1.13	Number::equal	
+sec-numeric-types-number-exponentiate	6.1.6.1.3	6.1.6.1.3	Number::exponentiate	
+sec-numeric-types-number-leftShift	6.1.6.1.9	6.1.6.1.9	Number::leftShift	
+sec-numeric-types-number-lessThan	6.1.6.1.12	6.1.6.1.12	Number::lessThan	
+sec-numeric-types-number-multiply	6.1.6.1.4	6.1.6.1.4	Number::multiply	
+sec-numeric-types-number-remainder	6.1.6.1.6	6.1.6.1.6	Number::remainder	
+sec-numeric-types-number-sameValue	6.1.6.1.14	6.1.6.1.14	Number::sameValue	
+sec-numeric-types-number-sameValueZero	6.1.6.1.15	6.1.6.1.15	Number::sameValueZero	
+sec-numeric-types-number-signedRightShift	6.1.6.1.10	6.1.6.1.10	Number::signedRightShift	
+sec-numeric-types-number-subtract	6.1.6.1.8	6.1.6.1.8	Number::subtract	
+sec-numeric-types-number-tostring	6.1.6.1.20	6.1.6.1.20	Number::toString	
+sec-numeric-types-number-unaryMinus	6.1.6.1.1	6.1.6.1.1	Number::unaryMinus	
+sec-numeric-types-number-unsignedRightShift	6.1.6.1.11	6.1.6.1.11	Number::unsignedRightShift	
+sec-numerictorawbytes	25.1.3.17	25.1.3.17	NumericToRawBytes	
+sec-numericvalue	12.9.3.3	12.9.3.3	Static Semantics: NumericValue	
+sec-object-constructor	20.1.1	20.1.1	The Object Constructor	
+sec-object-environment-records	9.1.1.2	9.1.1.2	Object Environment Records	
+sec-object-environment-records-createimmutablebinding-n-s	9.1.1.2.3	9.1.1.2.3	CreateImmutableBinding	
+sec-object-environment-records-createmutablebinding-n-d	9.1.1.2.2	9.1.1.2.2	CreateMutableBinding	
+sec-object-environment-records-deletebinding-n	9.1.1.2.7	9.1.1.2.7	DeleteBinding	
+sec-object-environment-records-getbindingvalue-n-s	9.1.1.2.6	9.1.1.2.6	GetBindingValue	
+sec-object-environment-records-getthisbinding		9.1.1.2.9	GetThisBinding	
+sec-object-environment-records-hasbinding-n	9.1.1.2.1	9.1.1.2.1	HasBinding	
+sec-object-environment-records-hassuperbinding	9.1.1.2.9	9.1.1.2.10	HasSuperBinding	
+sec-object-environment-records-hasthisbinding	9.1.1.2.8	9.1.1.2.8	HasThisBinding	
+sec-object-environment-records-initializebinding-n-v	9.1.1.2.4	9.1.1.2.4	InitializeBinding	
+sec-object-environment-records-setmutablebinding-n-v-s	9.1.1.2.5	9.1.1.2.5	SetMutableBinding	
+sec-object-environment-records-withbaseobject	9.1.1.2.10	9.1.1.2.11	WithBaseObject	
+sec-object-initializer	13.2.5	13.2.5	Object Initializer	
+sec-object-initializer-runtime-semantics-evaluation	13.2.5.4	13.2.5.5	Runtime Semantics: Evaluation	
+sec-object-initializer-static-semantics-early-errors	13.2.5.1	13.2.5.1	Static Semantics: Early Errors	
+sec-object-internal-methods-and-internal-slots	6.1.7.2	6.1.7.2	Object Internal Methods and Internal Slots	
+sec-object-objects	20.1	20.1	Object Objects	
+sec-object-type	6.1.7	6.1.7	The Object Type	
+sec-object-value	20.1.1.1	20.1.1.1	Object	
+sec-object.assign	20.1.2.1	20.1.2.1	Object.assign	
+sec-object.create	20.1.2.2	20.1.2.2	Object.create	
+sec-object.defineproperties	20.1.2.3	20.1.2.3	Object.defineProperties	
+sec-object.defineproperty	20.1.2.4	20.1.2.4	Object.defineProperty	
+sec-object.entries	20.1.2.5	20.1.2.5	Object.entries	
+sec-object.freeze	20.1.2.6	20.1.2.6	Object.freeze	
+sec-object.fromentries	20.1.2.7	20.1.2.7	Object.fromEntries	
+sec-object.getownpropertydescriptor	20.1.2.8	20.1.2.8	Object.getOwnPropertyDescriptor	
+sec-object.getownpropertydescriptors	20.1.2.9	20.1.2.9	Object.getOwnPropertyDescriptors	
+sec-object.getownpropertynames	20.1.2.10	20.1.2.10	Object.getOwnPropertyNames	
+sec-object.getownpropertysymbols	20.1.2.11	20.1.2.11	Object.getOwnPropertySymbols	
+sec-object.getprototypeof	20.1.2.12	20.1.2.12	Object.getPrototypeOf	
+sec-object.groupby	20.1.2.13	20.1.2.13	Object.groupBy	
+sec-object.hasown	20.1.2.14	20.1.2.14	Object.hasOwn	
+sec-object.is	20.1.2.15	20.1.2.15	Object.is	
+sec-object.isextensible	20.1.2.16	20.1.2.16	Object.isExtensible	
+sec-object.isfrozen	20.1.2.17	20.1.2.17	Object.isFrozen	
+sec-object.issealed	20.1.2.18	20.1.2.18	Object.isSealed	
+sec-object.keys	20.1.2.19	20.1.2.19	Object.keys	
+sec-object.preventextensions	20.1.2.20	20.1.2.20	Object.preventExtensions	
+sec-object.prototype	20.1.2.21	20.1.2.21	Object.prototype	
+sec-object.prototype-legacy-accessor-methods	20.1.3.9	20.1.3.9	Legacy Object.prototype Accessor Methods	
+sec-object.prototype.__defineGetter__	20.1.3.9.1	20.1.3.9.1	Object.prototype.__defineGetter__	
+sec-object.prototype.__defineSetter__	20.1.3.9.2	20.1.3.9.2	Object.prototype.__defineSetter__	
+sec-object.prototype.__lookupGetter__	20.1.3.9.3	20.1.3.9.3	Object.prototype.__lookupGetter__	
+sec-object.prototype.__lookupSetter__	20.1.3.9.4	20.1.3.9.4	Object.prototype.__lookupSetter__	
+sec-object.prototype.__proto__	20.1.3.8	20.1.3.8	Object.prototype.__proto__	
+sec-object.prototype.constructor	20.1.3.1	20.1.3.1	Object.prototype.constructor	
+sec-object.prototype.hasownproperty	20.1.3.2	20.1.3.2	Object.prototype.hasOwnProperty	
+sec-object.prototype.isprototypeof	20.1.3.3	20.1.3.3	Object.prototype.isPrototypeOf	
+sec-object.prototype.propertyisenumerable	20.1.3.4	20.1.3.4	Object.prototype.propertyIsEnumerable	
+sec-object.prototype.tolocalestring	20.1.3.5	20.1.3.5	Object.prototype.toLocaleString	
+sec-object.prototype.tostring	20.1.3.6	20.1.3.6	Object.prototype.toString	
+sec-object.prototype.valueof	20.1.3.7	20.1.3.7	Object.prototype.valueOf	
+sec-object.seal	20.1.2.22	20.1.2.22	Object.seal	
+sec-object.setprototypeof	20.1.2.23	20.1.2.23	Object.setPrototypeOf	
+sec-object.values	20.1.2.24	20.1.2.24	Object.values	
+sec-objectdefineproperties	20.1.2.3.1	20.1.2.3.1	ObjectDefineProperties	
+sec-objects	4.3.1	4.3.1	Objects	
+sec-one-of	5.1.5.5	5.1.5.5	one of	
+sec-operations-on-iterator-objects	7.4	7.4	Operations on Iterator Objects	
+sec-operations-on-objects	7.3	7.3	Operations on Objects	
+sec-optional-chaining-chain-evaluation	13.3.9.2	13.3.9.2	Runtime Semantics: ChainEvaluation	
+sec-optional-chaining-evaluation	13.3.9.1	13.3.9.1	Runtime Semantics: Evaluation	
+sec-optional-chains	13.3.9	13.3.9	Optional Chains	
+sec-optional-symbols	5.1.5.3	5.1.5.3	Optional Symbols	
+sec-ordinary-and-exotic-objects-behaviours	10	10	Ordinary and Exotic Objects Behaviours	
+sec-ordinary-object	4.4.9	4.4.9	ordinary object	
+sec-ordinary-object-internal-methods-and-internal-slots	10.1	10.1	Ordinary Object Internal Methods and Internal Slots	
+sec-ordinary-object-internal-methods-and-internal-slots-defineownproperty-p-desc	10.1.6	10.1.6	[[DefineOwnProperty]]	
+sec-ordinary-object-internal-methods-and-internal-slots-delete-p	10.1.10	10.1.10	[[Delete]]	
+sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver	10.1.8	10.1.8	[[Get]]	
+sec-ordinary-object-internal-methods-and-internal-slots-getownproperty-p	10.1.5	10.1.5	[[GetOwnProperty]]	
+sec-ordinary-object-internal-methods-and-internal-slots-getprototypeof	10.1.1	10.1.1	[[GetPrototypeOf]]	
+sec-ordinary-object-internal-methods-and-internal-slots-hasproperty-p	10.1.7	10.1.7	[[HasProperty]]	
+sec-ordinary-object-internal-methods-and-internal-slots-isextensible	10.1.3	10.1.3	[[IsExtensible]]	
+sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys	10.1.11	10.1.11	[[OwnPropertyKeys]]	
+sec-ordinary-object-internal-methods-and-internal-slots-preventextensions	10.1.4	10.1.4	[[PreventExtensions]]	
+sec-ordinary-object-internal-methods-and-internal-slots-set-p-v-receiver	10.1.9	10.1.9	[[Set]]	
+sec-ordinary-object-internal-methods-and-internal-slots-setprototypeof-v	10.1.2	10.1.2	[[SetPrototypeOf]]	
+sec-ordinarycallbindthis	10.2.1.2	10.2.1.2	OrdinaryCallBindThis	
+sec-ordinarycallevaluatebody	10.2.1.4	10.2.1.4	OrdinaryCallEvaluateBody	
+sec-ordinarycreatefromconstructor	10.1.13	10.1.13	OrdinaryCreateFromConstructor	
+sec-ordinarydefineownproperty	10.1.6.1	10.1.6.1	OrdinaryDefineOwnProperty	
+sec-ordinarydelete	10.1.10.1	10.1.10.1	OrdinaryDelete	
+sec-ordinaryfunctioncreate	10.2.3	10.2.3	OrdinaryFunctionCreate	
+sec-ordinaryget	10.1.8.1	10.1.8.1	OrdinaryGet	
+sec-ordinarygetownproperty	10.1.5.1	10.1.5.1	OrdinaryGetOwnProperty	
+sec-ordinarygetprototypeof	10.1.1.1	10.1.1.1	OrdinaryGetPrototypeOf	
+sec-ordinaryhasinstance	7.3.21	7.3.21	OrdinaryHasInstance	
+sec-ordinaryhasproperty	10.1.7.1	10.1.7.1	OrdinaryHasProperty	
+sec-ordinaryisextensible	10.1.3.1	10.1.3.1	OrdinaryIsExtensible	
+sec-ordinaryobjectcreate	10.1.12	10.1.12	OrdinaryObjectCreate	
+sec-ordinaryownpropertykeys	10.1.11.1	10.1.11.1	OrdinaryOwnPropertyKeys	
+sec-ordinarypreventextensions	10.1.4.1	10.1.4.1	OrdinaryPreventExtensions	
+sec-ordinaryset	10.1.9.1	10.1.9.1	OrdinarySet	
+sec-ordinarysetprototypeof	10.1.2.1	10.1.2.1	OrdinarySetPrototypeOf	
+sec-ordinarysetwithowndescriptor	10.1.9.2	10.1.9.2	OrdinarySetWithOwnDescriptor	
+sec-ordinarytoprimitive	7.1.1.1	7.1.1.1	OrdinaryToPrimitive	
+sec-organization-of-this-specification	4.5	4.5	Organization of This Specification	
+sec-other-additional-features	B.3	B.3	Other Additional Features	
+sec-other-properties-of-the-global-object	19.4	19.4	Other Properties of the Global Object	
+sec-overview	4	4	Overview	
+sec-overview-of-date-objects-and-definitions-of-abstract-operations	21.4.1	21.4.1	Overview of Date Objects and Definitions of Abstract Operations	
+sec-own-property	4.4.41	4.4.41	own property	
+sec-parameter-lists	15.1	15.1	Parameter Lists	
+sec-parameter-lists-static-semantics-early-errors	15.1.1	15.1.1	Static Semantics: Early Errors	
+sec-parse-json-module	16.2.1.8.2	16.2.1.8.2	ParseJSONModule	
+sec-parse-script	16.1.5	16.1.5	ParseScript	
+sec-parsefloat-string	19.2.4	19.2.4	parseFloat	
+sec-parsehexoctet	19.2.6.7	19.2.6.7	ParseHexOctet	
+sec-parseint-string-radix	19.2.5	19.2.5	parseInt	
+sec-parsemodule	16.2.1.7.1	16.2.1.7.1	ParseModule	
+sec-parsepattern	22.2.3.4	22.2.3.4	Static Semantics: ParsePattern	
+sec-parsepattern-annexb	B.1.2.9	B.1.2.9	Static Semantics: ParsePattern	
+sec-parsetext	11.1.6	11.1.6	Static Semantics: ParseText	
+sec-parsetimezoneoffsetstring	21.4.1.33.2	21.4.1.33.2	ParseTimeZoneOffsetString	
+sec-pattern-notation	22.2.2.1	22.2.2.1	Notation	
+sec-pattern-semantics	22.2.2	22.2.2	Pattern Semantics	
+sec-patterns	22.2.1	22.2.1	Patterns	
+sec-patterns-static-semantics-capturing-group-number	22.2.1.5	22.2.1.5	Static Semantics: CapturingGroupNumber	
+sec-patterns-static-semantics-character-value	22.2.1.7	22.2.1.7	Static Semantics: CharacterValue	
+sec-patterns-static-semantics-character-value-annexb	B.1.2.4	B.1.2.4	Static Semantics: CharacterValue	
+sec-patterns-static-semantics-early-errors	22.2.1.1	22.2.1.1	Static Semantics: Early Errors	
+sec-patterns-static-semantics-early-errors-annexb	B.1.2.1	B.1.2.1	Static Semantics: Early Errors	
+sec-patterns-static-semantics-is-character-class	22.2.1.6	22.2.1.6	Static Semantics: IsCharacterClass	
+sec-patterns-static-semantics-is-character-class-annexb	B.1.2.3	B.1.2.3	Static Semantics: IsCharacterClass	
+sec-performeval	19.2.1.1	19.2.1.1	PerformEval	
+sec-performpromiseall	27.2.4.1.2	27.2.4.1.2	PerformPromiseAll	
+sec-performpromiseallsettled	27.2.4.2.1	27.2.4.2.1	PerformPromiseAllSettled	
+sec-performpromiseany	27.2.4.3.1	27.2.4.3.1	PerformPromiseAny	
+sec-performpromiserace	27.2.4.5.1	27.2.4.5.1	PerformPromiseRace	
+sec-performpromisethen	27.2.5.4.1	27.2.5.4.1	PerformPromiseThen	
+sec-postfix-decrement-operator	13.4.3	13.4.3	Postfix Decrement Operator	
+sec-postfix-decrement-operator-runtime-semantics-evaluation	13.4.3.1	13.4.3.1	Runtime Semantics: Evaluation	
+sec-postfix-increment-operator	13.4.2	13.4.2	Postfix Increment Operator	
+sec-postfix-increment-operator-runtime-semantics-evaluation	13.4.2.1	13.4.2.1	Runtime Semantics: Evaluation	
+sec-prefix-decrement-operator	13.4.5	13.4.5	Prefix Decrement Operator	
+sec-prefix-decrement-operator-runtime-semantics-evaluation	13.4.5.1	13.4.5.1	Runtime Semantics: Evaluation	
+sec-prefix-increment-operator	13.4.4	13.4.4	Prefix Increment Operator	
+sec-prefix-increment-operator-runtime-semantics-evaluation	13.4.4.1	13.4.4.1	Runtime Semantics: Evaluation	
+sec-prepareforordinarycall	10.2.1.1	10.2.1.1	PrepareForOrdinaryCall	
+sec-preparefortailcall	15.10.3	15.10.3	PrepareForTailCall	
+sec-primary-expression	13.2	13.2	Primary Expression	
+sec-primary-expression-literals	13.2.3	13.2.3	Literals	
+sec-primary-expression-regular-expression-literals	13.2.7	13.2.7	Regular Expression Literals	
+sec-primary-expression-regular-expression-literals-static-semantics-early-errors	13.2.7.1	13.2.7.1	Static Semantics: Early Errors	
+sec-primitive-value	4.4.5	4.4.5	primitive value	
+sec-private-names	6.2.12	6.2.12	Private Names	
+sec-privateelement-specification-type	6.2.10	6.2.10	The PrivateElement Specification Type	
+sec-privateelementfind	7.3.26	7.3.26	PrivateElementFind	
+sec-privateenvironment-record-operations	9.2.1	9.2.1	PrivateEnvironment Record Operations	
+sec-privateenvironment-records	9.2	9.2	PrivateEnvironment Records	
+sec-privatefieldadd	7.3.27	7.3.27	PrivateFieldAdd	
+sec-privateget	7.3.30	7.3.30	PrivateGet	
+sec-privatemethodoraccessoradd	7.3.28	7.3.28	PrivateMethodOrAccessorAdd	
+sec-privateset	7.3.31	7.3.31	PrivateSet	
+sec-promise-abstract-operations	27.2.1	27.2.1	Promise Abstract Operations	
+sec-promise-constructor	27.2.3	27.2.3	The Promise Constructor	
+sec-promise-executor	27.2.3.1	27.2.3.1	Promise	
+sec-promise-jobs	27.2.2	27.2.2	Promise Jobs	
+sec-promise-objects	27.2	27.2	Promise Objects	
+sec-promise-reject-functions	27.2.1.3.1	27.2.1.3	Promise Reject Functions	merged into sec-createresolvingfunctions
+sec-promise-resolve	27.2.4.7.1	27.2.4.7.1	PromiseResolve	
+sec-promise-resolve-functions	27.2.1.3.2	27.2.1.3	Promise Resolve Functions	merged into sec-createresolvingfunctions
+sec-promise.all	27.2.4.1	27.2.4.1	Promise.all	
+sec-promise.all-resolve-element-functions	27.2.4.1.3	27.2.4.1.2	`Promise.all` Resolve Element Functions	merged into sec-performpromiseall
+sec-promise.allsettled	27.2.4.2	27.2.4.2	Promise.allSettled	
+sec-promise.allsettled-reject-element-functions	27.2.4.2.3	27.2.4.2.1	`Promise.allSettled` Reject Element Functions	merged into sec-performpromiseallsettled
+sec-promise.allsettled-resolve-element-functions	27.2.4.2.2	27.2.4.2.1	`Promise.allSettled` Resolve Element Functions	merged into sec-performpromiseallsettled
+sec-promise.any	27.2.4.3	27.2.4.3	Promise.any	
+sec-promise.any-reject-element-functions	27.2.4.3.2	27.2.4.3.1	`Promise.any` Reject Element Functions	merged into sec-performpromiseany
+sec-promise.prototype	27.2.4.4	27.2.4.4	Promise.prototype	
+sec-promise.prototype-%symbol.tostringtag%	27.2.5.5	27.2.5.5	Promise.prototype [ %Symbol.toStringTag% ]	
+sec-promise.prototype.catch	27.2.5.1	27.2.5.1	Promise.prototype.catch	
+sec-promise.prototype.constructor	27.2.5.2	27.2.5.2	Promise.prototype.constructor	
+sec-promise.prototype.finally	27.2.5.3	27.2.5.3	Promise.prototype.finally	
+sec-promise.prototype.then	27.2.5.4	27.2.5.4	Promise.prototype.then	
+sec-promise.race	27.2.4.5	27.2.4.5	Promise.race	
+sec-promise.reject	27.2.4.6	27.2.4.6	Promise.reject	
+sec-promise.resolve	27.2.4.7	27.2.4.7	Promise.resolve	
+sec-promise.try	27.2.4.8	27.2.4.8	Promise.try	
+sec-promise.withResolvers	27.2.4.9	27.2.4.9	Promise.withResolvers	
+sec-promisecapability-records	27.2.1.1	27.2.1.1	PromiseCapability Records	
+sec-promisereaction-records	27.2.1.2	27.2.1.2	PromiseReaction Records	
+sec-properties-of-aggregate-error-instances	20.5.7.4	20.5.7.4	Properties of AggregateError Instances	
+sec-properties-of-array-instances	23.1.4	23.1.4	Properties of Array Instances	
+sec-properties-of-array-instances-length	23.1.4.1	23.1.4.1	length	
+sec-properties-of-array-iterator-instances	23.1.5.2.3	23.1.5.3	Properties of Array Iterator Instances	
+sec-properties-of-async-from-sync-iterator-instances	27.1.6.3	27.1.5.3	Properties of Async-from-Sync Iterator Instances	
+sec-properties-of-asyncgenerator-intances	27.6.2	27.6.2	Properties of AsyncGenerator Instances	
+sec-properties-of-asyncgenerator-prototype	27.6.1	27.6.1	The %AsyncGeneratorPrototype% Object	
+sec-properties-of-asyncgeneratorfunction	27.4.2	27.4.2	Properties of the AsyncGeneratorFunction Constructor	
+sec-properties-of-asyncgeneratorfunction-prototype	27.4.3	27.4.3	Properties of the AsyncGeneratorFunction Prototype Object	
+sec-properties-of-bigint-instances	21.2.4	21.2.4	Properties of BigInt Instances	
+sec-properties-of-boolean-instances	20.3.4	20.3.4	Properties of Boolean Instances	
+sec-properties-of-dataview-instances	25.3.5	25.3.5	Properties of DataView Instances	
+sec-properties-of-date-instances	21.4.5	21.4.5	Properties of Date Instances	
+sec-properties-of-error-instances	20.5.4	20.5.4	Properties of Error Instances	
+sec-properties-of-finalization-registry-instances	26.2.4	26.2.4	Properties of FinalizationRegistry Instances	
+sec-properties-of-for-in-iterator-instances	14.7.5.10.3	14.7.5.10.3	Properties of For-In Iterator Instances	
+sec-properties-of-generator-instances	27.5.2	27.5.2	Properties of Generator Instances	
+sec-properties-of-generator-prototype	27.5.1	27.5.1	The %GeneratorPrototype% Object	
+sec-properties-of-map-instances	24.1.4	24.1.4	Properties of Map Instances	
+sec-properties-of-nativeerror-instances	20.5.6.4	20.5.6.4	Properties of _NativeError_ Instances	
+sec-properties-of-number-instances	21.1.4	21.1.4	Properties of Number Instances	
+sec-properties-of-object-instances	20.1.4	20.1.4	Properties of Object Instances	
+sec-properties-of-promise-instances	27.2.6	27.2.6	Properties of Promise Instances	
+sec-properties-of-regexp-instances	22.2.8	22.2.8	Properties of RegExp Instances	
+sec-properties-of-regexp-string-iterator-instances	22.2.9.2.3	22.2.9.3	Properties of RegExp String Iterator Instances	
+sec-properties-of-set-instances	24.2.5	24.2.5	Properties of Set Instances	
+sec-properties-of-string-instances	22.1.4	22.1.4	Properties of String Instances	
+sec-properties-of-string-instances-length	22.1.4.1	22.1.4.1	length	
+sec-properties-of-symbol-instances	20.4.4	20.4.4	Properties of Symbol Instances	
+sec-properties-of-the-%typedarray%-intrinsic-object	23.2.2	23.2.2	Properties of the %TypedArray% Intrinsic Object	
+sec-properties-of-the-%typedarrayprototype%-object	23.2.3	23.2.3	Properties of the %TypedArray% Prototype Object	
+sec-properties-of-the-aggregate-error-constructors	20.5.7.2	20.5.7.2	Properties of the AggregateError Constructor	
+sec-properties-of-the-aggregate-error-prototype-objects	20.5.7.3	20.5.7.3	Properties of the AggregateError Prototype Object	
+sec-properties-of-the-array-constructor	23.1.2	23.1.2	Properties of the Array Constructor	
+sec-properties-of-the-array-prototype-object	23.1.3	23.1.3	Properties of the Array Prototype Object	
+sec-properties-of-the-arraybuffer-constructor	25.1.5	25.1.5	Properties of the ArrayBuffer Constructor	
+sec-properties-of-the-arraybuffer-instances	25.1.7	25.1.7	Properties of ArrayBuffer Instances	
+sec-properties-of-the-arraybuffer-prototype-object	25.1.6	25.1.6	Properties of the ArrayBuffer Prototype Object	
+sec-properties-of-the-bigint-constructor	21.2.2	21.2.2	Properties of the BigInt Constructor	
+sec-properties-of-the-bigint-prototype-object	21.2.3	21.2.3	Properties of the BigInt Prototype Object	
+sec-properties-of-the-boolean-constructor	20.3.2	20.3.2	Properties of the Boolean Constructor	
+sec-properties-of-the-boolean-prototype-object	20.3.3	20.3.3	Properties of the Boolean Prototype Object	
+sec-properties-of-the-dataview-constructor	25.3.3	25.3.3	Properties of the DataView Constructor	
+sec-properties-of-the-dataview-prototype-object	25.3.4	25.3.4	Properties of the DataView Prototype Object	
+sec-properties-of-the-date-constructor	21.4.3	21.4.3	Properties of the Date Constructor	
+sec-properties-of-the-date-prototype-object	21.4.4	21.4.4	Properties of the Date Prototype Object	
+sec-properties-of-the-error-constructor	20.5.2	20.5.2	Properties of the Error Constructor	
+sec-properties-of-the-error-prototype-object	20.5.3	20.5.3	Properties of the Error Prototype Object	
+sec-properties-of-the-finalization-registry-constructor	26.2.2	26.2.2	Properties of the FinalizationRegistry Constructor	
+sec-properties-of-the-finalization-registry-prototype-object	26.2.3	26.2.3	Properties of the FinalizationRegistry Prototype Object	
+sec-properties-of-the-function-constructor	20.2.2	20.2.2	Properties of the Function Constructor	
+sec-properties-of-the-function-prototype-object	20.2.3	20.2.3	Properties of the Function Prototype Object	
+sec-properties-of-the-generatorfunction-constructor	27.3.2	27.3.2	Properties of the GeneratorFunction Constructor	
+sec-properties-of-the-generatorfunction-prototype-object	27.3.3	27.3.3	Properties of the GeneratorFunction Prototype Object	
+sec-properties-of-the-iterator-constructor	27.1.3.2	27.1.3.2	Properties of the Iterator Constructor	
+sec-properties-of-the-map-constructor	24.1.2	24.1.2	Properties of the Map Constructor	
+sec-properties-of-the-map-prototype-object	24.1.3	24.1.3	Properties of the Map Prototype Object	
+sec-properties-of-the-nativeerror-constructors	20.5.6.2	20.5.6.2	Properties of the _NativeError_ Constructors	
+sec-properties-of-the-nativeerror-prototype-objects	20.5.6.3	20.5.6.3	Properties of the _NativeError_ Prototype Objects	
+sec-properties-of-the-number-constructor	21.1.2	21.1.2	Properties of the Number Constructor	
+sec-properties-of-the-number-prototype-object	21.1.3	21.1.3	Properties of the Number Prototype Object	
+sec-properties-of-the-object-constructor	20.1.2	20.1.2	Properties of the Object Constructor	
+sec-properties-of-the-object-prototype-object	20.1.3	20.1.3	Properties of the Object Prototype Object	
+sec-properties-of-the-promise-constructor	27.2.4	27.2.4	Properties of the Promise Constructor	
+sec-properties-of-the-promise-prototype-object	27.2.5	27.2.5	Properties of the Promise Prototype Object	
+sec-properties-of-the-proxy-constructor	28.2.2	28.2.2	Properties of the Proxy Constructor	
+sec-properties-of-the-regexp-constructor	22.2.5	22.2.5	Properties of the RegExp Constructor	
+sec-properties-of-the-regexp-prototype-object	22.2.6	22.2.6	Properties of the RegExp Prototype Object	
+sec-properties-of-the-set-constructor	24.2.3	24.2.3	Properties of the Set Constructor	
+sec-properties-of-the-set-prototype-object	24.2.4	24.2.4	Properties of the Set Prototype Object	
+sec-properties-of-the-sharedarraybuffer-constructor	25.2.4	25.2.4	Properties of the SharedArrayBuffer Constructor	
+sec-properties-of-the-sharedarraybuffer-instances	25.2.6	25.2.6	Properties of SharedArrayBuffer Instances	
+sec-properties-of-the-sharedarraybuffer-prototype-object	25.2.5	25.2.5	Properties of the SharedArrayBuffer Prototype Object	
+sec-properties-of-the-string-constructor	22.1.2	22.1.2	Properties of the String Constructor	
+sec-properties-of-the-string-prototype-object	22.1.3	22.1.3	Properties of the String Prototype Object	
+sec-properties-of-the-symbol-constructor	20.4.2	20.4.2	Properties of the Symbol Constructor	
+sec-properties-of-the-symbol-prototype-object	20.4.3	20.4.3	Properties of the Symbol Prototype Object	
+sec-properties-of-the-typedarray-constructors	23.2.6	23.2.6	Properties of the _TypedArray_ Constructors	
+sec-properties-of-the-weak-ref-constructor	26.1.2	26.1.2	Properties of the WeakRef Constructor	
+sec-properties-of-the-weak-ref-prototype-object	26.1.3	26.1.3	Properties of the WeakRef Prototype Object	
+sec-properties-of-the-weakmap-constructor	24.3.2	24.3.2	Properties of the WeakMap Constructor	
+sec-properties-of-the-weakmap-prototype-object	24.3.3	24.3.3	Properties of the WeakMap Prototype Object	
+sec-properties-of-the-weakset-constructor	24.4.2	24.4.2	Properties of the WeakSet Constructor	
+sec-properties-of-the-weakset-prototype-object	24.4.3	24.4.3	Properties of the WeakSet Prototype Object	
+sec-properties-of-typedarray-instances	23.2.8	23.2.8	Properties of _TypedArray_ Instances	
+sec-properties-of-typedarray-prototype-objects	23.2.7	23.2.7	Properties of the _TypedArray_ Prototype Objects	
+sec-properties-of-valid-executions	29.7	29.7	Properties of Valid Executions	
+sec-properties-of-weak-ref-instances	26.1.5	26.1.5	Properties of WeakRef Instances	
+sec-properties-of-weakmap-instances	24.3.4	24.3.4	Properties of WeakMap Instances	
+sec-properties-of-weakset-instances	24.4.4	24.4.4	Properties of WeakSet Instances	
+sec-property	4.4.37	4.4.37	property	
+sec-property-accessors	13.3.2	13.3.2	Property Accessors	
+sec-property-accessors-runtime-semantics-evaluation	13.3.2.1	13.3.2.1	Runtime Semantics: Evaluation	
+sec-property-attributes	6.1.7.1	6.1.7.1	Property Attributes	
+sec-property-descriptor-specification-type	6.2.6	6.2.6	The Property Descriptor Specification Type	
+sec-proxy-constructor	28.2.1	28.2.1	The Proxy Constructor	
+sec-proxy-object-internal-methods-and-internal-slots	10.5	10.5	Proxy Object Internal Methods and Internal Slots	
+sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist	10.5.12	10.5.12	[[Call]]	
+sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget	10.5.13	10.5.13	[[Construct]]	
+sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc	10.5.6	10.5.6	[[DefineOwnProperty]]	
+sec-proxy-object-internal-methods-and-internal-slots-delete-p	10.5.10	10.5.10	[[Delete]]	
+sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver	10.5.8	10.5.8	[[Get]]	
+sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p	10.5.5	10.5.5	[[GetOwnProperty]]	
+sec-proxy-object-internal-methods-and-internal-slots-getprototypeof	10.5.1	10.5.1	[[GetPrototypeOf]]	
+sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p	10.5.7	10.5.7	[[HasProperty]]	
+sec-proxy-object-internal-methods-and-internal-slots-isextensible	10.5.3	10.5.3	[[IsExtensible]]	
+sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys	10.5.11	10.5.11	[[OwnPropertyKeys]]	
+sec-proxy-object-internal-methods-and-internal-slots-preventextensions	10.5.4	10.5.4	[[PreventExtensions]]	
+sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver	10.5.9	10.5.9	[[Set]]	
+sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v	10.5.2	10.5.2	[[SetPrototypeOf]]	
+sec-proxy-objects	28.2	28.2	Proxy Objects	
+sec-proxy-target-handler	28.2.1.1	28.2.1.1	Proxy	
+sec-proxy.revocable	28.2.2.1	28.2.2.1	Proxy.revocable	
+sec-proxycreate	10.5.15	10.5.15	ProxyCreate	
+sec-punctuators	12.8	12.8	Punctuators	
+sec-putvalue	6.2.5.6	6.2.5.6	PutValue	
+sec-quotejsonstring	25.5.2.3	25.5.4.3	QuoteJSONString	
+sec-races	29.8	29.8	Races	
+sec-rawbytestonumeric	25.1.3.14	25.1.3.14	RawBytesToNumeric	
+sec-reads-bytes-from	29.6.2	29.6.2	reads-bytes-from	
+sec-reads-from	29.6.3	29.6.3	reads-from	
+sec-reference-record-specification-type	6.2.5	6.2.5	The Reference Record Specification Type	
+sec-reflect	19.4.4	19.4.4	Reflect	
+sec-reflect-%symbol.tostringtag%	28.1.14	28.1.14	Reflect [ %Symbol.toStringTag% ]	
+sec-reflect-object	28.1	28.1	The Reflect Object	
+sec-reflect.apply	28.1.1	28.1.1	Reflect.apply	
+sec-reflect.construct	28.1.2	28.1.2	Reflect.construct	
+sec-reflect.defineproperty	28.1.3	28.1.3	Reflect.defineProperty	
+sec-reflect.deleteproperty	28.1.4	28.1.4	Reflect.deleteProperty	
+sec-reflect.get	28.1.5	28.1.5	Reflect.get	
+sec-reflect.getownpropertydescriptor	28.1.6	28.1.6	Reflect.getOwnPropertyDescriptor	
+sec-reflect.getprototypeof	28.1.7	28.1.7	Reflect.getPrototypeOf	
+sec-reflect.has	28.1.8	28.1.8	Reflect.has	
+sec-reflect.isextensible	28.1.9	28.1.9	Reflect.isExtensible	
+sec-reflect.ownkeys	28.1.10	28.1.10	Reflect.ownKeys	
+sec-reflect.preventextensions	28.1.11	28.1.11	Reflect.preventExtensions	
+sec-reflect.set	28.1.12	28.1.12	Reflect.set	
+sec-reflect.setprototypeof	28.1.13	28.1.13	Reflect.setPrototypeOf	
+sec-reflection	28	28	Reflection	
+sec-regexp-constructor	22.2.4	22.2.4	The RegExp Constructor	
+sec-regexp-pattern-flags	22.2.4.1	22.2.4.1	RegExp	
+sec-regexp-prototype-%symbol.matchall%	22.2.6.9	22.2.6.9	RegExp.prototype [ %Symbol.matchAll% ]	
+sec-regexp-records	22.2.2.1.1	22.2.2.1.1	RegExp Records	
+sec-regexp-regular-expression-objects	22.2	22.2	RegExp	
+sec-regexp-string-iterator-objects	22.2.9	22.2.9	RegExp String Iterator Objects	
+sec-regexp.escape	22.2.5.1	22.2.5.1	RegExp.escape	
+sec-regexp.prototype	22.2.5.2	22.2.5.2	RegExp.prototype	
+sec-regexp.prototype-%symbol.match%	22.2.6.8	22.2.6.8	RegExp.prototype [ %Symbol.match% ]	
+sec-regexp.prototype-%symbol.replace%	22.2.6.11	22.2.6.11	RegExp.prototype [ %Symbol.replace% ]	
+sec-regexp.prototype-%symbol.search%	22.2.6.12	22.2.6.12	RegExp.prototype [ %Symbol.search% ]	
+sec-regexp.prototype-%symbol.split%	22.2.6.14	22.2.6.14	RegExp.prototype [ %Symbol.split% ]	
+sec-regexp.prototype.compile	B.2.4.1	B.2.4.1	RegExp.prototype.compile	
+sec-regexp.prototype.constructor	22.2.6.1	22.2.6.1	RegExp.prototype.constructor	
+sec-regexp.prototype.exec	22.2.6.2	22.2.6.2	RegExp.prototype.exec	
+sec-regexp.prototype.test	22.2.6.16	22.2.6.16	RegExp.prototype.test	
+sec-regexp.prototype.tostring	22.2.6.17	22.2.6.17	RegExp.prototype.toString	
+sec-regexpalloc	22.2.3.2	22.2.3.2	RegExpAlloc	
+sec-regexpbuiltinexec	22.2.7.2	22.2.7.2	RegExpBuiltinExec	
+sec-regexpcreate	22.2.3.1	22.2.3.1	RegExpCreate	
+sec-regexpexec	22.2.7.1	22.2.7.1	RegExpExec	
+sec-regexphasflag	22.2.6.4.1	22.2.6.4.1	RegExpHasFlag	
+sec-regexpidentifiercodepoint	22.2.1.12	22.2.1.12	Static Semantics: RegExpIdentifierCodePoint	
+sec-regexpidentifiercodepoints	22.2.1.11	22.2.1.11	Static Semantics: RegExpIdentifierCodePoints	
+sec-regexpinitialize	22.2.3.3	22.2.3.3	RegExpInitialize	
+sec-regular-expression-literals-runtime-semantics-evaluation	13.2.7.3	13.2.7.3	Runtime Semantics: Evaluation	
+sec-regular-expressions	A.8	A.8	Regular Expressions	
+sec-regular-expressions-patterns	B.1.2	B.1.2	Regular Expressions Patterns	
+sec-rejectpromise	27.2.1.7	27.2.1.7	RejectPromise	
+sec-relational-operators	13.10	13.10	Relational Operators	
+sec-relational-operators-runtime-semantics-evaluation	13.10.1	13.10.1	Runtime Semantics: Evaluation	
+sec-relations-of-candidate-executions	29.6	29.6	Relations of Candidate Executions	
+sec-removewaiter	25.4.3.9	25.4.3.9	RemoveWaiter	
+sec-removewaiters	25.4.3.10	25.4.3.10	RemoveWaiters	
+sec-requireinternalslot	10.1.15	10.1.15	RequireInternalSlot	
+sec-requireobjectcoercible	7.2.1	7.2.1	RequireObjectCoercible	
+sec-resizable-arraybuffer-guidelines	25.1.8	25.1.8	Resizable ArrayBuffer Guidelines	
+sec-resolve-private-identifier	9.2.1.2	9.2.1.2	ResolvePrivateIdentifier	
+sec-resolvebinding	9.4.2	9.4.2	ResolveBinding	
+sec-resolveexport	16.2.1.7.2.2	16.2.1.7.2.2	ResolveExport	
+sec-resolvethisbinding	9.4.4	9.4.4	ResolveThisBinding	
+sec-return-statement	14.10	14.10	The `return` Statement	
+sec-return-statement-runtime-semantics-evaluation	14.10.1	14.10.1	Runtime Semantics: Evaluation	
+sec-returncompletion	6.2.4.3	6.2.4.3	ReturnCompletion	
+sec-returnifabrupt-shorthands	5.2.3.4		ReturnIfAbrupt Shorthands	removed
+sec-revalidateatomicaccess	25.4.3.4	25.4.3.4	RevalidateAtomicAccess	
+sec-roundmvresult	7.1.4.1.3	7.1.4.1.3	RoundMVResult	
+sec-rules-of-automatic-semicolon-insertion	12.10.1	12.10.1	Rules of Automatic Semicolon Insertion	
+sec-runtime-errors-for-function-call-assignment-targets		B.3.9	Runtime Errors for Function Call Assignment Targets	
+sec-runtime-semantics	5.2.3	5.2.4	Runtime Semantics	
+sec-runtime-semantics-argumentlistevaluation	13.3.8.1	13.3.8.1	Runtime Semantics: ArgumentListEvaluation	
+sec-runtime-semantics-arrayaccumulation	13.2.4.1	13.2.4.1	Runtime Semantics: ArrayAccumulation	
+sec-runtime-semantics-bindingclassdeclarationevaluation	15.7.15	15.7.15	Runtime Semantics: BindingClassDeclarationEvaluation	
+sec-runtime-semantics-bindinginitialization	8.6.2	8.6.2	Runtime Semantics: BindingInitialization	
+sec-runtime-semantics-canonicalize-ch	22.2.2.7.3	22.2.2.7.3	Canonicalize	
+sec-runtime-semantics-caseblockevaluation	14.12.2	14.12.2	Runtime Semantics: CaseBlockEvaluation	
+sec-runtime-semantics-caseclauseisselected	14.12.3	14.12.3	CaseClauseIsSelected	
+sec-runtime-semantics-catchclauseevaluation	14.15.2	14.15.2	Runtime Semantics: CatchClauseEvaluation	
+sec-runtime-semantics-characterrange-abstract-operation	22.2.2.9.1	22.2.2.9.1	CharacterRange	
+sec-runtime-semantics-characterrangeorunion-abstract-operation	B.1.2.8.1	B.1.2.8.1	CharacterRangeOrUnion	
+sec-runtime-semantics-charactersetmatcher-abstract-operation	22.2.2.7.1	22.2.2.7.1	CharacterSetMatcher	
+sec-runtime-semantics-classdefinitionevaluation	15.7.14	15.7.14	Runtime Semantics: ClassDefinitionEvaluation	
+sec-runtime-semantics-classfielddefinitionevaluation	15.7.10	15.7.10	Runtime Semantics: ClassFieldDefinitionEvaluation	
+sec-runtime-semantics-classstaticblockdefinitionevaluation	15.7.11	15.7.11	Runtime Semantics: ClassStaticBlockDefinitionEvaluation	
+sec-runtime-semantics-definemethod	15.4.4	15.4.4	Runtime Semantics: DefineMethod	
+sec-runtime-semantics-destructuringassignmentevaluation	13.15.5.2	13.15.5.2	Runtime Semantics: DestructuringAssignmentEvaluation	
+sec-runtime-semantics-dowhileloopevaluation	14.7.2.2	14.7.2.2	Runtime Semantics: DoWhileLoopEvaluation	
+sec-runtime-semantics-evaluateasyncconcisebody	15.9.3	15.9.3	Runtime Semantics: EvaluateAsyncConciseBody	
+sec-runtime-semantics-evaluateasyncfunctionbody	15.8.4	15.8.4	Runtime Semantics: EvaluateAsyncFunctionBody	
+sec-runtime-semantics-evaluateasyncgeneratorbody	15.6.2	15.6.2	Runtime Semantics: EvaluateAsyncGeneratorBody	
+sec-runtime-semantics-evaluatebody	10.2.1.3	10.2.1.3	Runtime Semantics: EvaluateBody	
+sec-runtime-semantics-evaluateclassstaticblockbody	15.7.12	15.7.12	Runtime Semantics: EvaluateClassStaticBlockBody	
+sec-runtime-semantics-evaluateconcisebody	15.3.3	15.3.3	Runtime Semantics: EvaluateConciseBody	
+sec-runtime-semantics-evaluatefunctionbody	15.2.3	15.2.3	Runtime Semantics: EvaluateFunctionBody	
+sec-runtime-semantics-evaluategeneratorbody	15.5.2	15.5.2	Runtime Semantics: EvaluateGeneratorBody	
+sec-runtime-semantics-fordeclarationbindinginitialization	14.7.5.3	14.7.5.3	Runtime Semantics: ForDeclarationBindingInitialization	
+sec-runtime-semantics-fordeclarationbindinginstantiation	14.7.5.4	14.7.5.4	Runtime Semantics: ForDeclarationBindingInstantiation	
+sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset	14.7.5.7	14.7.5.7	ForIn/OfBodyEvaluation	
+sec-runtime-semantics-forinofheadevaluation	14.7.5.6	14.7.5.6	ForIn/OfHeadEvaluation	
+sec-runtime-semantics-forinofloopevaluation	14.7.5.5	14.7.5.5	Runtime Semantics: ForInOfLoopEvaluation	
+sec-runtime-semantics-forloopevaluation	14.7.4.2	14.7.4.2	Runtime Semantics: ForLoopEvaluation	
+sec-runtime-semantics-haseitherunicodeflag-abstract-operation	22.2.2.9.2	22.2.2.9.2	HasEitherUnicodeFlag	
+sec-runtime-semantics-instantiatearrowfunctionexpression	15.3.4	15.3.4	Runtime Semantics: InstantiateArrowFunctionExpression	
+sec-runtime-semantics-instantiateasyncarrowfunctionexpression	15.9.4	15.9.4	Runtime Semantics: InstantiateAsyncArrowFunctionExpression	
+sec-runtime-semantics-instantiateasyncfunctionexpression	15.8.3	15.8.3	Runtime Semantics: InstantiateAsyncFunctionExpression	
+sec-runtime-semantics-instantiateasyncfunctionobject	15.8.2	15.8.2	Runtime Semantics: InstantiateAsyncFunctionObject	
+sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression	15.6.4	15.6.4	Runtime Semantics: InstantiateAsyncGeneratorFunctionExpression	
+sec-runtime-semantics-instantiateasyncgeneratorfunctionobject	15.6.3	15.6.3	Runtime Semantics: InstantiateAsyncGeneratorFunctionObject	
+sec-runtime-semantics-instantiatefunctionobject	8.6.1	8.6.1	Runtime Semantics: InstantiateFunctionObject	
+sec-runtime-semantics-instantiategeneratorfunctionexpression	15.5.4	15.5.4	Runtime Semantics: InstantiateGeneratorFunctionExpression	
+sec-runtime-semantics-instantiategeneratorfunctionobject	15.5.3	15.5.3	Runtime Semantics: InstantiateGeneratorFunctionObject	
+sec-runtime-semantics-instantiateordinaryfunctionexpression	15.2.5	15.2.5	Runtime Semantics: InstantiateOrdinaryFunctionExpression	
+sec-runtime-semantics-instantiateordinaryfunctionobject	15.2.4	15.2.4	Runtime Semantics: InstantiateOrdinaryFunctionObject	
+sec-runtime-semantics-iswordchar-abstract-operation	22.2.2.4.1	22.2.2.4.1	IsWordChar	
+sec-runtime-semantics-iteratorbindinginitialization	8.6.3	8.6.3	Runtime Semantics: IteratorBindingInitialization	
+sec-runtime-semantics-iteratordestructuringassignmentevaluation	13.15.5.5	13.15.5.5	Runtime Semantics: IteratorDestructuringAssignmentEvaluation	
+sec-runtime-semantics-keyedbindinginitialization	14.3.3.3	14.3.3.3	Runtime Semantics: KeyedBindingInitialization	
+sec-runtime-semantics-keyeddestructuringassignmentevaluation	13.15.5.6	13.15.5.6	Runtime Semantics: KeyedDestructuringAssignmentEvaluation	
+sec-runtime-semantics-labelledevaluation	14.13.4	14.13.4	Runtime Semantics: LabelledEvaluation	
+sec-runtime-semantics-loopevaluation	14.7.1.2	14.7.1.2	Runtime Semantics: LoopEvaluation	
+sec-runtime-semantics-methoddefinitionevaluation	15.4.5	15.4.5	Runtime Semantics: MethodDefinitionEvaluation	
+sec-runtime-semantics-mv-for-stringintegerliteral	7.1.14.2	7.1.14.2	Runtime Semantics: MV	
+sec-runtime-semantics-namedevaluation	8.4.5	8.4.5	Runtime Semantics: NamedEvaluation	
+sec-runtime-semantics-propertydefinitionevaluation	13.2.5.5	13.2.5.6	Runtime Semantics: PropertyDefinitionEvaluation	
+sec-runtime-semantics-propertydestructuringassignmentevaluation	13.15.5.3	13.15.5.3	Runtime Semantics: PropertyDestructuringAssignmentEvaluation	
+sec-runtime-semantics-repeatmatcher-abstract-operation	22.2.2.3.1	22.2.2.3.1	RepeatMatcher	
+sec-runtime-semantics-restdestructuringassignmentevaluation	13.15.5.4	13.15.5.4	Runtime Semantics: RestDestructuringAssignmentEvaluation	
+sec-runtime-semantics-scriptevaluation	16.1.6	16.1.6	ScriptEvaluation	
+sec-runtime-semantics-stringnumericvalue	7.1.4.1.2	7.1.4.1.2	Runtime Semantics: StringNumericValue	
+sec-runtime-semantics-substitutionevaluation	13.2.8.5	13.2.8.5	Runtime Semantics: SubstitutionEvaluation	
+sec-runtime-semantics-unicodematchproperty-p	22.2.2.9.7	22.2.2.9.7	UnicodeMatchProperty	
+sec-runtime-semantics-unicodematchpropertyvalue-p-v	22.2.2.9.8	22.2.2.9.8	UnicodeMatchPropertyValue	
+sec-runtime-semantics-whileloopevaluation	14.7.3.2	14.7.3.2	Runtime Semantics: WhileLoopEvaluation	
+sec-sametype	7.2.8	7.2.8	SameType	
+sec-samevalue	7.2.9	7.2.9	SameValue	
+sec-samevaluenonnumber	7.2.11	7.2.11	SameValueNonNumber	
+sec-samevaluezero	7.2.10	7.2.10	SameValueZero	
+sec-scope	1	1	Scope	
+sec-script-records	16.1.4	16.1.4	Script Records	
+sec-script-semantics-runtime-semantics-evaluation	16.1.3	16.1.3	Runtime Semantics: Evaluation	
+sec-scriptisstrict	16.1.2	16.1.2	Static Semantics: ScriptIsStrict	
+sec-scripts	16.1	16.1	Scripts	
+sec-scripts-and-modules	A.5	A.5	Scripts and Modules	
+sec-scripts-static-semantics-early-errors	16.1.1	16.1.1	Static Semantics: Early Errors	
+sec-secfromtime	21.4.1.16	21.4.1.16	SecFromTime	
+sec-serializejsonarray	25.5.2.6	25.5.4.6	SerializeJSONArray	
+sec-serializejsonobject	25.5.2.5	25.5.4.5	SerializeJSONObject	
+sec-serializejsonproperty	25.5.2.2	25.5.4.2	SerializeJSONProperty	
+sec-set	19.3.29	19.3.29	Set	
+sec-set-and-relation-specification-type	6.2.3	6.2.3	The Set and Relation Specification Types	
+sec-set-constructor	24.2.2	24.2.2	The Set Constructor	
+sec-set-immutable-prototype	10.4.7.2	10.4.7.2	SetImmutablePrototype	
+sec-set-iterable	24.2.2.1	24.2.2.1	Set	
+sec-set-iterator-objects	24.2.6	24.2.6	Set Iterator Objects	
+sec-set-iterator.prototype-%symbol.tostringtag%	27.1.4.14.2	27.1.3.3.14.2	set Iterator.prototype [ %Symbol.toStringTag% ]	
+sec-set-iterator.prototype.constructor	27.1.4.1.2	27.1.3.3.1.2	set Iterator.prototype.constructor	
+sec-set-o-p-v-throw	7.3.4	7.3.4	Set	
+sec-set-object.prototype.__proto__	20.1.3.8.2	20.1.3.8.2	set Object.prototype.__proto__	
+sec-set-objects	24.2	24.2	Set Objects	
+sec-set-records	24.2.1.1	24.2.1.1	Set Records	
+sec-set.prototype	24.2.3.1	24.2.3.1	Set.prototype	
+sec-set.prototype-%symbol.iterator%	24.2.4.18	24.2.4.18	Set.prototype [ %Symbol.iterator% ]	
+sec-set.prototype-%symbol.tostringtag%	24.2.4.19	24.2.4.19	Set.prototype [ %Symbol.toStringTag% ]	
+sec-set.prototype.add	24.2.4.1	24.2.4.1	Set.prototype.add	
+sec-set.prototype.clear	24.2.4.2	24.2.4.2	Set.prototype.clear	
+sec-set.prototype.constructor	24.2.4.3	24.2.4.3	Set.prototype.constructor	
+sec-set.prototype.delete	24.2.4.4	24.2.4.4	Set.prototype.delete	
+sec-set.prototype.difference	24.2.4.5	24.2.4.5	Set.prototype.difference	
+sec-set.prototype.entries	24.2.4.6	24.2.4.6	Set.prototype.entries	
+sec-set.prototype.foreach	24.2.4.7	24.2.4.7	Set.prototype.forEach	
+sec-set.prototype.has	24.2.4.8	24.2.4.8	Set.prototype.has	
+sec-set.prototype.intersection	24.2.4.9	24.2.4.9	Set.prototype.intersection	
+sec-set.prototype.isdisjointfrom	24.2.4.10	24.2.4.10	Set.prototype.isDisjointFrom	
+sec-set.prototype.issubsetof	24.2.4.11	24.2.4.11	Set.prototype.isSubsetOf	
+sec-set.prototype.issupersetof	24.2.4.12	24.2.4.12	Set.prototype.isSupersetOf	
+sec-set.prototype.keys	24.2.4.13	24.2.4.13	Set.prototype.keys	
+sec-set.prototype.symmetricdifference	24.2.4.15	24.2.4.15	Set.prototype.symmetricDifference	
+sec-set.prototype.union	24.2.4.16	24.2.4.16	Set.prototype.union	
+sec-set.prototype.values	24.2.4.17	24.2.4.17	Set.prototype.values	
+sec-setdatahas	24.2.1.3	24.2.1.3	SetDataHas	
+sec-setdataindex	24.2.1.4	24.2.1.4	SetDataIndex	
+sec-setdatasize	24.2.1.5	24.2.1.5	SetDataSize	
+sec-setdefaultglobalbindings	9.3.3	9.3.3	SetDefaultGlobalBindings	
+sec-setfunctionlength	10.2.10	10.2.10	SetFunctionLength	
+sec-setfunctionname	10.2.9	10.2.9	SetFunctionName	
+sec-setintegritylevel	7.3.15	7.3.15	SetIntegrityLevel	
+sec-setsyntheticmoduleexport	16.2.1.8.3	16.2.1.8.3	SetSyntheticModuleExport	
+sec-settypedarrayfromarraylike	23.2.3.26.2	23.2.3.26.1	SetTypedArrayFromArrayLike	
+sec-settypedarrayfromtypedarray	23.2.3.26.1	23.2.3.26.2	SetTypedArrayFromTypedArray	
+sec-setuint8arraybytes		23.3.3.3	SetUint8ArrayBytes	
+sec-setvalueinbuffer	25.1.3.18	25.1.3.18	SetValueInBuffer	
+sec-setviewvalue	25.3.1.6	25.3.1.6	SetViewValue	
+sec-shallowestcontainedjsonvalue		25.5.2.5	Static Semantics: ShallowestContainedJSONValue	
+sec-shared-memory-guidelines	29.11	29.11	Shared Memory Guidelines	
+sec-sharedarraybuffer-%symbol.species%	25.2.4.2	25.2.4.2	get SharedArrayBuffer [ %Symbol.species% ]	
+sec-sharedarraybuffer-constructor	25.2.3	25.2.3	The SharedArrayBuffer Constructor	
+sec-sharedarraybuffer-length	25.2.3.1	25.2.3.1	SharedArrayBuffer	
+sec-sharedarraybuffer-objects	25.2	25.2	SharedArrayBuffer Objects	
+sec-sharedarraybuffer.prototype	25.2.4.1	25.2.4.1	SharedArrayBuffer.prototype	
+sec-sharedarraybuffer.prototype-%symbol.tostringtag%	25.2.5.7	25.2.5.7	SharedArrayBuffer.prototype [ %Symbol.toStringTag% ]	
+sec-sharedarraybuffer.prototype.constructor	25.2.5.2	25.2.5.2	SharedArrayBuffer.prototype.constructor	
+sec-sharedarraybuffer.prototype.grow	25.2.5.3	25.2.5.3	SharedArrayBuffer.prototype.grow	
+sec-sharedarraybuffer.prototype.slice	25.2.5.6	25.2.5.6	SharedArrayBuffer.prototype.slice	
+sec-sharedatablockeventset	29.5.2	29.5.2	SharedDataBlockEventSet	
+sec-shorthands-for-unwrapping-completion-records	5.2.3.3	5.2.4.3	Shorthands for Unwrapping Completion Records	was sec-returnifabrupt
+sec-signed-right-shift-operator	13.9.2	13.9.2	The Signed Right Shift Operator	
+sec-signed-right-shift-operator-runtime-semantics-evaluation	13.9.2.1	13.9.2.1	Runtime Semantics: Evaluation	
+sec-skipasciiwhitespace		23.3.3.4	SkipAsciiWhitespace	
+sec-smr-Evaluate	16.2.1.8.4.5	16.2.1.8.4.5	Evaluate	
+sec-smr-Link	16.2.1.8.4.4	16.2.1.8.4.4	Link	
+sec-smr-LoadRequestedModules	16.2.1.8.4.1	16.2.1.8.4.1	LoadRequestedModules	
+sec-smr-getexportednames	16.2.1.8.4.2	16.2.1.8.4.2	GetExportedNames	
+sec-smr-module-record-methods	16.2.1.8.4	16.2.1.8.4	Implementation of Module Record Abstract Methods	
+sec-smr-resolveexport	16.2.1.8.4.3	16.2.1.8.4.3	ResolveExport	
+sec-sortindexedproperties	23.1.3.30.1	23.1.3.30.1	SortIndexedProperties	
+sec-source-text	11.1	11.1	Source Text	
+sec-source-text-module-record-cyclic-module-record-methods	16.2.1.7.3	16.2.1.7.3	Implementation of Cyclic Module Record Abstract Methods	
+sec-source-text-module-record-execute-module	16.2.1.7.3.2	16.2.1.7.3.2	ExecuteModule	
+sec-source-text-module-record-initialize-environment	16.2.1.7.3.1	16.2.1.7.3.1	InitializeEnvironment	
+sec-source-text-module-record-module-record-methods	16.2.1.7.2	16.2.1.7.2	Implementation of Module Record Abstract Methods	
+sec-source-text-module-records	16.2.1.7	16.2.1.7	Source Text Module Records	
+sec-speciesconstructor	7.3.22	7.3.22	SpeciesConstructor	
+sec-standard-object	4.4.11	4.4.11	standard object	
+sec-statement-semantics	14.1	14.1	Statement Semantics	
+sec-statement-semantics-runtime-semantics-evaluation	14.1.1	14.1.1	Runtime Semantics: Evaluation	
+sec-statements	A.3	A.3	Statements	
+sec-static-semantic-rules	5.2.4	5.2.5	Static Semantics	
+sec-static-semantics	13.3.1	13.3.1	Static Semantics	
+sec-static-semantics-allprivateidentifiersvalid	15.7.7	15.7.7	Static Semantics: AllPrivateIdentifiersValid	
+sec-static-semantics-assignmenttargettype	8.6.4	8.6.4	Static Semantics: AssignmentTargetType	
+sec-static-semantics-asyncconcisebodycontainsusestrict	15.9.2	15.9.2	Static Semantics: AsyncConciseBodyContainsUseStrict	
+sec-static-semantics-bodytext	12.9.5.1	12.9.5.1	Static Semantics: BodyText	
+sec-static-semantics-boundnames	8.2.1	8.2.1	Static Semantics: BoundNames	
+sec-static-semantics-capturinggroupname	22.2.1.10	22.2.1.10	Static Semantics: CapturingGroupName	
+sec-static-semantics-classelementevaluation	15.7.13	15.7.13	Runtime Semantics: ClassElementEvaluation	
+sec-static-semantics-classelementkind	15.7.2	15.7.2	Static Semantics: ClassElementKind	
+sec-static-semantics-computedpropertycontains	8.5.2	8.5.2	Static Semantics: ComputedPropertyContains	
+sec-static-semantics-concisebodycontainsusestrict	15.3.2	15.3.2	Static Semantics: ConciseBodyContainsUseStrict	
+sec-static-semantics-constructormethod	15.7.3	15.7.3	Static Semantics: ConstructorMethod	
+sec-static-semantics-contains	8.5.1	8.5.1	Static Semantics: Contains	
+sec-static-semantics-containsarguments	15.7.9	15.7.9	Static Semantics: ContainsArguments	
+sec-static-semantics-containsduplicatelabels	8.3.1	8.3.1	Static Semantics: ContainsDuplicateLabels	
+sec-static-semantics-containsexpression	15.1.2	15.1.2	Static Semantics: ContainsExpression	
+sec-static-semantics-containsundefinedbreaktarget	8.3.2	8.3.2	Static Semantics: ContainsUndefinedBreakTarget	
+sec-static-semantics-containsundefinedcontinuetarget	8.3.3	8.3.3	Static Semantics: ContainsUndefinedContinueTarget	
+sec-static-semantics-declarationpart	8.2.2	8.2.2	Static Semantics: DeclarationPart	
+sec-static-semantics-expectedargumentcount	15.1.5	15.1.5	Static Semantics: ExpectedArgumentCount	
+sec-static-semantics-exportedbindings	16.2.3.2	16.2.3.2	Static Semantics: ExportedBindings	
+sec-static-semantics-exportednames	16.2.3.3	16.2.3.3	Static Semantics: ExportedNames	
+sec-static-semantics-exportentries	16.2.3.4	16.2.3.4	Static Semantics: ExportEntries	
+sec-static-semantics-exportentriesformodule	16.2.3.5	16.2.3.5	Static Semantics: ExportEntriesForModule	
+sec-static-semantics-flagtext	12.9.5.2	12.9.5.2	Static Semantics: FlagText	
+sec-static-semantics-functionbodycontainsusestrict	15.2.2	15.2.2	Static Semantics: FunctionBodyContainsUseStrict	
+sec-static-semantics-hascallintailposition	15.10.2	15.10.2	Static Semantics: HasCallInTailPosition	
+sec-static-semantics-hasdirectsuper	15.4.2	15.4.2	Static Semantics: HasDirectSuper	
+sec-static-semantics-hasinitializer	15.1.4	15.1.4	Static Semantics: HasInitializer	
+sec-static-semantics-hasname	8.4.1	8.4.1	Static Semantics: HasName	
+sec-static-semantics-importentries	16.2.2.2	16.2.2.2	Static Semantics: ImportEntries	
+sec-static-semantics-importentriesformodule	16.2.2.3	16.2.2.3	Static Semantics: ImportEntriesForModule	
+sec-static-semantics-iscomputedpropertykey	13.2.5.2	13.2.5.2	Static Semantics: IsComputedPropertyKey	
+sec-static-semantics-isconstantdeclaration	8.2.3	8.2.3	Static Semantics: IsConstantDeclaration	
+sec-static-semantics-isdestructuring	14.7.5.2	14.7.5.2	Static Semantics: IsDestructuring	
+sec-static-semantics-isfunctiondefinition	8.4.2	8.4.2	Static Semantics: IsFunctionDefinition	
+sec-static-semantics-isidentifierref	8.4.4	8.4.4	Static Semantics: IsIdentifierRef	
+sec-static-semantics-issimpleparameterlist	15.1.3	15.1.3	Static Semantics: IsSimpleParameterList	
+sec-static-semantics-isstatic	15.7.4	15.7.4	Static Semantics: IsStatic	
+sec-static-semantics-jsonarrayliteralcontentnodes		25.5.2.6	Static Semantics: JSONArrayLiteralContentNodes	
+sec-static-semantics-lexicallydeclarednames	8.2.4	8.2.4	Static Semantics: LexicallyDeclaredNames	
+sec-static-semantics-lexicallyscopeddeclarations	8.2.5	8.2.5	Static Semantics: LexicallyScopedDeclarations	
+sec-static-semantics-maycontainstrings	22.2.1.8	22.2.1.8	Static Semantics: MayContainStrings	
+sec-static-semantics-modulerequests	16.2.1.4	16.2.1.4	Static Semantics: ModuleRequests	
+sec-static-semantics-mv	12.9.3.2	12.9.3.2	Static Semantics: MV	
+sec-static-semantics-nonconstructorelements	15.7.5	15.7.5	Static Semantics: NonConstructorElements	
+sec-static-semantics-privateboundidentifiers	15.7.8	15.7.8	Static Semantics: PrivateBoundIdentifiers	
+sec-static-semantics-propertydefinitionnodes		13.2.5.3	Static Semantics: PropertyDefinitionNodes	
+sec-static-semantics-propertynamelist	13.2.5.3	13.2.5.4	Static Semantics: PropertyNameList	
+sec-static-semantics-propname	8.6.5	8.6.5	Static Semantics: PropName	
+sec-static-semantics-prototypepropertynamelist	15.7.6	15.7.6	Static Semantics: PrototypePropertyNameList	
+sec-static-semantics-referencedbindings	16.2.3.6	16.2.3.6	Static Semantics: ReferencedBindings	
+sec-static-semantics-specialmethod	15.4.3	15.4.3	Static Semantics: SpecialMethod	
+sec-static-semantics-stringvalue	13.1.2	13.1.2	Static Semantics: StringValue	
+sec-static-semantics-sv	12.9.4.2	12.9.4.2	Static Semantics: SV	
+sec-static-semantics-template-early-errors	13.2.8.1	13.2.8.1	Static Semantics: Early Errors	
+sec-static-semantics-templatestrings	13.2.8.2	13.2.8.2	Static Semantics: TemplateStrings	
+sec-static-semantics-toplevellexicallydeclarednames	8.2.8	8.2.8	Static Semantics: TopLevelLexicallyDeclaredNames	
+sec-static-semantics-toplevellexicallyscopeddeclarations	8.2.9	8.2.9	Static Semantics: TopLevelLexicallyScopedDeclarations	
+sec-static-semantics-toplevelvardeclarednames	8.2.10	8.2.10	Static Semantics: TopLevelVarDeclaredNames	
+sec-static-semantics-toplevelvarscopeddeclarations	8.2.11	8.2.11	Static Semantics: TopLevelVarScopedDeclarations	
+sec-static-semantics-trv	12.9.6.2	12.9.6.2	Static Semantics: TRV	
+sec-static-semantics-tv	12.9.6.1	12.9.6.1	Static Semantics: TV	
+sec-static-semantics-vardeclarednames	8.2.6	8.2.6	Static Semantics: VarDeclaredNames	
+sec-static-semantics-varscopeddeclarations	8.2.7	8.2.7	Static Semantics: VarScopedDeclarations	
+sec-strict-mode-code	11.2.2	11.2.2	Strict Mode Code	
+sec-strict-mode-of-ecmascript	C	C	The Strict Mode of ECMAScript	
+sec-strict-variant-of-ecmascript	4.3.2	4.3.2	The Strict Variant of ECMAScript	
+sec-string-constructor	22.1.1	22.1.1	The String Constructor	
+sec-string-constructor-string-value	22.1.1.1	22.1.1.1	String	
+sec-string-exotic-objects	10.4.3	10.4.3	String Exotic Objects	
+sec-string-exotic-objects-defineownproperty-p-desc	10.4.3.2	10.4.3.2	[[DefineOwnProperty]]	
+sec-string-exotic-objects-getownproperty-p	10.4.3.1	10.4.3.1	[[GetOwnProperty]]	
+sec-string-exotic-objects-ownpropertykeys	10.4.3.3	10.4.3.3	[[OwnPropertyKeys]]	
+sec-string-iterator-objects	22.1.5	22.1.5	String Iterator Objects	
+sec-string-literals-early-errors	12.9.4.1	12.9.4.1	Static Semantics: Early Errors	
+sec-string-literals-static-semantics-mv	12.9.4.3	12.9.4.3	Static Semantics: MV	
+sec-string-object	4.4.22	4.4.22	String object	
+sec-string-objects	22.1	22.1	String Objects	
+sec-string.fromcharcode	22.1.2.1	22.1.2.1	String.fromCharCode	
+sec-string.fromcodepoint	22.1.2.2	22.1.2.2	String.fromCodePoint	
+sec-string.prototype	22.1.2.3	22.1.2.3	String.prototype	
+sec-string.prototype-%symbol.iterator%	22.1.3.36	22.1.3.36	String.prototype [ %Symbol.iterator% ]	
+sec-string.prototype.anchor	B.2.2.2	B.2.2.2	String.prototype.anchor	
+sec-string.prototype.at	22.1.3.1	22.1.3.1	String.prototype.at	
+sec-string.prototype.big	B.2.2.3	B.2.2.3	String.prototype.big	
+sec-string.prototype.blink	B.2.2.4	B.2.2.4	String.prototype.blink	
+sec-string.prototype.bold	B.2.2.5	B.2.2.5	String.prototype.bold	
+sec-string.prototype.charat	22.1.3.2	22.1.3.2	String.prototype.charAt	
+sec-string.prototype.charcodeat	22.1.3.3	22.1.3.3	String.prototype.charCodeAt	
+sec-string.prototype.codepointat	22.1.3.4	22.1.3.4	String.prototype.codePointAt	
+sec-string.prototype.concat	22.1.3.5	22.1.3.5	String.prototype.concat	
+sec-string.prototype.constructor	22.1.3.6	22.1.3.6	String.prototype.constructor	
+sec-string.prototype.endswith	22.1.3.7	22.1.3.7	String.prototype.endsWith	
+sec-string.prototype.fixed	B.2.2.6	B.2.2.6	String.prototype.fixed	
+sec-string.prototype.fontcolor	B.2.2.7	B.2.2.7	String.prototype.fontcolor	
+sec-string.prototype.fontsize	B.2.2.8	B.2.2.8	String.prototype.fontsize	
+sec-string.prototype.includes	22.1.3.8	22.1.3.8	String.prototype.includes	
+sec-string.prototype.indexof	22.1.3.9	22.1.3.9	String.prototype.indexOf	
+sec-string.prototype.iswellformed	22.1.3.10	22.1.3.10	String.prototype.isWellFormed	
+sec-string.prototype.italics	B.2.2.9	B.2.2.9	String.prototype.italics	
+sec-string.prototype.lastindexof	22.1.3.11	22.1.3.11	String.prototype.lastIndexOf	
+sec-string.prototype.link	B.2.2.10	B.2.2.10	String.prototype.link	
+sec-string.prototype.localecompare	22.1.3.12	22.1.3.12	String.prototype.localeCompare	
+sec-string.prototype.match	22.1.3.13	22.1.3.13	String.prototype.match	
+sec-string.prototype.matchall	22.1.3.14	22.1.3.14	String.prototype.matchAll	
+sec-string.prototype.normalize	22.1.3.15	22.1.3.15	String.prototype.normalize	
+sec-string.prototype.padend	22.1.3.16	22.1.3.16	String.prototype.padEnd	
+sec-string.prototype.padstart	22.1.3.17	22.1.3.17	String.prototype.padStart	
+sec-string.prototype.repeat	22.1.3.18	22.1.3.18	String.prototype.repeat	
+sec-string.prototype.replace	22.1.3.19	22.1.3.19	String.prototype.replace	
+sec-string.prototype.replaceall	22.1.3.20	22.1.3.20	String.prototype.replaceAll	
+sec-string.prototype.search	22.1.3.21	22.1.3.21	String.prototype.search	
+sec-string.prototype.slice	22.1.3.22	22.1.3.22	String.prototype.slice	
+sec-string.prototype.small	B.2.2.11	B.2.2.11	String.prototype.small	
+sec-string.prototype.split	22.1.3.23	22.1.3.23	String.prototype.split	
+sec-string.prototype.startswith	22.1.3.24	22.1.3.24	String.prototype.startsWith	
+sec-string.prototype.strike	B.2.2.12	B.2.2.12	String.prototype.strike	
+sec-string.prototype.sub	B.2.2.13	B.2.2.13	String.prototype.sub	
+sec-string.prototype.substr	B.2.2.1	B.2.2.1	String.prototype.substr	
+sec-string.prototype.substring	22.1.3.25	22.1.3.25	String.prototype.substring	
+sec-string.prototype.sup	B.2.2.14	B.2.2.14	String.prototype.sup	
+sec-string.prototype.tolocalelowercase	22.1.3.26	22.1.3.26	String.prototype.toLocaleLowerCase	
+sec-string.prototype.tolocaleuppercase	22.1.3.27	22.1.3.27	String.prototype.toLocaleUpperCase	
+sec-string.prototype.tolowercase	22.1.3.28	22.1.3.28	String.prototype.toLowerCase	
+sec-string.prototype.tostring	22.1.3.29	22.1.3.29	String.prototype.toString	
+sec-string.prototype.touppercase	22.1.3.30	22.1.3.30	String.prototype.toUpperCase	
+sec-string.prototype.towellformed	22.1.3.31	22.1.3.31	String.prototype.toWellFormed	
+sec-string.prototype.trim	22.1.3.32	22.1.3.32	String.prototype.trim	
+sec-string.prototype.trimend	22.1.3.33	22.1.3.33	String.prototype.trimEnd	
+sec-string.prototype.trimstart	22.1.3.34	22.1.3.34	String.prototype.trimStart	
+sec-string.prototype.valueof	22.1.3.35	22.1.3.35	String.prototype.valueOf	
+sec-string.raw	22.1.2.4	22.1.2.4	String.raw	
+sec-stringcreate	10.4.3.4	10.4.3.4	StringCreate	
+sec-stringgetownproperty	10.4.3.5	10.4.3.5	StringGetOwnProperty	
+sec-stringindexof	6.1.4.1	6.1.4.1	StringIndexOf	
+sec-stringintegerliteral-grammar	7.1.14.1	7.1.14.1	StringIntegerLiteral Grammar	
+sec-stringlastindexof	6.1.4.2	6.1.4.2	StringLastIndexOf	
+sec-stringpad	22.1.3.17.2	22.1.3.17.2	StringPad	
+sec-stringpaddingbuiltinsimpl	22.1.3.17.1	22.1.3.17.1	StringPaddingBuiltinsImpl	
+sec-stringtobigint	7.1.14	7.1.14	StringToBigInt	
+sec-stringtocodepoints	11.1.5	11.1.5	Static Semantics: StringToCodePoints	
+sec-stringtonumber	7.1.4.1.1	7.1.4.1.1	StringToNumber	
+sec-structured-data	25	25	Structured Data	
+sec-subtraction-operator-minus	13.8.2	13.8.2	The Subtraction Operator	
+sec-subtraction-operator-minus-runtime-semantics-evaluation	13.8.2.1	13.8.2.1	Runtime Semantics: Evaluation	
+sec-super-keyword	13.3.7	13.3.7	The `super` Keyword	
+sec-super-keyword-runtime-semantics-evaluation	13.3.7.1	13.3.7.1	Runtime Semantics: Evaluation	
+sec-suspendthisagent	25.4.3.11	25.4.3.11	SuspendThisAgent	
+sec-switch-duplicates-allowed-static-semantics	B.3.2.5	14.12.1	Changes to `switch` Statement Static Semantics: Early Errors	merged into sec-switch-statement-static-semantics-early-errors
+sec-switch-statement	14.12	14.12	The `switch` Statement	
+sec-switch-statement-runtime-semantics-evaluation	14.12.4	14.12.4	Runtime Semantics: Evaluation	
+sec-switch-statement-static-semantics-early-errors	14.12.1	14.12.1	Static Semantics: Early Errors	
+sec-symbol-constructor	20.4.1	20.4.1	The Symbol Constructor	
+sec-symbol-description	20.4.1.1	20.4.1.1	Symbol	
+sec-symbol-object	4.4.33	4.4.33	Symbol object	
+sec-symbol-objects	20.4	20.4	Symbol Objects	
+sec-symbol-value	4.4.31	4.4.31	Symbol value	
+sec-symbol.asynciterator	20.4.2.1	20.4.2.1	Symbol.asyncIterator	
+sec-symbol.for	20.4.2.2	20.4.2.2	Symbol.for	
+sec-symbol.hasinstance	20.4.2.3	20.4.2.3	Symbol.hasInstance	
+sec-symbol.isconcatspreadable	20.4.2.4	20.4.2.4	Symbol.isConcatSpreadable	
+sec-symbol.iterator	20.4.2.5	20.4.2.5	Symbol.iterator	
+sec-symbol.keyfor	20.4.2.6	20.4.2.6	Symbol.keyFor	
+sec-symbol.match	20.4.2.7	20.4.2.7	Symbol.match	
+sec-symbol.matchall	20.4.2.8	20.4.2.8	Symbol.matchAll	
+sec-symbol.prototype	20.4.2.9	20.4.2.9	Symbol.prototype	
+sec-symbol.prototype-%symbol.toprimitive%	20.4.3.5	20.4.3.5	Symbol.prototype [ %Symbol.toPrimitive% ]	
+sec-symbol.prototype-%symbol.tostringtag%	20.4.3.6	20.4.3.6	Symbol.prototype [ %Symbol.toStringTag% ]	
+sec-symbol.prototype.constructor	20.4.3.1	20.4.3.1	Symbol.prototype.constructor	
+sec-symbol.prototype.description	20.4.3.2	20.4.3.2	get Symbol.prototype.description	
+sec-symbol.prototype.tostring	20.4.3.3	20.4.3.3	Symbol.prototype.toString	
+sec-symbol.prototype.valueof	20.4.3.4	20.4.3.4	Symbol.prototype.valueOf	
+sec-symbol.replace	20.4.2.10	20.4.2.10	Symbol.replace	
+sec-symbol.search	20.4.2.11	20.4.2.11	Symbol.search	
+sec-symbol.species	20.4.2.12	20.4.2.12	Symbol.species	
+sec-symbol.split	20.4.2.13	20.4.2.13	Symbol.split	
+sec-symbol.toprimitive	20.4.2.14	20.4.2.14	Symbol.toPrimitive	
+sec-symbol.tostringtag	20.4.2.15	20.4.2.15	Symbol.toStringTag	
+sec-symbol.unscopables	20.4.2.16	20.4.2.16	Symbol.unscopables	
+sec-symboldescriptivestring	20.4.3.3.1	20.4.3.3.1	SymbolDescriptiveString	
+sec-synchronizes-with	29.6.5	29.6.5	synchronizes-with	
+sec-syntactic-and-lexical-grammars	5.1	5.1	Syntactic and Lexical Grammars	
+sec-syntactic-grammar	5.1.4	5.1.4	The Syntactic Grammar	
+sec-syntax-directed-operations	8	8	Syntax-Directed Operations	
+sec-syntax-directed-operations-contains	8.5	8.5	Contains	
+sec-syntax-directed-operations-function-name-inference	8.4	8.4	Function Name Inference	
+sec-syntax-directed-operations-labels	8.3	8.3	Labels	
+sec-syntax-directed-operations-miscellaneous	8.6	8.6	Miscellaneous	
+sec-syntax-directed-operations-scope-analysis	8.2	8.2	Scope Analysis	
+sec-synthetic-module-records	16.2.1.8	16.2.1.8	Synthetic Module Records	
+sec-systemtimezoneidentifier	21.4.1.24	21.4.1.24	SystemTimeZoneIdentifier	
+sec-tagged-templates	13.3.11	13.3.11	Tagged Templates	
+sec-tagged-templates-runtime-semantics-evaluation	13.3.11.1	13.3.11.1	Runtime Semantics: Evaluation	
+sec-tail-position-calls	15.10	15.10	Tail Position Calls	
+sec-tear-free-aligned-reads	29.7.3	29.7.3	Tear Free Reads	
+sec-template-literal-lexical-components	12.9.6	12.9.6	Template Literal Lexical Components	
+sec-template-literals	13.2.8	13.2.8	Template Literals	
+sec-template-literals-runtime-semantics-evaluation	13.2.8.6	13.2.8.6	Runtime Semantics: Evaluation	
+sec-templatestring	13.2.8.3	13.2.8.3	Static Semantics: TemplateString	
+sec-terminal-symbols	5.1.5.1	5.1.5.1	Terminal Symbols	
+sec-terms-and-definitions	4.4	4.4	Terms and Definitions	
+sec-terms-and-definitions-bigint-type	4.4.29	4.4.29	BigInt type	
+sec-terms-and-definitions-bigint-value	4.4.28	4.4.28	BigInt value	
+sec-terms-and-definitions-boolean-type	4.4.18	4.4.18	Boolean type	
+sec-terms-and-definitions-boolean-value	4.4.17	4.4.17	Boolean value	
+sec-terms-and-definitions-function	4.4.34	4.4.34	function	
+sec-terms-and-definitions-host-defined	4.4.3	4.4.3	host-defined	
+sec-terms-and-definitions-implementation-approximated	4.4.1	4.4.1	implementation-approximated	
+sec-terms-and-definitions-implementation-defined	4.4.2	4.4.2	implementation-defined	
+sec-terms-and-definitions-infinity	4.4.26	4.4.26	Infinity	
+sec-terms-and-definitions-nan	4.4.27	4.4.27	NaN	
+sec-terms-and-definitions-null-type	4.4.16	4.4.16	Null type	
+sec-terms-and-definitions-number-type	4.4.24	4.4.24	Number type	
+sec-terms-and-definitions-number-value	4.4.23	4.4.23	Number value	
+sec-terms-and-definitions-object	4.4.6	4.4.6	object	
+sec-terms-and-definitions-prototype	4.4.8	4.4.8	prototype	
+sec-terms-and-definitions-string-type	4.4.21	4.4.21	String type	
+sec-terms-and-definitions-string-value	4.4.20	4.4.20	String value	
+sec-terms-and-definitions-symbol-type	4.4.32	4.4.32	Symbol type	
+sec-terms-and-definitions-undefined-type	4.4.14	4.4.14	Undefined type	
+sec-testing-and-comparison-operations	7.2	7.2	Testing and Comparison Operations	
+sec-testintegritylevel	7.3.16	7.3.16	TestIntegrityLevel	
+sec-text-processing	22	22	Text Processing	
+sec-the-environment-record-type-hierarchy	9.1.1	9.1.1	The Environment Record Type Hierarchy	
+sec-this-keyword	13.2.1	13.2.1	The `this` Keyword	
+sec-this-keyword-runtime-semantics-evaluation	13.2.1.1	13.2.1.1	Runtime Semantics: Evaluation	
+sec-thisbigintvalue	21.2.3.4.1	21.2.3.4.1	ThisBigIntValue	
+sec-thisbooleanvalue	20.3.3.3.1	20.3.3.3.1	ThisBooleanValue	
+sec-thisnumbervalue	21.1.3.7.1	21.1.3.7.1	ThisNumberValue	
+sec-thisstringvalue	22.1.3.35.1	22.1.3.35.1	ThisStringValue	
+sec-thissymbolvalue	20.4.3.4.1	20.4.3.4.1	ThisSymbolValue	
+sec-throw-an-exception	5.2.3.2	5.2.4.2	Throw an Exception	
+sec-throw-statement	14.14	14.14	The `throw` Statement	
+sec-throw-statement-runtime-semantics-evaluation	14.14.1	14.14.1	Runtime Semantics: Evaluation	
+sec-throwcompletion	6.2.4.2	6.2.4.2	ThrowCompletion	
+sec-time-related-constants	21.4.1.2	21.4.1.2	Time-related Constants	
+sec-time-values-and-time-range	21.4.1.1	21.4.1.1	Time Values and Time Range	
+sec-time-zone-identifier-record	21.4.1.22	21.4.1.22	Time Zone Identifier Record	
+sec-time-zone-identifiers	21.4.1.19	21.4.1.19	Time Zone Identifiers	
+sec-time-zone-offset-string-format	A.7	A.7	Time Zone Offset String Format	
+sec-time-zone-offset-strings	21.4.1.33	21.4.1.33	Time Zone Offset String Format	
+sec-timeclip	21.4.1.31	21.4.1.31	TimeClip	
+sec-timefromyear	21.4.1.7	21.4.1.7	TimeFromYear	
+sec-timestring	21.4.4.41.1	21.4.4.41.1	TimeString	
+sec-timewithinday	21.4.1.4	21.4.1.4	TimeWithinDay	
+sec-timezoneestring	21.4.4.41.3	21.4.4.41.3	TimeZoneString	
+sec-tobigint	7.1.13	7.1.13	ToBigInt	
+sec-tobigint64	7.1.15	7.1.15	ToBigInt64	
+sec-tobiguint64	7.1.16	7.1.16	ToBigUint64	
+sec-toboolean	7.1.2	7.1.2	ToBoolean	
+sec-todatestring	21.4.4.41.4	21.4.4.41.4	ToDateString	
+sec-toindex	7.1.22	7.1.22	ToIndex	
+sec-toint16	7.1.8	7.1.8	ToInt16	
+sec-toint32	7.1.6	7.1.6	ToInt32	
+sec-toint8	7.1.10	7.1.10	ToInt8	
+sec-tointegerorinfinity	7.1.5	7.1.5	ToIntegerOrInfinity	
+sec-tokens	12.6	12.6	Tokens	
+sec-tolength	7.1.20	7.1.20	ToLength	
+sec-tonumber	7.1.4	7.1.4	ToNumber	
+sec-tonumber-applied-to-the-string-type	7.1.4.1	7.1.4.1	ToNumber Applied to the String Type	
+sec-tonumeric	7.1.3	7.1.3	ToNumeric	
+sec-toobject	7.1.18	7.1.18	ToObject	
+sec-toprimitive	7.1.1	7.1.1	ToPrimitive	
+sec-topropertydescriptor	6.2.6.5	6.2.6.5	ToPropertyDescriptor	
+sec-topropertykey	7.1.19	7.1.19	ToPropertyKey	
+sec-tostring	7.1.17	7.1.17	ToString	
+sec-touint16	7.1.9	7.1.9	ToUint16	
+sec-touint32	7.1.7	7.1.7	ToUint32	
+sec-touint8	7.1.11	7.1.11	ToUint8	
+sec-touint8clamp	7.1.12	7.1.12	ToUint8Clamp	
+sec-tozeropaddeddecimalstring	22.1.3.17.3	22.1.3.17.3	ToZeroPaddedDecimalString	
+sec-triggerpromisereactions	27.2.1.8	27.2.1.8	TriggerPromiseReactions	
+sec-trimstring	22.1.3.32.1	22.1.3.32.1	TrimString	
+sec-try-statement	14.15	14.15	The `try` Statement	
+sec-try-statement-runtime-semantics-evaluation	14.15.3	14.15.3	Runtime Semantics: Evaluation	
+sec-try-statement-static-semantics-early-errors	14.15.1	14.15.1	Static Semantics: Early Errors	
+sec-type	4.4.4	4.4.4	type	
+sec-type-conversion	7.1	7.1	Type Conversion	
+sec-typedarray	23.2.5.1	23.2.5.1	_TypedArray_	
+sec-typedarray-constructors	23.2.5	23.2.5	The _TypedArray_ Constructors	
+sec-typedarray-create-same-type	23.2.4.3	23.2.4.2	TypedArrayCreateSameType	
+sec-typedarray-defineownproperty	10.4.5.4	10.4.5.4	[[DefineOwnProperty]]	
+sec-typedarray-delete	10.4.5.7	10.4.5.7	[[Delete]]	
+sec-typedarray-exotic-objects	10.4.5	10.4.5	TypedArray Exotic Objects	
+sec-typedarray-get	10.4.5.5	10.4.5.5	[[Get]]	
+sec-typedarray-getownproperty	10.4.5.2	10.4.5.2	[[GetOwnProperty]]	
+sec-typedarray-hasproperty	10.4.5.3	10.4.5.3	[[HasProperty]]	
+sec-typedarray-objects	23.2	23.2	TypedArray Objects	
+sec-typedarray-ownpropertykeys	10.4.5.8	10.4.5.8	[[OwnPropertyKeys]]	
+sec-typedarray-preventextensions	10.4.5.1	10.4.5.1	[[PreventExtensions]]	
+sec-typedarray-set	10.4.5.6	10.4.5.6	[[Set]]	
+sec-typedarray-with-buffer-witness-records	10.4.5.9	10.4.5.9	TypedArray With Buffer Witness Records	
+sec-typedarray.bytes_per_element	23.2.6.1	23.2.6.1	_TypedArray_.BYTES_PER_ELEMENT	
+sec-typedarray.prototype	23.2.6.2	23.2.6.2	_TypedArray_.prototype	
+sec-typedarray.prototype.bytes_per_element	23.2.7.1	23.2.7.1	_TypedArray_.prototype.BYTES_PER_ELEMENT	
+sec-typedarray.prototype.constructor	23.2.7.2	23.2.7.2	_TypedArray_.prototype.constructor	
+sec-typedarraybytelength	10.4.5.12	10.4.5.12	TypedArrayByteLength	
+sec-typedarraycreate	10.4.5.11	10.4.5.11	TypedArrayCreate	
+sec-typedarraycreatefromconstructor	23.2.4.2	23.2.4.1	TypedArrayCreateFromConstructor	
+sec-typedarrayelementsize	23.2.4.5	23.2.4.5	TypedArrayElementSize	
+sec-typedarrayelementtype	23.2.4.6	23.2.4.6	TypedArrayElementType	
+sec-typedarraygetelement	10.4.5.17	10.4.5.17	TypedArrayGetElement	
+sec-typedarraylength	10.4.5.13	10.4.5.13	TypedArrayLength	
+sec-typedarraysetelement	10.4.5.18	10.4.5.18	TypedArraySetElement	
+sec-typeof-operator	13.5.3	13.5.3	The `typeof` Operator	
+sec-typeof-operator-runtime-semantics-evaluation	13.5.3.1	13.5.3.1	Runtime Semantics: Evaluation	
+sec-types-of-source-code	11.2	11.2	Types of Source Code	
+sec-uint16array	19.3.37	19.3.37	Uint16Array	
+sec-uint32array	19.3.38	19.3.38	Uint32Array	
+sec-uint8array	19.3.35	23.3	Uint8Array Objects	
+sec-uint8array.frombase64		23.3.1.1	Uint8Array.fromBase64	
+sec-uint8array.fromhex		23.3.1.2	Uint8Array.fromHex	
+sec-uint8array.prototype.setfrombase64		23.3.2.1	Uint8Array.prototype.setFromBase64	
+sec-uint8array.prototype.setfromhex		23.3.2.2	Uint8Array.prototype.setFromHex	
+sec-uint8array.prototype.tobase64		23.3.2.3	Uint8Array.prototype.toBase64	
+sec-uint8array.prototype.tohex		23.3.2.4	Uint8Array.prototype.toHex	
+sec-uint8clampedarray	19.3.36	19.3.36	Uint8ClampedArray	
+sec-unary-minus-operator	13.5.5	13.5.5	Unary `-` Operator	
+sec-unary-minus-operator-runtime-semantics-evaluation	13.5.5.1	13.5.5.1	Runtime Semantics: Evaluation	
+sec-unary-operators	13.5	13.5	Unary Operators	
+sec-unary-plus-operator	13.5.4	13.5.4	Unary `+` Operator	
+sec-unary-plus-operator-runtime-semantics-evaluation	13.5.4.1	13.5.4.1	Runtime Semantics: Evaluation	
+sec-undefined	19.1.4	19.1.4	undefined	
+sec-undefined-value	4.4.13	4.4.13	undefined value	
+sec-unescape-string	B.2.1.2	B.2.1.2	unescape	
+sec-unicode-format-control-characters	12.1	12.1	Unicode Format-Control Characters	
+sec-unicodeescape	25.5.2.4	25.5.4.4	UnicodeEscape	
+sec-unsigned-right-shift-operator	13.9.3	13.9.3	The Unsigned Right Shift Operator	
+sec-unsigned-right-shift-operator-runtime-semantics-evaluation	13.9.3.1	13.9.3.1	Runtime Semantics: Evaluation	
+sec-update-expressions	13.4	13.4	Update Expressions	
+sec-update-expressions-static-semantics-early-errors	13.4.1	13.4.1	Static Semantics: Early Errors	
+sec-updateempty	6.2.4.4	6.2.4.4	UpdateEmpty	
+sec-updatemodifiers	22.2.2.7.4	22.2.2.7.4	UpdateModifiers	
+sec-uri-handling-functions	19.2.6	19.2.6	URI Handling Functions	
+sec-utc-t	21.4.1.26	21.4.1.26	UTC	
+sec-utf16decodesurrogatepair	11.1.3	11.1.3	Static Semantics: UTF16SurrogatePairToCodePoint	
+sec-utf16encodecodepoint	11.1.1	11.1.1	Static Semantics: UTF16EncodeCodePoint	
+sec-valid-chosen-reads	29.7.1	29.7.1	Valid Chosen Reads	
+sec-valid-executions	29.7.5	29.7.5	Valid Executions	
+sec-validateandapplypropertydescriptor	10.1.6.3	10.1.6.3	ValidateAndApplyPropertyDescriptor	
+sec-validateatomicaccess	25.4.3.2	25.4.3.2	ValidateAtomicAccess	
+sec-validateatomicaccessonintegertypedarray	25.4.3.3	25.4.3.3	ValidateAtomicAccessOnIntegerTypedArray	
+sec-validateintegertypedarray	25.4.3.1	25.4.3.1	ValidateIntegerTypedArray	
+sec-validatenonrevokedproxy	10.5.14	10.5.14	ValidateNonRevokedProxy	
+sec-validatetypedarray	23.2.4.4	23.2.4.4	ValidateTypedArray	
+sec-validateuint8array		23.3.3.1	ValidateUint8Array	
+sec-value-notation	5.2.6	5.2.7	Value Notation	
+sec-value-properties-of-the-global-object	19.1	19.1	Value Properties of the Global Object	
+sec-value-properties-of-the-global-object-infinity	19.1.2	19.1.2	Infinity	
+sec-value-properties-of-the-global-object-nan	19.1.3	19.1.3	NaN	
+sec-value-properties-of-the-math-object	21.3.1	21.3.1	Value Properties of the Math Object	
+sec-valueofreadevent	29.5.5	29.5.5	ValueOfReadEvent	
+sec-variable-statement	14.3.2	14.3.2	Variable Statement	
+sec-variable-statement-runtime-semantics-evaluation	14.3.2.1	14.3.2.1	Runtime Semantics: Evaluation	
+sec-variablestatements-in-catch-blocks	B.3.4	B.3.4	VariableStatements in Catch Blocks	
+sec-void-operator	13.5.2	13.5.2	The `void` Operator	
+sec-void-operator-runtime-semantics-evaluation	13.5.2.1	13.5.2.1	Runtime Semantics: Evaluation	
+sec-waiter-record	25.4.1	25.4.1	Waiter Record	
+sec-waiterlist-records	25.4.2	25.4.2	WaiterList Records	
+sec-weak-ref-constructor	26.1.1	26.1.1	The WeakRef Constructor	
+sec-weak-ref-objects	26.1	26.1	WeakRef Objects	
+sec-weak-ref-target	26.1.1.1	26.1.1.1	WeakRef	
+sec-weak-ref.prototype	26.1.2.1	26.1.2.1	WeakRef.prototype	
+sec-weak-ref.prototype-%symbol.tostringtag%	26.1.3.3	26.1.3.3	WeakRef.prototype [ %Symbol.toStringTag% ]	
+sec-weak-ref.prototype.constructor	26.1.3.1	26.1.3.1	WeakRef.prototype.constructor	
+sec-weak-ref.prototype.deref	26.1.3.2	26.1.3.2	WeakRef.prototype.deref	
+sec-weakmap-constructor	24.3.1	24.3.1	The WeakMap Constructor	
+sec-weakmap-iterable	24.3.1.1	24.3.1.1	WeakMap	
+sec-weakmap-objects	24.3	24.3	WeakMap Objects	
+sec-weakmap.prototype	24.3.2.1	24.3.2.1	WeakMap.prototype	
+sec-weakmap.prototype-%symbol.tostringtag%	24.3.3.6	24.3.3.8	WeakMap.prototype [ %Symbol.toStringTag% ]	
+sec-weakmap.prototype.constructor	24.3.3.1	24.3.3.1	WeakMap.prototype.constructor	
+sec-weakmap.prototype.delete	24.3.3.2	24.3.3.2	WeakMap.prototype.delete	
+sec-weakmap.prototype.get	24.3.3.3	24.3.3.3	WeakMap.prototype.get	
+sec-weakmap.prototype.getorinsert		24.3.3.4	WeakMap.prototype.getOrInsert	
+sec-weakmap.prototype.getorinsertcomputed		24.3.3.5	WeakMap.prototype.getOrInsertComputed	
+sec-weakmap.prototype.has	24.3.3.4	24.3.3.6	WeakMap.prototype.has	
+sec-weakmap.prototype.set	24.3.3.5	24.3.3.7	WeakMap.prototype.set	
+sec-weakref-abstract-operations	26.1.4	26.1.4	WeakRef Abstract Operations	
+sec-weakref-execution	9.9.3	9.9.3	Execution	
+sec-weakref-host-hooks	9.9.4	9.9.4	Host Hooks	
+sec-weakref-invariants	9.9.1	9.9.1	Objectives	
+sec-weakref-processing-model	9.9	9.9	Processing Model of WeakRef and FinalizationRegistry Targets	
+sec-weakrefderef	26.1.4.1	26.1.4.1	WeakRefDeref	
+sec-weakset-constructor	24.4.1	24.4.1	The WeakSet Constructor	
+sec-weakset-iterable	24.4.1.1	24.4.1.1	WeakSet	
+sec-weakset-objects	24.4	24.4	WeakSet Objects	
+sec-weakset.prototype	24.4.2.1	24.4.2.1	WeakSet.prototype	
+sec-weakset.prototype-%symbol.tostringtag%	24.4.3.5	24.4.3.5	WeakSet.prototype [ %Symbol.toStringTag% ]	
+sec-weakset.prototype.add	24.4.3.1	24.4.3.1	WeakSet.prototype.add	
+sec-weakset.prototype.constructor	24.4.3.2	24.4.3.2	WeakSet.prototype.constructor	
+sec-weakset.prototype.delete	24.4.3.3	24.4.3.3	WeakSet.prototype.delete	
+sec-weakset.prototype.has	24.4.3.4	24.4.3.4	WeakSet.prototype.has	
+sec-web-compat-blockdeclarationinstantiation	B.3.2.6	14.2.3	Changes to BlockDeclarationInstantiation	merged into sec-blockdeclarationinstantiation
+sec-web-compat-evaldeclarationinstantiation	B.3.2.3	19.2.1.3	Changes to EvalDeclarationInstantiation	merged into sec-evaldeclarationinstantiation
+sec-web-compat-functiondeclarationinstantiation	B.3.2.1	10.2.11	Changes to FunctionDeclarationInstantiation	merged into sec-functiondeclarationinstantiation
+sec-web-compat-globaldeclarationinstantiation	B.3.2.2	16.1.7	Changes to GlobalDeclarationInstantiation	merged into sec-globaldeclarationinstantiation
+sec-web-compat-host-ensure-can-add-private-field	B.3.8	B.3.8	Non-default behaviour in HostEnsureCanAddPrivateElement	
+sec-web-compat-host-make-job-callback	B.3.7	B.3.7	Non-default behaviour in HostMakeJobCallback	
+sec-web-scripting	4.1	4.1	Web Scripting	
+sec-weekday	21.4.1.13	21.4.1.13	WeekDay	
+sec-well-known-intrinsic-objects	6.1.7.4	6.1.7.4	Well-Known Intrinsic Objects	
+sec-well-known-symbols	6.1.5.1	6.1.5.1	Well-Known Symbols	
+sec-while-statement	14.7.3	14.7.3	The `while` Statement	
+sec-while-statement-static-semantics-early-errors	14.7.3.1	14.7.3.1	Static Semantics: Early Errors	
+sec-white-space	12.2	12.2	White Space	
+sec-with-statement	14.11	14.11	The `with` Statement	
+sec-with-statement-runtime-semantics-evaluation	14.11.2	14.11.2	Runtime Semantics: Evaluation	
+sec-with-statement-static-semantics-early-errors	14.11.1	14.11.1	Static Semantics: Early Errors	
+sec-withclausetoattributes	16.2.2.4	16.2.2.4	Static Semantics: WithClauseToAttributes	
+sec-wordcharacters	22.2.2.9.3	22.2.2.9.3	WordCharacters	
+sec-yearfromtime	21.4.1.8	21.4.1.8	YearFromTime	
+sec-yield	27.5.3.7	27.5.3.7	Yield	
+typedarray-species-create	23.2.4.1	23.2.4.3	TypedArraySpeciesCreate	

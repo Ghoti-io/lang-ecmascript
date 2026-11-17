@@ -1,0 +1,11 @@
+--- a/tools/check-test262.py
++++ b/tools/check-test262.py
+@@ -527,7 +527,7 @@
+     by_result = Counter()
+     for (name, mode, expect), answer in zip(pairs, answers):
+         by_result[answer] += 1
+-        ok = (answer == "OK") if expect == "accept" else (answer == "ERR_SYNTAX")
++        ok = (answer == "OK") if expect == "accept" else (answer != "OK")
+         row = pending_match(ledger, name, mode, used)
+         if ok:
+             passed += 1

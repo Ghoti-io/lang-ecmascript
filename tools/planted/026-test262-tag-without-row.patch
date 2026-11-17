@@ -1,0 +1,10 @@
+--- a/tests/data-test262-tags.tsv
++++ b/tests/data-test262-tags.tsv
+@@ -140,7 +140,6 @@
+ String.prototype.trimStart	in	sec-string.prototype.trimstart	String.prototype.trimStart (17th 22.1.3.34)
+ String.prototype.toWellFormed	in	sec-string.prototype.towellformed	String.prototype.toWellFormed (17th 22.1.3.31)
+ super	in	sec-super-keyword	The `super` Keyword (17th 13.3.7)
+-Symbol	in	sec-symbol-objects	Symbol Objects (17th 20.4)
+ symbols-as-weakmap-keys	in	sec-canbeheldweakly	CanBeHeldWeakly (17th 9.13)
+ Symbol.asyncIterator	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)
+ Symbol.hasInstance	in	sec-well-known-symbols	Well-Known Symbols (17th 6.1.5.1)

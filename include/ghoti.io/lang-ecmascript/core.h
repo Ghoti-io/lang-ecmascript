@@ -144,8 +144,8 @@ typedef struct GLECMA_Location {
  * ::GLECMA_RULE_COUNT with the next number. A host may store and compare the
  * numbers. ::glecma_rule_name and ::glecma_rule_clause give each its stable
  * name and the ECMA-262 clause it comes from (the clause numbers are the
- * 16th edition's, and are checked against the 17th when the clause
- * concordance is committed).
+ * 17th edition's; `documentation/clause-concordance.tsv` maps the 16th's,
+ * and `make check-clauses` fails a number the 17th lacks).
  *
  * Zero is no rule: the value of ::GLECMA_Failure::rule for every result but
  * ::GLECMA_ERR_SYNTAX. The lexical rules come first; the rules of the parser
@@ -155,64 +155,64 @@ typedef enum {
   GLECMA_RULE_NONE = 0, ///< No rule: the failure is not a syntax error.
 
   GLECMA_RULE_UNEXPECTED_CHARACTER = 1, ///< A code point that begins no token
-                                        ///< (12.6).
+                                        ///< (clause 12.6).
   GLECMA_RULE_UNTERMINATED_COMMENT = 2, ///< A multi-line comment that never
-                                        ///< ends (12.4).
+                                        ///< ends (clause 12.4).
   GLECMA_RULE_UNTERMINATED_STRING = 3,  ///< A string literal ended by a line
                                         ///< terminator or the end of input
-                                        ///< (12.9.4).
+                                        ///< (clause 12.9.4).
   GLECMA_RULE_UNTERMINATED_TEMPLATE = 4, ///< A template literal that never
-                                         ///< ends (12.9.6).
+                                         ///< ends (clause 12.9.6).
   GLECMA_RULE_UNTERMINATED_REGEXP = 5,  ///< A regular expression literal
                                         ///< ended by a line terminator or the
-                                        ///< end of input (12.9.5).
+                                        ///< end of input (clause 12.9.5).
   GLECMA_RULE_REGEXP_FLAGS = 6,         ///< A backslash where the flags of a
                                         ///< regular expression literal end
-                                        ///< (12.9.5).
+                                        ///< (clause 12.9.5).
   GLECMA_RULE_IDENTIFIER_ESCAPE = 7,    ///< A malformed `\u` escape in a name,
                                         ///< or one that is not an
-                                        ///< IdentifierPart (12.7).
+                                        ///< IdentifierPart (clause 12.7).
   GLECMA_RULE_PRIVATE_NAME = 8,         ///< `#` not followed by an
-                                        ///< IdentifierName (12.7).
-  GLECMA_RULE_ESCAPE_HEX = 9,           ///< A malformed `\x` escape (12.9.4).
+                                        ///< IdentifierName (clause 12.7).
+  GLECMA_RULE_ESCAPE_HEX = 9,           ///< A malformed `\x` escape (clause 12.9.4).
   GLECMA_RULE_ESCAPE_UNICODE = 10,      ///< A malformed `\u` escape in a
-                                        ///< string or template (12.9.4).
+                                        ///< string or template (clause 12.9.4).
   GLECMA_RULE_ESCAPE_CODE_POINT = 11,   ///< A malformed or out-of-range
-                                        ///< `\u{...}` escape (12.9.4).
+                                        ///< `\u{...}` escape (clause 12.9.4).
   GLECMA_RULE_ESCAPE_LEGACY_OCTAL_STRICT = 12, ///< A legacy octal escape in
-                                               ///< strict code (12.9.4,
+                                               ///< strict code (clauses 12.9.4,
                                                ///< 12.9.4.1).
   GLECMA_RULE_ESCAPE_NON_OCTAL_DECIMAL_STRICT = 13, ///< `\8` or `\9` in
-                                                    ///< strict code (12.9.4).
+                                                    ///< strict code (clause 12.9.4).
   GLECMA_RULE_TEMPLATE_ESCAPE_OCTAL = 14, ///< A decimal digit escape in a
                                           ///< template: not an escape
-                                          ///< sequence there (12.9.6).
+                                          ///< sequence there (clause 12.9.6).
   GLECMA_RULE_NUMERIC_EXPECTED_DIGIT = 15, ///< No digit where a numeric
-                                           ///< literal needs one (12.9.3).
+                                           ///< literal needs one (clause 12.9.3).
   GLECMA_RULE_NUMERIC_SEPARATOR = 16,   ///< A numeric separator that is not
-                                        ///< between two digits (12.9.3).
+                                        ///< between two digits (clause 12.9.3).
   GLECMA_RULE_NUMERIC_SEPARATOR_LEGACY = 17, ///< A separator in a legacy
                                              ///< octal or leading-zero
-                                             ///< literal (12.9.3).
+                                             ///< literal (clause 12.9.3).
   GLECMA_RULE_NUMERIC_BIGINT = 18,      ///< The BigInt suffix on a literal
-                                        ///< that cannot be one (12.9.3).
+                                        ///< that cannot be one (clause 12.9.3).
   GLECMA_RULE_NUMERIC_TRAILING = 19,    ///< An IdentifierStart or digit
                                         ///< directly after a numeric
-                                        ///< literal (12.9.3).
+                                        ///< literal (clause 12.9.3).
   GLECMA_RULE_NUMERIC_LEGACY_OCTAL_STRICT = 20, ///< A legacy octal literal in
-                                                ///< strict code (12.9.3).
+                                                ///< strict code (clause 12.9.3).
   GLECMA_RULE_NUMERIC_NON_OCTAL_DECIMAL_STRICT = 21, ///< A leading-zero
                                                      ///< decimal literal in
                                                      ///< strict code
-                                                     ///< (12.9.3).
+                                                     ///< (clause 12.9.3).
   GLECMA_RULE_ESCAPED_RESERVED_WORD = 22, ///< A reserved word written with a
                                           ///< `\u` escape, where an
-                                          ///< Identifier is required (12.7.1).
+                                          ///< Identifier is required (clause 12.7.1).
   GLECMA_RULE_RESERVED_WORD = 23,       ///< A reserved word where an
-                                        ///< Identifier is required (13.1.1).
+                                        ///< Identifier is required (clause 13.1.1).
   GLECMA_RULE_RESERVED_WORD_STRICT = 24, ///< A word reserved only in strict
                                          ///< code, or in a module, where an
-                                         ///< Identifier is required (13.1.1).
+                                         ///< Identifier is required (clause 13.1.1).
 
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.

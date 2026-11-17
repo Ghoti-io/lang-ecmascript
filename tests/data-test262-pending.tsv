@@ -1,0 +1,15 @@
+# The pending ledger: (file, mode) pairs that cannot pass yet, so that a gate that runs before the parser is complete can still be green without scoring anything it has not earned.
+#
+# - a failing pair that no row names fails the gate;
+# - a row that names a pair that now passes fails the gate (the ledger stays exact);
+# - rows only leave the ledger, or are narrowed; a new failure is fixed, never added;
+# - a row that names no pair fails the gate.
+# A selector ending in / names every file under that directory; the mode is * or one mode.
+# The ledger is empty when the parser is complete.
+# selector	mode	reason	cleared by
+harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+test/harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+test/annexB/language/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+test/annexB/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+test/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+test/language/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser

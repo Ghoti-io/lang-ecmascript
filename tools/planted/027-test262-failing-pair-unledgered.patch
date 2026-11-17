@@ -1,0 +1,10 @@
+--- a/tests/data-test262-pending.tsv
++++ b/tests/data-test262-pending.tsv
+@@ -8,7 +8,6 @@
+ # The ledger is empty when the parser is complete.
+ # selector	mode	reason	cleared by
+ harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+-test/harness/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+ test/annexB/language/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+ test/annexB/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser
+ test/built-ins/	*	there is no parser yet: the parse entry answers unsupported, which never scores	the parser

@@ -463,7 +463,7 @@ GLECMA_Result glecma_lex_scan_number(GLECMA_Lexer * lexer,
       }
       tail = TAIL_SUFFIX;
     } else if ((next >= '0' && next <= '9') || next == '_') {
-      // Annex B: a legacy octal literal, or a decimal literal with a leading
+      // Clause 12.9.3: a legacy octal literal, or a decimal literal with a leading
       // zero. Neither has numeric separators.
       bool has_89 = false;
       offset++;
@@ -553,7 +553,7 @@ GLECMA_Result glecma_lex_scan_number(GLECMA_Lexer * lexer,
   }
 
 finish:;
-  // 12.9.3: the unit after a numeric literal must not be an IdentifierStart
+  // Clause 12.9.3: the unit after a numeric literal must not be an IdentifierStart
   // or a DecimalDigit.
   uint32_t after = glecma_lex_unit(text, offset);
   bool bad_after = after == '\\' ||

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 //
-// The tokenizer's literals: numeric literals (with Annex B's legacy forms and
+// The tokenizer's literals: numeric literals (with the legacy forms and
 // the strict-mode rules), string literals and their escapes, templates with
 // cooked and raw text, and regular expression literals. Every case runs in
-// UTF-8 and UTF-16 (Lex). ECMA-262 clause numbers are the 16th edition's.
+// UTF-8 and UTF-16 (Lex). ECMA-262 clause numbers are the 17th edition's
+// (documentation/clause-concordance.tsv maps them from the 16th).
 
 #include "../lex_test_support.h"
 
@@ -36,7 +37,7 @@ struct BadCase {
 
 }  // namespace
 
-// 12.9.3: numeric literals.
+// Clause 12.9.3: numeric literals.
 TEST(Numbers, ValidLiterals) {
   const NumberCase cases[] = {
       {"0", GLECMA_TOK_NUMBER, 0}, {"1", GLECMA_TOK_NUMBER, 0},
@@ -54,7 +55,7 @@ TEST(Numbers, ValidLiterals) {
       {"0n", GLECMA_TOK_BIGINT, 0}, {"123n", GLECMA_TOK_BIGINT, 0},
       {"1_0n", GLECMA_TOK_BIGINT, 0}, {"0x1Fn", GLECMA_TOK_BIGINT, 0},
       {"0b1n", GLECMA_TOK_BIGINT, 0}, {"0o7n", GLECMA_TOK_BIGINT, 0},
-      // Annex B: legacy octal, and decimal with a leading zero.
+      // Clause 12.9.3: legacy octal, and decimal with a leading zero.
       {"017", GLECMA_TOK_NUMBER, GLECMA_TOKF_LEGACY_OCTAL},
       {"00", GLECMA_TOK_NUMBER, GLECMA_TOKF_LEGACY_OCTAL},
       {"0777", GLECMA_TOK_NUMBER, GLECMA_TOKF_LEGACY_OCTAL},
@@ -74,7 +75,7 @@ TEST(Numbers, ValidLiterals) {
   }
 }
 
-// 12.9.3: where a literal ends.
+// Clause 12.9.3: where a literal ends.
 TEST(Numbers, WhereALiteralEnds) {
   // The legacy octal has no fraction: `.5` is a second literal, and a member
   // access reads as one.
@@ -143,7 +144,7 @@ TEST(Numbers, InvalidLiterals) {
   }
 }
 
-// 12.9.3: legacy octal and leading-zero decimals are errors in strict code,
+// Clause 12.9.3: legacy octal and leading-zero decimals are errors in strict code,
 // the Script goal's directive and the Module goal alike.
 TEST(Numbers, StrictModeRefusesTheLegacyForms) {
   for (uint32_t mode : {kStrict, kModule}) {
@@ -196,7 +197,7 @@ TEST(Numbers, TheParserCanMakeTheLexerStrict) {
   glecma_source_release(source);
 }
 
-// 12.9.4: string literals and their values.
+// Clause 12.9.4: string literals and their values.
 TEST(Strings, Values) {
   struct Case {
     const char * text;
@@ -232,7 +233,8 @@ TEST(Strings, Values) {
   EXPECT_EQ(ValueOf("'a\\0b'", 0), std::string("a\0b", 3));
 }
 
-// B.1.2: legacy octal escapes and \8 \9 in sloppy code.
+// Clause 12.9.4: legacy octal escapes and \8 \9 in sloppy code (the 17th
+// edition has them in the main text, not in Annex B).
 TEST(Strings, LegacyEscapesInSloppyCode) {
   struct Case {
     const char * text;
@@ -315,7 +317,7 @@ TEST(Strings, InvalidStrings) {
   EXPECT_EQ(Lex("'\\u{00000000000000000010FFFF}'").result, GLECMA_OK);
 }
 
-// 12.9.6: templates.
+// Clause 12.9.6: templates.
 TEST(Templates, PartsAndValues) {
   Lexed lexed = Lex("`abc`");
   ASSERT_EQ(lexed.tokens.size(), 2u);
@@ -364,7 +366,7 @@ TEST(Templates, DollarAndEscapedDelimiters) {
   EXPECT_EQ(Sig(Lex("`\\\\` x")), "TEMPLATE NAME");
 }
 
-// 12.9.6: TV and TRV read CR and CRLF as LF; LS and PS are kept.
+// Clause 12.9.6: TV and TRV read CR and CRLF as LF; LS and PS are kept.
 TEST(Templates, LineTerminators) {
   EXPECT_EQ(ValueOf("`a\r\nb\rc\nd`", 0), "a\nb\nc\nd");
   EXPECT_EQ(ValueOf("`a\r\nb\rc\nd`", 0, GLECMA_VALUE_RAW), "a\nb\nc\nd");
@@ -391,7 +393,7 @@ TEST(Templates, EscapesAreCooked) {
   EXPECT_EQ(Lex("`\\x41`").tokens[0].flags & GLECMA_TOKF_COOKED_UNDEFINED, 0u);
 }
 
-// 12.9.6: an invalid escape in a template is not an error here: its cooked
+// Clause 12.9.6: an invalid escape in a template is not an error here: its cooked
 // value is undefined, its raw value is intact, and the token says why, so
 // that the parser can refuse it in an untagged template and accept it in a
 // tagged one.
@@ -464,7 +466,7 @@ TEST(Templates, Unterminated) {
   EXPECT_EQ(Lex("`a\\").failure.rule, R(GLECMA_RULE_UNTERMINATED_TEMPLATE));
 }
 
-// 12.9.5: regular expression literals; the pattern is regex's to validate.
+// Clause 12.9.5: regular expression literals; the pattern is regex's to validate.
 TEST(Regexps, BodiesAndFlags) {
   Lexed lexed = Lex("/ab+c/gi");
   ASSERT_EQ(lexed.result, GLECMA_OK);

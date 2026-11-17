@@ -1,0 +1,52 @@
+# The test262 classification table: every file of the pinned corpus is named by
+# a row here, or the gate fails. The first row that matches a file decides, so
+# the order is part of the table. A row that matches no file also fails the gate
+# (the table stays exact), except `unicode-newer:`, whose matches at a given pin
+# may legitimately be none.
+#
+# selector   what it names
+#   toplevel:        a file directly in the repository root
+#   nonjs:           a file whose name does not end in .js (test262's own runner
+#                    reads only .js)
+#   suffix:<text>    a file whose path ends with <text>
+#   unicode-newer:   a file generated for a Unicode version above the engine's
+#                    pinned one (the version in its name or its header)
+#   <dir>/           everything under the directory
+#   <path>           one file
+# decision
+#   in               a test: it runs in the modes its flags select
+#   include          a harness file: parsed as a Script, sloppy and strict
+#   fixture          an imported module: parsed as a Module; in scope when some
+#                    test or fixture that imports it is in scope
+#   fixture-refuse   a fixture that the importing test requires to be a
+#                    SyntaxError: refused as a Module
+#   out              skipped, with the reason, which is counted and printed
+# selector	decision	reason	where an out is scored, or what moves it
+src/	out	test generator templates, not tests (the generated tests are under test/)	never
+tools/	out	test262's own tooling	never
+docs/	out	test262's documentation	never
+rfcs/	out	test262's process documents	never
+.github/	out	repository configuration	never
+.circleci/	out	repository configuration	never
+toplevel:	out	repository files that are not tests	never
+test/intl402/	out	ECMA-402, not ECMA-262	with the Intl work
+test/staging/	out	not consensus tests; a test enters scope when test262 moves it into a scored directory and the pin moves	when the pin moves
+nonjs:	out	not ECMAScript source: JSON, text and binary fixtures that an import reads as data	with module loading
+test/language/expressions/dynamic-import/catch/script-code_FIXTURE.js	fixture-refuse	a var and a function of one name: an early error in a Module, valid in a Script (the dynamic-import/catch/*-script-code-target.js tests import it and expect the SyntaxError)	-
+test/language/module-code/instn-resolve-empty-export_FIXTURE.js	fixture-refuse	`0++;`, an invalid assignment target: an early SyntaxError (instn-resolve-empty-export.js expects the import to fail)	-
+test/language/module-code/instn-resolve-empty-import_FIXTURE.js	fixture-refuse	`0++;`, an invalid assignment target: an early SyntaxError (instn-resolve-empty-import.js expects the import to fail)	-
+test/language/module-code/instn-resolve-err-syntax-1_FIXTURE.js	fixture-refuse	`break;` outside a loop: an early SyntaxError (instn-resolve-err-syntax-1.js expects the import to fail)	-
+test/language/module-code/instn-resolve-err-syntax-2_FIXTURE.js	fixture-refuse	`0++;`, an invalid assignment target: an early SyntaxError (instn-resolve-err-syntax-2.js expects the import to fail)	-
+test/language/module-code/instn-resolve-order-depth-reference_FIXTURE.js	fixture-refuse	`0++;`, an invalid assignment target: an early SyntaxError (instn-resolve-order-depth.js expects the import to fail before its sibling)	-
+test/language/module-code/instn-resolve-order-depth-syntax_FIXTURE.js	fixture-refuse	`break;` outside a loop: an early SyntaxError (instn-resolve-order-depth.js expects the import to fail)	-
+test/language/module-code/instn-resolve-order-src-reference_FIXTURE.js	fixture-refuse	`0++;`, an invalid assignment target: an early SyntaxError (instn-resolve-order-src.js expects the import to fail before its sibling)	-
+test/language/module-code/instn-resolve-order-src-syntax_FIXTURE.js	fixture-refuse	`break;` outside a loop: an early SyntaxError (instn-resolve-order-src.js expects the import to fail)	-
+unicode-newer:	out	generated for a Unicode version above the engine's pinned one	when the engine's Unicode version moves
+harness/sm/	out	includes of test/staging only	when staging tests enter scope
+harness/	include	the harness files every test may include	-
+suffix:_FIXTURE.js	fixture	an imported module	-
+test/language/	in	the language	-
+test/annexB/language/	in	Annex B, the language	-
+test/built-ins/	in	the built-in objects; each must parse, though nothing runs	-
+test/annexB/built-ins/	in	Annex B, the built-in objects; each must parse, though nothing runs	-
+test/harness/	in	tests of the harness files; each must parse	-
