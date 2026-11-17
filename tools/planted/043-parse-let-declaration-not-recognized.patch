@@ -1,0 +1,11 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -60,7 +60,7 @@
+     return false;
+   }
+   if (after.kind == GLECMA_TOK_LBRACKET || after.kind == GLECMA_TOK_LBRACE) {
+-    return true;
++    return false;
+   }
+   return after.kind == GLECMA_TOK_NAME &&
+       glecma_token_identifier_check(&after, 0) == GLECMA_RULE_NONE;

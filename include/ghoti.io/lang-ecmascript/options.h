@@ -115,12 +115,35 @@ GLECMA_API bool glecma_feature_set_has(const GLECMA_FeatureSet * set,
  * keeps working. Members are only ever added at the end. A `size` smaller
  * than the header is ::GLECMA_ERR_INVALID. `reserved` must be zero.
  *
- * This version carries the parts the tokenizer reads, the limits and the
- * feature set. The goal and its context join at the end with the parser.
- * No member selects the internal built-in mode of the tokenizer: that mode
+ * The limits and the feature set are what the tokenizer reads; the goal and
+ * its context are what the parser adds. No member selects the internal built-in mode of the tokenizer: that mode
  * is reached only through an internal entry, so user source can never spell
  * an intrinsic.
  */
+/**
+ * @name Goals
+ *
+ * Which grammar a source is parsed for. Only ::GLECMA_PARSE_SCRIPT is built in
+ * this version; asking for another is ::GLECMA_ERR_UNSUPPORTED, and a value
+ * that is no goal is ::GLECMA_ERR_INVALID.
+ */
+///@{
+#define GLECMA_PARSE_SCRIPT 0u ///< A Script, sloppy unless a directive or the context makes it strict.
+#define GLECMA_PARSE_MODULE 1u ///< A Module: always strict.
+///@}
+
+/**
+ * @name Context flags
+ *
+ * What the host knows about the code that the source cannot say.
+ * Strictness can only be added, never removed: a source's own directive can
+ * make code strict, and nothing can make strict code sloppy.
+ */
+///@{
+#define GLECMA_CONTEXT_STRICT 0x1u ///< The code is strict before its first token.
+#define GLECMA_CONTEXT_MASK 0x1u   ///< Every bit defined; the rest must be zero.
+///@}
+
 typedef struct GLECMA_ParseOptions {
   uint32_t size;     ///< `sizeof(GLECMA_ParseOptions)` as the caller knows it.
   uint32_t reserved; ///< Padding; must be zero.
@@ -129,11 +152,15 @@ typedef struct GLECMA_ParseOptions {
                                       ///< to.
   const GLECMA_FeatureSet * features; ///< The features asked for, or NULL for
                                       ///< none. Must outlive the call.
+  uint32_t goal;      ///< ::GLECMA_PARSE_SCRIPT or ::GLECMA_PARSE_MODULE.
+  uint32_t context;   ///< ::GLECMA_CONTEXT_STRICT and the other flags; bits
+                      ///< beyond ::GLECMA_CONTEXT_MASK must be zero.
 } GLECMA_ParseOptions;
 
 /** @brief Initializer for a ::GLECMA_ParseOptions: its size, and defaults. */
 #define GLECMA_PARSE_OPTIONS_INIT                                              \
-  { (uint32_t)sizeof(GLECMA_ParseOptions), 0u, NULL, NULL }
+  { (uint32_t)sizeof(GLECMA_ParseOptions), 0u, NULL, NULL, GLECMA_PARSE_SCRIPT, \
+    0u }
 
 /**
  * @brief Writes the default options into @p options.

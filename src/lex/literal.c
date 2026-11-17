@@ -804,10 +804,20 @@ static void emit(Builder * b, uint32_t cp) {
   }
 }
 
-GLECMA_Result glecma_token_value(const GLECMA_Source * source,
+static void release_units(const GLECMA_Allocator * allocator,
+    uint16_t * given, uint16_t * units) {
+  if (given == NULL) {
+    allocator->free_fn(allocator->ctx, units);
+  }
+}
+
+// The value, written into @p given when it is not NULL (the caller guarantees
+// room for one unit per unit of the token's text, which is the most a value
+// can take) and into a block from @p allocator otherwise.
+static GLECMA_Result token_value(const GLECMA_Source * source,
     const GLECMA_Token * token, GLECMA_ValueKind kind,
-    const GLECMA_Allocator * allocator, uint16_t ** out_units,
-    size_t * out_length) {
+    const GLECMA_Allocator * allocator, uint16_t * given,
+    uint16_t ** out_units, size_t * out_length) {
   if (source == NULL || token == NULL || out_units == NULL ||
       out_length == NULL) {
     return GLECMA_ERR_INVALID;
@@ -862,8 +872,9 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
   // UTF-8 sequence yields two), and an escape yields fewer than it takes.
   Builder b;
   b.length = 0;
-  b.units = (uint16_t *)allocator->malloc_fn(allocator->ctx,
-      (stop - begin) * sizeof(uint16_t));
+  b.units = given != NULL ? given
+      : (uint16_t *)allocator->malloc_fn(allocator->ctx,
+            (stop - begin) * sizeof(uint16_t));
   if (b.units == NULL) {
     return GLECMA_ERR_OOM;
   }
@@ -872,7 +883,7 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
     size_t length = 0;
     uint32_t cp = glecma_lex_cp(&text, offset, &length);
     if (cp == GLECMA_LEX_NONE || cp == GLECMA_LEX_BAD) {
-      allocator->free_fn(allocator->ctx, b.units);
+      release_units(allocator, given, b.units);
       return GLECMA_ERR_INTERNAL;
     }
     if (cp == '\\') {
@@ -880,7 +891,7 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
         uint32_t named = 0;
         size_t after = 0;
         if (!glecma_lex_scan_name_escape(&text, offset, &named, &after)) {
-          allocator->free_fn(allocator->ctx, b.units);
+          release_units(allocator, given, b.units);
           return GLECMA_ERR_INTERNAL;
         }
         emit(&b, named);
@@ -913,7 +924,7 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
       scan_escape(&text, offset + 1,
           is_template ? ESCAPE_TEMPLATE : ESCAPE_STRING_SLOPPY, &e);
       if (e.rule != 0) {
-        allocator->free_fn(allocator->ctx, b.units);
+        release_units(allocator, given, b.units);
         return GLECMA_ERR_INTERNAL;
       }
       if (e.has_value) {
@@ -934,7 +945,7 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
     offset += length;
   }
   if (b.length == 0) {
-    allocator->free_fn(allocator->ctx, b.units);
+    release_units(allocator, given, b.units);
     *out_units = NULL;
     *out_length = 0;
     return GLECMA_OK;
@@ -942,6 +953,30 @@ GLECMA_Result glecma_token_value(const GLECMA_Source * source,
   *out_units = b.units;
   *out_length = b.length;
   return GLECMA_OK;
+}
+
+GLECMA_Result glecma_token_value(const GLECMA_Source * source,
+    const GLECMA_Token * token, GLECMA_ValueKind kind,
+    const GLECMA_Allocator * allocator, uint16_t ** out_units,
+    size_t * out_length) {
+  return token_value(source, token, kind, allocator, NULL, out_units,
+      out_length);
+}
+
+GLECMA_Result glecma_token_value_into(const GLECMA_Source * source,
+    const GLECMA_Token * token, GLECMA_ValueKind kind, uint16_t * buffer,
+    size_t capacity, size_t * out_length) {
+  if (buffer == NULL || token == NULL) {
+    return GLECMA_ERR_INVALID;
+  }
+  size_t span = token->end.offset - token->start.offset;
+  if (span > capacity) {
+    return GLECMA_ERR_INVALID;
+  }
+  uint16_t * units = NULL;
+  GLECMA_Result r = token_value(source, token, kind, NULL, buffer, &units,
+      out_length);
+  return r;
 }
 
 void glecma_token_value_free(const GLECMA_Allocator * allocator,

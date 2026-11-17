@@ -37,5 +37,6 @@
 #include <ghoti.io/lang-ecmascript/options.h>
 #include <ghoti.io/lang-ecmascript/source.h>
 #include <ghoti.io/lang-ecmascript/stream.h>
+#include <ghoti.io/lang-ecmascript/tree.h>
 
 #endif // GHOTI_IO_GLECMA_LANG_ECMASCRIPT_H

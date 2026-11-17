@@ -1,0 +1,11 @@
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -209,7 +209,7 @@
+ // is checked. The recursive functions that are not a level of syntactic
+ // nesting of their own (the layers of one expression) check the stack only.
+ void parser_enter(Parser * p) {
+-  if (++p->depth > p->max_nesting) {
++  if (++p->depth >= p->max_nesting) {
+     parser_fail_limit(p, "nesting");
+   }
+   parser_check_stack(p);

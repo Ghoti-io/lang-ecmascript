@@ -151,7 +151,19 @@ TEST(AbiLayout, RuleAndFeatureAreAppendedAtTheEnd) {
       offsetof(GLECMA_Limits, source_units) + sizeof(uint64_t));
   EXPECT_EQ(offsetof(GLECMA_Limits, literal_length),
       offsetof(GLECMA_Limits, tokens) + sizeof(uint64_t));
-  EXPECT_EQ(sizeof(GLECMA_Limits), 32u);
+  // The parser's three caps follow, in the order they were added.
+  EXPECT_EQ(offsetof(GLECMA_Limits, nesting),
+      offsetof(GLECMA_Limits, literal_length) + sizeof(uint64_t));
+  EXPECT_EQ(offsetof(GLECMA_Limits, nodes),
+      offsetof(GLECMA_Limits, nesting) + sizeof(uint64_t));
+  EXPECT_EQ(offsetof(GLECMA_Limits, native_stack_bytes),
+      offsetof(GLECMA_Limits, nodes) + sizeof(uint64_t));
+  EXPECT_EQ(sizeof(GLECMA_Limits), 56u);
+  // The parse options gain the goal and its context at the end.
+  EXPECT_EQ(offsetof(GLECMA_ParseOptions, goal),
+      offsetof(GLECMA_ParseOptions, features) + sizeof(void *));
+  EXPECT_EQ(offsetof(GLECMA_ParseOptions, context),
+      offsetof(GLECMA_ParseOptions, goal) + sizeof(uint32_t));
   EXPECT_EQ(sizeof(GLECMA_Failure), offsetof(GLECMA_Failure, limit) +
       sizeof(const char *) + 8 + GLECMA_FEATURE_NAME_MAX);
 }

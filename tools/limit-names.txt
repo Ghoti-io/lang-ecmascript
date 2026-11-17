@@ -4,3 +4,6 @@
 source_units
 tokens
 literal_length
+nesting
+nodes
+native_stack_bytes

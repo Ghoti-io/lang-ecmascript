@@ -86,6 +86,22 @@ GLECMA_INTERNAL_API bool glecma_parse_options_resolve(
     const GLECMA_FeatureSet ** out_features);
 
 /**
+ * @brief Reads the goal and context of a caller's parse options.
+ *
+ * A member beyond the caller's declared size takes its default (a Script, no
+ * context flags).
+ *
+ * @param options The caller's options, or NULL for the defaults.
+ * @param out_goal Receives the goal.
+ * @param out_context Receives the context flags.
+ * @return ::GLECMA_OK; ::GLECMA_ERR_INVALID for a `size` below the header, a
+ *   goal that is not one, or a context bit that is not defined.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_parse_options_goal(
+    const GLECMA_ParseOptions * options, uint32_t * out_goal,
+    uint32_t * out_context);
+
+/**
  * @brief Whether this build defines a feature.
  *
  * Looks the name up in the registry, `src/core/features.def`. The registry

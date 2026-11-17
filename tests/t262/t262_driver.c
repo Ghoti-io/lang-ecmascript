@@ -31,13 +31,9 @@
  * INTERPRETING.md says), `module` (a Module) and `raw` (a Script exactly as
  * written).
  *
- * It is the only place the gate calls the library. Today the library has a
- * tokenizer and no parser, so the most a pair can be taken is as far as a
- * source (every file of the corpus must be well-formed text the library
- * accepts), and every pair that gets that far is answered ERR_UNSUPPORTED:
- * work not built is never an acceptance and never a SyntaxError. The parser
- * replaces `parse_pair` with a call of its public entry; nothing else here
- * or in the gate changes.
+ * It is the only place the gate calls the library: `parse_pair` is a call of
+ * the public parse entry. Work not built (the Module goal) answers
+ * ERR_UNSUPPORTED, which is never an acceptance and never a SyntaxError.
  */
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
@@ -72,11 +68,16 @@ static int parse_mode(const char * name, Mode * mode) {
   return 0;
 }
 
-// The parse of one pair. There is no parser yet (see the file comment).
+// The parse of one pair: the library's public parse entry, for the Script or
+// the Module goal. A Module is refused as unsupported until that goal is
+// built, which scores nothing.
 static GLECMA_Result parse_pair(GLECMA_Source * source, Mode mode) {
-  (void)source;
-  (void)mode;
-  return GLECMA_ERR_UNSUPPORTED;
+  GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+  options.goal = mode == MODE_MODULE ? GLECMA_PARSE_MODULE : GLECMA_PARSE_SCRIPT;
+  GLECMA_Tree * tree = NULL;
+  GLECMA_Result result = glecma_parse(source, &options, NULL, NULL, &tree);
+  glecma_tree_destroy(tree);
+  return result;
 }
 
 static int read_file(const char * path, char ** text, size_t * length) {

@@ -77,6 +77,42 @@ extern "C" {
 #define GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT (UINT64_C(16) * 1024 * 1024)
 
 /**
+ * @brief The default for ::GLECMA_Limits::nesting: 256 levels.
+ *
+ * A level is one statement, one assignment expression, one prefix operator
+ * or one pattern inside another. The deepest real source measured (a minified
+ * bundle) nests about 40 levels; 256 admits that several times over, and is
+ * the depth at which the worst shape measured (a chain of nested parenthesized
+ * arrow functions, at about 1.9 KiB of native stack per level on x86-64) still
+ * fits in half of the default ::GLECMA_Limits::native_stack_bytes.
+ * design.md ("Limits" and "Recursive descent and the stack") gives the
+ * measurements.
+ */
+#define GLECMA_LIMIT_NESTING_DEFAULT UINT64_C(256)
+
+/**
+ * @brief The default for ::GLECMA_Limits::nodes: 16 Mi nodes.
+ *
+ * Real source builds between 0.08 nodes per byte (commented, formatted code)
+ * and 0.32 (minified), and a node with its share of the tree's names and
+ * events takes about 100 bytes, so 16 Mi nodes is about 1.7 GB of tree and
+ * admits a 50 MB minified file. A host that parses larger source raises it
+ * deliberately.
+ */
+#define GLECMA_LIMIT_NODES_DEFAULT (UINT64_C(16) * 1024 * 1024)
+
+/**
+ * @brief The default for ::GLECMA_Limits::native_stack_bytes: 1 MiB.
+ *
+ * The native stack the library assumes the caller can spare for one parse:
+ * the stack a Windows main thread starts with, and less than the 8 MiB of a
+ * Linux main thread or a glibc thread. A host that parses on a smaller stack
+ * (a macOS secondary thread has 512 KiB, a musl thread 128 KiB) must say so,
+ * because the library cannot see how much stack a caller really has.
+ */
+#define GLECMA_LIMIT_NATIVE_STACK_BYTES_DEFAULT (UINT64_C(1) * 1024 * 1024)
+
+/**
  * @brief Caps checked before the allocation they bound.
  *
  * The first member is the size of the struct the caller was compiled
@@ -103,12 +139,26 @@ typedef struct GLECMA_Limits {
                            ///< template part or regular expression literal,
                            ///< counted in the source text and the delimiters
                            ///< included.
+  uint64_t nesting;      ///< Levels of syntactic nesting a parse may reach: a
+                         ///< statement, an expression, a bracketed construct
+                         ///< or a function inside another each take one.
+  uint64_t nodes;        ///< Nodes one parse may build (the checking builder
+                         ///< counts the nodes it skips as the tree builder
+                         ///< would count them, so both refuse the same input).
+  uint64_t native_stack_bytes; ///< The native stack, in bytes, that the caller
+                         ///< grants one parse beyond the point where it is
+                         ///< called. The recursive descent checks the stack
+                         ///< it has used against this and refuses with
+                         ///< ::GLECMA_ERR_LIMIT naming the field, never a
+                         ///< fault.
 } GLECMA_Limits;
 
 /** @brief Initializer for a ::GLECMA_Limits: its size, and every default. */
 #define GLECMA_LIMITS_INIT                                                     \
   { (uint32_t)sizeof(GLECMA_Limits), 0u, GLECMA_LIMIT_SOURCE_UNITS_DEFAULT,    \
-    GLECMA_LIMIT_TOKENS_DEFAULT, GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT }
+    GLECMA_LIMIT_TOKENS_DEFAULT, GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT,          \
+    GLECMA_LIMIT_NESTING_DEFAULT, GLECMA_LIMIT_NODES_DEFAULT,                  \
+    GLECMA_LIMIT_NATIVE_STACK_BYTES_DEFAULT }
 
 /**
  * @brief Writes the default caps into @p limits.

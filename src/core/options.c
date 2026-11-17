@@ -161,6 +161,12 @@ GLECMA_Result glecma_parse_options_default(GLECMA_ParseOptions * options) {
   if (OPTIONS_WITHIN(options->size, features)) {
     options->features = NULL;
   }
+  if (OPTIONS_WITHIN(options->size, goal)) {
+    options->goal = GLECMA_PARSE_SCRIPT;
+  }
+  if (OPTIONS_WITHIN(options->size, context)) {
+    options->context = 0;
+  }
   return GLECMA_OK;
 }
 
@@ -184,4 +190,30 @@ bool glecma_parse_options_resolve(const GLECMA_ParseOptions * options,
   }
   *out_features = features;
   return true;
+}
+
+GLECMA_Result glecma_parse_options_goal(const GLECMA_ParseOptions * options,
+    uint32_t * out_goal, uint32_t * out_context) {
+  uint32_t goal = GLECMA_PARSE_SCRIPT;
+  uint32_t context = 0;
+  if (options != NULL) {
+    if (options->size < GLECMA_PARSE_OPTIONS_HEADER_SIZE) {
+      return GLECMA_ERR_INVALID;
+    }
+    if (OPTIONS_WITHIN(options->size, goal)) {
+      goal = options->goal;
+    }
+    if (OPTIONS_WITHIN(options->size, context)) {
+      context = options->context;
+    }
+  }
+  if (goal != GLECMA_PARSE_SCRIPT && goal != GLECMA_PARSE_MODULE) {
+    return GLECMA_ERR_INVALID;
+  }
+  if ((context & ~GLECMA_CONTEXT_MASK) != 0) {
+    return GLECMA_ERR_INVALID;
+  }
+  *out_goal = goal;
+  *out_context = context;
+  return GLECMA_OK;
 }

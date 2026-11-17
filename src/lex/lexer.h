@@ -353,6 +353,21 @@ GLECMA_INTERNAL_API GLECMA_Result glecma_token_value(
     GLECMA_ValueKind kind, const GLECMA_Allocator * allocator,
     uint16_t ** out_units, size_t * out_length);
 
+/**
+ * @brief Produces a token's text value into a caller's buffer.
+ *
+ * The same value as ::glecma_token_value, with no allocation: @p buffer must
+ * hold at least as many units as the token spans in the source (the most a
+ * value can take). When the value is empty, @p out_length is zero.
+ *
+ * @return ::GLECMA_OK; ::GLECMA_ERR_INVALID for what ::glecma_token_value
+ *   refuses or a buffer that is too small.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_token_value_into(
+    const GLECMA_Source * source, const GLECMA_Token * token,
+    GLECMA_ValueKind kind, uint16_t * buffer, size_t capacity,
+    size_t * out_length);
+
 /** @brief Frees what ::glecma_token_value returned. */
 GLECMA_INTERNAL_API void glecma_token_value_free(
     const GLECMA_Allocator * allocator, uint16_t * units);

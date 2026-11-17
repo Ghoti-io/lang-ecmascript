@@ -30,6 +30,7 @@ Usage: check-test262.py check --root DIR --sums FILE --classification FILE
            [--features NAME,NAME] [--unicode-version V.V.V]
 """
 import argparse
+import itertools
 import fnmatch
 import hashlib
 import os
@@ -307,8 +308,29 @@ def load_tags(path):
     return tags
 
 
+class Ledger(list):
+    """The pending ledger's rows, with an index so that a lookup does not read
+    every row: the ledger names thousands of files, and a pair is looked up
+    for each of tens of thousands of pairs."""
+
+    def __init__(self):
+        super().__init__()
+        self._exact = None
+        self._prefixes = None
+
+    def build(self):
+        self._exact = {}
+        self._prefixes = []
+        for row in self:
+            number, selector, mode, _reason, _cleared = row
+            if selector.endswith("/"):
+                self._prefixes.append(row)
+            else:
+                self._exact.setdefault(selector, []).append(row)
+
+
 def load_pending(path):
-    rows = []
+    rows = Ledger()
     for number, (selector, mode, reason, cleared) in read_table(path, 4, "pending ledger"):
         if mode != "*" and mode not in MODES:
             fail("%s:%d: mode %r is not * or one of %s" % (path, number, mode, ", ".join(MODES)))
@@ -317,6 +339,23 @@ def load_pending(path):
 
 
 def pending_match(rows, name, mode, used):
+    if isinstance(rows, Ledger):
+        # The first row, in table order, that names the pair.
+        if rows._exact is None:
+            rows.build()
+        best = None
+        candidates = rows._exact.get(name, ())
+        for row in itertools.chain(candidates, rows._prefixes):
+            number, selector, row_mode = row[0], row[1], row[2]
+            if row_mode not in ("*", mode):
+                continue
+            if selector.endswith("/") and not name.startswith(selector):
+                continue
+            if best is None or number < best:
+                best = number
+        if best is not None:
+            used[best] += 1
+        return best
     for number, selector, row_mode, _reason, _cleared in rows:
         if row_mode not in ("*", mode):
             continue

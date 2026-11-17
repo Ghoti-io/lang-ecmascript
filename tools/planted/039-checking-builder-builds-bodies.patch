@@ -1,0 +1,11 @@
+--- a/src/parse/tree.c
++++ b/src/parse/tree.c
+@@ -387,7 +387,7 @@
+ static GLECMA_Result checking_node(GLECMA_TreeBuilder * builder,
+     const GLECMA_BSpec * spec, GLECMA_BNode * out) {
+   GLECMA_Tree * tree = tree_of(builder);
+-  if (tree->body_depth > 0) {
++  if (0 && tree->body_depth > 0) {
+     *out = GLECMA_BNODE_ELIDED;
+     return GLECMA_OK;
+   }

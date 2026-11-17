@@ -214,6 +214,29 @@ typedef enum {
                                          ///< code, or in a module, where an
                                          ///< Identifier is required (clause 13.1.1).
 
+  GLECMA_RULE_UNEXPECTED_TOKEN = 25, ///< A token the grammar does not allow here (clause 5.1.4).
+  GLECMA_RULE_UNEXPECTED_END = 26, ///< The source ended where the grammar needs more (clause 5.1.4).
+  GLECMA_RULE_MISSING_SEMICOLON = 27, ///< No semicolon where one is required and automatic semicolon insertion does not supply it (clause 12.10.1).
+  GLECMA_RULE_INVALID_ASSIGNMENT_TARGET = 28, ///< The left side of an assignment is not a valid target (clause 13.15.1).
+  GLECMA_RULE_INVALID_UPDATE_TARGET = 29, ///< The operand of `++` or `--` is not a valid target (clause 13.4.1).
+  GLECMA_RULE_INVALID_FOR_TARGET = 30, ///< The left side of a `for-in` or `for-of` is not a valid target (clause 14.7.5.1).
+  GLECMA_RULE_COVER_INITIALIZED_NAME = 31, ///< An object literal's `{a = 1}` where it is not a pattern (clause 13.2.5.1).
+  GLECMA_RULE_REST_ELEMENT_POSITION = 32, ///< A rest element that is not last, or has a trailing comma or an initializer (clause 13.15.5.1).
+  GLECMA_RULE_EXPONENT_UNARY_OPERAND = 33, ///< A unary operator directly before `**` (clause 13.6).
+  GLECMA_RULE_NULLISH_MIXED = 34, ///< `??` mixed with `&&` or `||` without parentheses (clause 13.13).
+  GLECMA_RULE_OPTIONAL_CHAIN_TEMPLATE = 35, ///< A template literal in an optional chain (clause 13.3.9).
+  GLECMA_RULE_OPTIONAL_CHAIN_NEW = 36, ///< `?.` in the callee of `new` (clause 13.3.9).
+  GLECMA_RULE_INVALID_SUPER = 37, ///< `super` not followed by a call or a property access (clause 13.3.7).
+  GLECMA_RULE_IMPORT_META_OUTSIDE_MODULE = 38, ///< `import.meta` outside a Module (clause 13.3.12).
+  GLECMA_RULE_IMPORT_CALL_ARGUMENTS = 39, ///< An `import()` call with other than one or two arguments (clause 13.3.10).
+  GLECMA_RULE_ARROW_LINE_TERMINATOR = 40, ///< A line terminator before `=>` (clause 15.3).
+  GLECMA_RULE_INVALID_ARROW_PARAMETERS = 41, ///< Arrow parameters that are not a parameter list (clause 15.3.1).
+  GLECMA_RULE_DECLARATION_POSITION = 42, ///< A declaration where only a statement is allowed (clause 14.1).
+  GLECMA_RULE_FOR_HEAD_RESTRICTED = 43, ///< A `for` head the grammar's lookahead restrictions refuse (clause 14.7.5.1).
+  GLECMA_RULE_FOR_AWAIT_POSITION = 44, ///< `for await` outside an async function (clause 14.7.5.1).
+  GLECMA_RULE_INVALID_CLASS_ELEMENT = 45, ///< A class element the grammar does not allow (clause 15.7).
+  GLECMA_RULE_THROW_LINE_TERMINATOR = 46, ///< A line terminator after `throw` (clause 14.14).
+
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.
 } GLECMA_Rule;

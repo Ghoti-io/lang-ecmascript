@@ -1,0 +1,10 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -191,7 +191,6 @@
+ }
+ 
+ static PExpr regexp_literal(Parser * p) {
+-  parser_rescan(p, GLECMA_GOAL_REGEXP);
+   if (p->tok.kind != GLECMA_TOK_REGEXP) {
+     parser_unexpected(p);
+   }

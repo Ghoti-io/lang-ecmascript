@@ -1,0 +1,11 @@
+--- a/src/source/stream.c
++++ b/src/source/stream.c
+@@ -306,7 +306,7 @@
+   const size_t unit_size = encoding == GLECMA_ENCODING_UTF8 ? 1u : 2u;
+   const size_t max_bytes = resolved.source_units > SIZE_MAX / unit_size
+       ? SIZE_MAX - 1u
+-      : (size_t)resolved.source_units * unit_size;
++      : (size_t)resolved.source_units * unit_size + 1000;
+ 
+   uint8_t * buffer = NULL;
+   size_t capacity = 0;

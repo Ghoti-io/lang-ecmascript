@@ -1,0 +1,10 @@
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -197,7 +197,6 @@
+   p->tok = snap->tok;
+   p->prev_end = snap->prev_end;
+   p->builder->ops->rewind(p->builder, &snap->mark);
+-  p->nodes = snap->nodes;
+   p->kids_len = snap->kids;
+   p->pending = snap->pending;
+   p->pending_at = snap->pending_at;

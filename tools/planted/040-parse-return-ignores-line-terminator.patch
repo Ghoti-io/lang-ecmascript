@@ -1,0 +1,12 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -546,8 +546,7 @@
+         size_t mark = p->kids_len;
+         parser_next(p);
+         if (p->tok.kind == GLECMA_TOK_SEMICOLON ||
+-            p->tok.kind == GLECMA_TOK_RBRACE || p->tok.kind == GLECMA_TOK_EOF ||
+-            (p->tok.flags & GLECMA_TOKF_NEWLINE_BEFORE) != 0) {
++            p->tok.kind == GLECMA_TOK_RBRACE || p->tok.kind == GLECMA_TOK_EOF) {
+           parser_kid(p, NULL);
+         } else {
+           parser_kid(p, parse_expression(p).node);

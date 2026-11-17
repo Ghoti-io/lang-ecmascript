@@ -52,6 +52,15 @@ GLECMA_Result glecma_limits_default(GLECMA_Limits * limits) {
   if (WITHIN(limits->size, literal_length)) {
     limits->literal_length = GLECMA_LIMIT_LITERAL_LENGTH_DEFAULT;
   }
+  if (WITHIN(limits->size, nesting)) {
+    limits->nesting = GLECMA_LIMIT_NESTING_DEFAULT;
+  }
+  if (WITHIN(limits->size, nodes)) {
+    limits->nodes = GLECMA_LIMIT_NODES_DEFAULT;
+  }
+  if (WITHIN(limits->size, native_stack_bytes)) {
+    limits->native_stack_bytes = GLECMA_LIMIT_NATIVE_STACK_BYTES_DEFAULT;
+  }
   return GLECMA_OK;
 }
 
@@ -69,6 +78,15 @@ bool glecma_limits_resolve(const GLECMA_Limits * limits, GLECMA_Limits * out) {
     }
     if (WITHIN(limits->size, literal_length)) {
       resolved.literal_length = limits->literal_length;
+    }
+    if (WITHIN(limits->size, nesting)) {
+      resolved.nesting = limits->nesting;
+    }
+    if (WITHIN(limits->size, nodes)) {
+      resolved.nodes = limits->nodes;
+    }
+    if (WITHIN(limits->size, native_stack_bytes)) {
+      resolved.native_stack_bytes = limits->native_stack_bytes;
     }
   }
   *out = resolved;

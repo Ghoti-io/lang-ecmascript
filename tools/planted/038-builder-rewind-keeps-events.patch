@@ -1,0 +1,10 @@
+--- a/src/parse/tree.c
++++ b/src/parse/tree.c
+@@ -373,7 +373,6 @@
+   GLECMA_Tree * tree = tree_of(builder);
+   arena_rewind(&tree->allocator, &tree->nodes, (Chunk *)mark->chunk,
+       mark->used);
+-  tree->event_count = mark->events;
+   tree->body_depth = mark->body_depth;
+ }
+ 

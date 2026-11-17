@@ -37,3 +37,15 @@
 # Story 4 (the parser and the public tree) registers 033 onward.
 033|rule-code-renumbered|A rule code's number is changed in the enumeration|033-rule-code-renumbered.patch|check-rule-codes
 034|rule-code-renamed|A rule code's stable name is changed in the name table|034-rule-code-renamed.patch|check-rule-codes
+035|parse-nesting-off-by-one|A parse that reaches exactly the nesting cap is refused|035-parse-nesting-off-by-one.patch|test
+036|parse-native-stack-unchecked|The recursive descent does not check the native stack it has used|036-parse-native-stack-unchecked.patch|test
+037|parse-unbuilt-feature-ignored|A feature set that names a feature the build lacks is accepted, and the feature ignored|037-parse-unbuilt-feature-ignored.patch|test
+038|builder-rewind-keeps-events|A rewind of the builder keeps the events of the discarded reading|038-builder-rewind-keeps-events.patch|test
+039|checking-builder-builds-bodies|The checking builder builds the nodes of a function body|039-checking-builder-builds-bodies.patch|test
+040|parse-return-ignores-line-terminator|`return` takes the next line's expression as its argument|040-parse-return-ignores-line-terminator.patch|test
+041|stream-cap-off-by-a-thousand|A stream is read a thousand units past the source_units cap|041-stream-cap-off-by-a-thousand.patch|test
+042|parse-rewind-keeps-node-count|The nodes of a discarded cover-grammar reading stay counted|042-parse-rewind-keeps-node-count.patch|test
+043|parse-let-declaration-not-recognized|`let [a] = b` is not read as a declaration|043-parse-let-declaration-not-recognized.patch|check-test262
+044|parse-cover-initializer-accepted|`({a = 1})` is accepted where it is no pattern|044-parse-cover-initializer-accepted.patch|test
+045|parse-regexp-never-rescanned|A `/` where an expression begins is never read as a regular expression|045-parse-regexp-never-rescanned.patch|check-test262
+046|test262-ledger-row-names-a-passing-pair|The pending ledger lists a pair that passes|046-test262-ledger-row-names-a-passing-pair.patch|check-test262

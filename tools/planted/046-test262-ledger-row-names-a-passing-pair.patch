@@ -1,0 +1,10 @@
+--- a/tests/data-test262-pending.tsv
++++ b/tests/data-test262-pending.tsv
+@@ -7,6 +7,7 @@
+ # A selector ending in / names every file under that directory; the mode is * or one mode.
+ # The ledger is empty when the parser is complete.
+ # selector	mode	reason	cleared by
++test/language/statements/if/cptn-else-false-nrml.js	*	a pair that passes, listed as if it did not	nowhere
+ test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
+ test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
+ test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
