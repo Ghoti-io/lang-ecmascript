@@ -63,7 +63,7 @@ int main(void) {
       "let b = 2;\xE2\x80\xA8"
       "f(\"\xF0\x9F\x98\x80\", b);";
   GLECMA_Source * source = NULL;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   GLECMA_Result result = glecma_source_create_utf8(text, sizeof(text) - 1,
       NULL, NULL, &failure, &source);
   if (result != GLECMA_OK) {
@@ -81,7 +81,7 @@ int main(void) {
   status |= show(source, "the emoji", 28, 3, 3);
   status |= show(source, "the comma after it", 33, 3, 6);
   status |= show(source, "the end of the input", sizeof(text) - 1, 3, 11);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 
   // An overlong encoding of '/' (C0 AF) is refused, never decoded.
   static const char bad[] = "a = 1;\nb = \"\xC0\xAF\";";
@@ -98,7 +98,7 @@ int main(void) {
       failure.location.line, failure.location.column);
 
   // A host that takes text from strangers caps its size.
-  GLECMA_Limits limits;
+  GLECMA_Limits limits = GLECMA_LIMITS_INIT;
   glecma_limits_default(&limits);
   limits.source_units = 8;
   result = glecma_source_create_utf8(text, sizeof(text) - 1, &limits, NULL,

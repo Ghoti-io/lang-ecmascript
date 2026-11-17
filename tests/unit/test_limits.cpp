@@ -21,7 +21,7 @@ GLECMA_Source * const kUntouched =
     reinterpret_cast<GLECMA_Source *>(static_cast<uintptr_t>(0xA5A5A5A5u));
 
 GLECMA_Limits Cap(uint64_t source_units) {
-  GLECMA_Limits limits;
+  GLECMA_Limits limits = GLECMA_LIMITS_INIT;
   EXPECT_EQ(glecma_limits_default(&limits), GLECMA_OK);
   limits.source_units = source_units;
   return limits;
@@ -32,8 +32,9 @@ GLECMA_Limits Cap(uint64_t source_units) {
 // The default is a decision recorded in limits.h and documentation/design.md:
 // 64 Mi units.
 TEST(LimitsDefault, SourceUnitsIsSixtyFourMebiUnits) {
-  GLECMA_Limits limits;
+  GLECMA_Limits limits = GLECMA_LIMITS_INIT;
   std::memset(&limits, 0, sizeof(limits));
+  limits.size = sizeof(limits);
   ASSERT_EQ(glecma_limits_default(&limits), GLECMA_OK);
   EXPECT_EQ(limits.source_units, UINT64_C(64) * 1024 * 1024);
   EXPECT_EQ(limits.source_units, GLECMA_LIMIT_SOURCE_UNITS_DEFAULT);
@@ -52,7 +53,7 @@ TEST(SourceUnits, OnePastTheCapIsALimitAndAllocatesNothing) {
   GLECMA_Limits limits = Cap(10);
   for (int encoding = 0; encoding < 2; ++encoding) {
     glecma_test::CountingAllocator counting;
-    GLECMA_Failure failure;
+    GLECMA_Failure failure = GLECMA_FAILURE_INIT;
     std::memset(&failure, 0xFF, sizeof(failure));
     GLECMA_Source * source = kUntouched;
     GLECMA_Result result = encoding == 0
@@ -63,7 +64,7 @@ TEST(SourceUnits, OnePastTheCapIsALimitAndAllocatesNothing) {
     EXPECT_EQ(result, GLECMA_ERR_LIMIT) << encoding;
     EXPECT_EQ(source, kUntouched) << encoding;
     EXPECT_EQ(counting.calls(), 0u) << encoding;
-    EXPECT_EQ(failure.result, GLECMA_ERR_LIMIT) << encoding;
+    EXPECT_EQ((GLECMA_Result)failure.result, GLECMA_ERR_LIMIT) << encoding;
     ASSERT_NE(failure.limit, nullptr) << encoding;
     EXPECT_STREQ(failure.limit, "source_units") << encoding;
     EXPECT_NE(failure.message, nullptr) << encoding;
@@ -81,13 +82,13 @@ TEST(SourceUnits, ExactlyTheCapIsAccepted) {
                 nullptr, &source),
       GLECMA_OK);
   EXPECT_EQ(glecma_source_units(source), 10u);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
   const uint16_t wide[10] = {};
   ASSERT_EQ(glecma_source_create_utf16(wide, 10, &limits, nullptr, nullptr,
                 &source),
       GLECMA_OK);
   EXPECT_EQ(glecma_source_units(source), 10u);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // The cap counts input units, not code points: four bytes of one emoji are
@@ -95,7 +96,7 @@ TEST(SourceUnits, ExactlyTheCapIsAccepted) {
 TEST(SourceUnits, CapCountsInputUnitsNotCodePoints) {
   GLECMA_Limits limits = Cap(3);
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   EXPECT_EQ(glecma_source_create_utf8("\xF0\x9F\x98\x80", 4, &limits,
                 nullptr, &failure, &source),
       GLECMA_ERR_LIMIT);
@@ -105,7 +106,7 @@ TEST(SourceUnits, CapCountsInputUnitsNotCodePoints) {
                 &source),
       GLECMA_OK);
   EXPECT_EQ(glecma_source_code_points(source), 1u);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // limits.h: zero is a cap of zero, not a request for the default.
@@ -115,9 +116,9 @@ TEST(SourceUnits, ZeroIsACapOfZero) {
   ASSERT_EQ(glecma_source_create_utf8("", 0, &limits, nullptr, nullptr,
                 &source),
       GLECMA_OK);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
   source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   EXPECT_EQ(glecma_source_create_utf8("a", 1, &limits, nullptr, &failure,
                 &source),
       GLECMA_ERR_LIMIT);
@@ -130,7 +131,7 @@ TEST(SourceUnits, ZeroIsACapOfZero) {
 TEST(SourceUnits, CapIsCheckedBeforeTheEncoding) {
   GLECMA_Limits limits = Cap(2);
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   EXPECT_EQ(glecma_source_create_utf8("\xFF\xFF\xFF", 3, &limits, nullptr,
                 &failure, &source),
       GLECMA_ERR_LIMIT);
@@ -144,7 +145,7 @@ TEST(SourceUnits, NullLimitsMeanTheDefaultCap) {
   std::vector<char> text(length, 'a');
   glecma_test::CountingAllocator counting;
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   EXPECT_EQ(glecma_source_create_utf8(text.data(), length, nullptr,
                 counting.get(), &failure, &source),
       GLECMA_ERR_LIMIT);

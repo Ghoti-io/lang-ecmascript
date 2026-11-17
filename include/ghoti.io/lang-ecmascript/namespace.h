@@ -69,7 +69,8 @@
   GHOTIIO_LANG_ECMASCRIPT(glecma_source_create_utf16)
 #define glecma_source_create_utf8                                              \
   GHOTIIO_LANG_ECMASCRIPT(glecma_source_create_utf8)
-#define glecma_source_destroy GHOTIIO_LANG_ECMASCRIPT(glecma_source_destroy)
+#define glecma_source_release GHOTIIO_LANG_ECMASCRIPT(glecma_source_release)
+#define glecma_source_retain GHOTIIO_LANG_ECMASCRIPT(glecma_source_retain)
 #define glecma_source_dump GHOTIIO_LANG_ECMASCRIPT(glecma_source_dump)
 #define glecma_source_encoding GHOTIIO_LANG_ECMASCRIPT(glecma_source_encoding)
 #define glecma_source_lines GHOTIIO_LANG_ECMASCRIPT(glecma_source_lines)
@@ -77,6 +78,7 @@
 #define glecma_source_units GHOTIIO_LANG_ECMASCRIPT(glecma_source_units)
 
 // Internal (src/); hidden by -fvisibility=hidden, renamed to keep one rule.
+#define glecma_limits_resolve GHOTIIO_LANG_ECMASCRIPT(glecma_limits_resolve)
 #define glecma_result_from_grcore                                              \
   GHOTIIO_LANG_ECMASCRIPT(glecma_result_from_grcore)
 #define GLECMA_SourceCheckpoint                                                \

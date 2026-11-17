@@ -33,12 +33,31 @@
 
 #include <ghoti.io/lang-ecmascript/source.h>
 
+#include "core/core_internal.h"
 #include "source/source_internal.h"
+
+#include <ghoti.io/cutil/atomic.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+// cutil's atomics live in a shared library TSan did not instrument, so it
+// cannot see the happens-before edge that a release-to-zero gives the freeing
+// thread, and reports every read of the text against the free as a race. The
+// edge is real (the atomics are sequentially consistent); under TSan it is
+// stated to the tool with its own annotations. Nothing changes otherwise.
+#if defined(__SANITIZE_THREAD__)
+void __tsan_acquire(void * addr);
+void __tsan_release(void * addr);
+#define GLECMA_TSAN_RELEASE(addr) __tsan_release(addr)
+#define GLECMA_TSAN_ACQUIRE(addr) __tsan_acquire(addr)
+#else
+#define GLECMA_TSAN_RELEASE(addr) ((void)0)
+#define GLECMA_TSAN_ACQUIRE(addr) ((void)0)
+#endif
 
 // ECMA-262's line terminators (12.3).
 #define CP_LF 0x000Au
@@ -258,22 +277,34 @@ GLECMA_Result glecma_source_cursor_seek(GLECMA_SourceCursor * cursor,
   return GLECMA_OK;
 }
 
+// Writes only the members that lie wholly within the caller's `size`, so a
+// caller built against a shorter struct is never written past.
+#define FAILURE_WITHIN(failure, member)                                        \
+  ((size_t)(failure)->size >= offsetof(GLECMA_Failure, member) +               \
+          sizeof((failure)->member))
+
 static void write_failure(GLECMA_Failure * failure, GLECMA_Result result,
     const char * message, const GLECMA_Location * location,
     const char * limit) {
   if (failure == NULL) {
     return;
   }
-  failure->result = result;
-  failure->message = message;
-  if (location != NULL) {
-    failure->location = *location;
-  } else {
-    failure->location.offset = 0;
-    failure->location.line = 0;
-    failure->location.column = 0;
+  failure->result = (uint32_t)result;
+  if (FAILURE_WITHIN(failure, message)) {
+    failure->message = message;
   }
-  failure->limit = limit;
+  if (FAILURE_WITHIN(failure, location)) {
+    if (location != NULL) {
+      failure->location = *location;
+    } else {
+      failure->location.offset = 0;
+      failure->location.line = 0;
+      failure->location.column = 0;
+    }
+  }
+  if (FAILURE_WITHIN(failure, limit)) {
+    failure->limit = limit;
+  }
 }
 
 static void source_free(GLECMA_Source * source) {
@@ -336,6 +367,11 @@ static GLECMA_Result source_create(GLECMA_Encoding encoding,
     const void * text, size_t length, size_t unit_size,
     const GLECMA_Limits * limits, const GLECMA_Allocator * allocator,
     GLECMA_Failure * failure, GLECMA_Source ** out_source) {
+  // A failure record whose size does not cover its header cannot be written
+  // to at all, so this is refused before anything else and writes nothing.
+  if (failure != NULL && failure->size < GLECMA_FAILURE_HEADER_SIZE) {
+    return GLECMA_ERR_INVALID;
+  }
   if (out_source == NULL) {
     write_failure(failure, GLECMA_ERR_INVALID, "out_source is NULL", NULL,
         NULL);
@@ -360,11 +396,13 @@ static GLECMA_Result source_create(GLECMA_Encoding encoding,
         "allocator has a NULL function", NULL, NULL);
     return GLECMA_ERR_INVALID;
   }
-  GLECMA_Limits defaults;
-  if (limits == NULL) {
-    glecma_limits_default(&defaults);
-    limits = &defaults;
+  GLECMA_Limits resolved;
+  if (!glecma_limits_resolve(limits, &resolved)) {
+    write_failure(failure, GLECMA_ERR_INVALID,
+        "limits has a size below the header", NULL, NULL);
+    return GLECMA_ERR_INVALID;
   }
+  limits = &resolved;
   // Before any allocation: the cap is what keeps a hostile length from
   // costing anything.
   if ((uint64_t)length > limits->source_units) {
@@ -381,6 +419,7 @@ static GLECMA_Result source_create(GLECMA_Encoding encoding,
     return GLECMA_ERR_OOM;
   }
   source->allocator = *allocator;
+  gcu_atomic_size_init(&source->refs, 1);
   source->encoding = encoding;
   source->units = length;
   source->checkpoint_count = length / GLECMA_SOURCE_CHECKPOINT_INTERVAL + 1;
@@ -434,8 +473,31 @@ GLECMA_Result glecma_source_create_utf16(const uint16_t * text,
       limits, allocator, failure, out_source);
 }
 
-void glecma_source_destroy(GLECMA_Source * source) {
-  if (source != NULL) {
+GLECMA_Source * glecma_source_retain(GLECMA_Source * source) {
+  if (source == NULL) {
+    return NULL;
+  }
+  size_t before = gcu_atomic_size_fetch_add(&source->refs, 1);
+  // A count of zero means the source was already released to nothing, and a
+  // count this large means about 2^63 holders: either is a defect in the
+  // caller, and carrying on would free the text under a reader.
+  if (before == 0 || before > SIZE_MAX / 2) {
+    abort();
+  }
+  return source;
+}
+
+void glecma_source_release(GLECMA_Source * source) {
+  if (source == NULL) {
+    return;
+  }
+  GLECMA_TSAN_RELEASE(&source->refs);
+  size_t before = gcu_atomic_size_fetch_sub(&source->refs, 1);
+  if (before == 0) {
+    abort(); // released more often than it was held
+  }
+  if (before == 1) {
+    GLECMA_TSAN_ACQUIRE(&source->refs);
     source_free(source);
   }
 }

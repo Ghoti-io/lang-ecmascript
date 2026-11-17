@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -462,7 +462,7 @@
+   if (source == NULL) {
+     return NULL;
+   }
+-  size_t before = gcu_atomic_size_fetch_add(&source->refs, 1);
++  size_t before = gcu_atomic_size_fetch_add(&source->refs, 0);
+   // A count of zero means the source was already released to nothing, and a
+   // count this large means about 2^63 holders: either is a defect in the
+   // caller, and carrying on would free the text under a reader.

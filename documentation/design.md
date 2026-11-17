@@ -76,7 +76,7 @@ documentation and tested as a choice.
 | Engine descriptor | `engine.h` | The descriptor runtime-core uses to recognize ECMAScript frames, and idempotent registration with a context |
 | Syntax result, locations, failure record | `core.h` | `GLECMA_ERR_SYNTAX` appended after the shared nine; `GLECMA_Location`; `GLECMA_Failure`, which every parse call writes |
 | Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; so far the one field the source enforces, `source_units` |
-| Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump |
+| Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump, `glecma_source_retain` and `glecma_source_release` (the holders are counted atomically; the last release frees) |
 | Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
 
 The descriptor's callbacks are all NULL, which runtime-core reads as "the
@@ -178,8 +178,15 @@ independent.
 
 ## Limits
 
-`GLECMA_Limits`, filled by `glecma_limits_default`; NULL limits mean the
-defaults. A field of zero is a cap of zero, not a request for the default.
+`GLECMA_Limits`, initialized with `GLECMA_LIMITS_INIT` or filled by
+`glecma_limits_default`; NULL limits mean the defaults. The struct is
+size-first: its first member is the size the caller was compiled against, the
+library reads only the members within it and takes the default for any later
+one, and fields are only added at the end, so a caller built before a field
+existed keeps working (a test is built against a shorter struct to show it).
+The names a failure reports (`source_units`, ...) are kept in an append-only
+registry, `tools/limit-names.txt`, and `make check-limit-names` fails when one
+is removed or renamed. A field of zero is a cap of zero, not a request for the default.
 Each cap is checked before the allocation it bounds, and exceeding one is
 `GLECMA_ERR_LIMIT` with the field's name in the failure record - never a
 truncated result and never `GLECMA_ERR_OOM`. A field is added in the change
@@ -196,7 +203,9 @@ parser that enforce them.
 ## The failure record
 
 `GLECMA_Failure` is written on every return of a call that takes one, when
-the caller passes it, success included. It holds the result, a static
+the caller passes it, success included. It is size-first like the limits
+(`GLECMA_FAILURE_INIT`), and the library writes only the members within the
+size it is given. It holds the result, a static
 English message or NULL, a location, and for `GLECMA_ERR_LIMIT` the static
 name of the field. The location is meaningful for `GLECMA_ERR_CORRUPT` (the
 first ill-formed byte) and, once the parser exists, `GLECMA_ERR_SYNTAX`;

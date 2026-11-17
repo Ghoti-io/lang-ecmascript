@@ -30,11 +30,18 @@
 #include <ghoti.io/lang-ecmascript/macros.h>
 
 #include <ghoti.io/lang-ecmascript/core.h>
+#include <ghoti.io/lang-ecmascript/limits.h>
 #include <ghoti.io/runtime-core/core.h>
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** @brief Bytes of the `size` and `reserved` members of a size-first struct. */
+#define GLECMA_LIMITS_HEADER_SIZE 8u
+#define GLECMA_FAILURE_HEADER_SIZE 8u
 
 /**
  * @brief Converts a runtime-core result into this library's.
@@ -49,6 +56,18 @@ extern "C" {
  * @return The corresponding result.
  */
 GLECMA_INTERNAL_API GLECMA_Result glecma_result_from_grcore(GRCORE_Result result);
+
+/**
+ * @brief Resolves a caller's limits against the defaults.
+ *
+ * @param limits The caller's limits, or NULL for the defaults.
+ * @param out Receives every member: the caller's where its `size` covers
+ *   them, the default elsewhere.
+ * @return false when @p limits has a `size` below the header (the caller
+ *   must report ::GLECMA_ERR_INVALID).
+ */
+GLECMA_INTERNAL_API bool glecma_limits_resolve(const GLECMA_Limits * limits,
+    GLECMA_Limits * out);
 
 #ifdef __cplusplus
 }

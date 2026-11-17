@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -390,7 +390,7 @@
+   limits = &resolved;
+   // Before any allocation: the cap is what keeps a hostile length from
+   // costing anything.
+-  if ((uint64_t)length > limits->source_units) {
++  if ((uint64_t)length >= limits->source_units) {
+     write_failure(failure, GLECMA_ERR_LIMIT,
+         "source is longer than the source_units limit", NULL,
+         "source_units");

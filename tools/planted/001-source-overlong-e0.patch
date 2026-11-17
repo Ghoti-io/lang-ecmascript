@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -73,7 +73,7 @@
+     trail = 2;
+     code_point = lead & 0x0Fu;
+     if (lead == 0xE0u) {
+-      low = 0xA0u;
++      low = 0x80u;
+     } else if (lead == 0xEDu) {
+       high = 0x9Fu;
+     }

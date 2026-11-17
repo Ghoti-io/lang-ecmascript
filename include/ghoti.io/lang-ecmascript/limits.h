@@ -60,19 +60,39 @@ extern "C" {
 /**
  * @brief Caps checked before the allocation they bound.
  *
- * A failure names the field in ::GLECMA_Failure::limit, spelled as the
- * member is.
+ * The first member is the size of the struct the caller was compiled
+ * against; set it with ::GLECMA_LIMITS_INIT. The library reads only the
+ * members that lie wholly within that size and takes the default for any
+ * later one, so a caller built against a shorter struct keeps working when
+ * a field is added (fields are only ever added at the end, and never
+ * removed or reordered). A `size` smaller than the header is
+ * ::GLECMA_ERR_INVALID.
+ *
+ * Members are fixed-width integers with the padding written out, and `reserved`
+ * must be zero. A failure names the field in ::GLECMA_Failure::limit, spelled
+ * as the member is; the names are kept in an append-only registry
+ * (tools/limit-names.txt) so that a name a host matches on is never changed.
  */
 typedef struct GLECMA_Limits {
+  uint32_t size;         ///< `sizeof(GLECMA_Limits)` as the caller knows it.
+  uint32_t reserved;     ///< Padding; must be zero.
   uint64_t source_units; ///< Input units of one source: bytes for UTF-8,
                          ///< 16-bit code units for UTF-16.
 } GLECMA_Limits;
 
+/** @brief Initializer for a ::GLECMA_Limits: its size, and every default. */
+#define GLECMA_LIMITS_INIT                                                     \
+  { (uint32_t)sizeof(GLECMA_Limits), 0u, GLECMA_LIMIT_SOURCE_UNITS_DEFAULT }
+
 /**
  * @brief Writes the default caps into @p limits.
  *
- * @param limits Caller-owned storage. NULL is ::GLECMA_ERR_INVALID and
- *   writes nothing.
+ * Reads `limits->size` (set it with ::GLECMA_LIMITS_INIT or by hand) and
+ * writes only the members within it, so it never writes past the struct the
+ * caller was compiled against.
+ *
+ * @param limits Caller-owned storage with `size` set. NULL, or a `size` below
+ *   the header, is ::GLECMA_ERR_INVALID and writes nothing.
  * @return ::GLECMA_OK, or ::GLECMA_ERR_INVALID.
  */
 GLECMA_API GLECMA_Result glecma_limits_default(GLECMA_Limits * limits);

@@ -1,0 +1,11 @@
+--- a/src/core/limits.c
++++ b/src/core/limits.c
+@@ -43,7 +43,7 @@
+     return GLECMA_ERR_INVALID;
+   }
+   limits->reserved = 0;
+-  if (WITHIN(limits->size, source_units)) {
++  if (true) {
+     limits->source_units = GLECMA_LIMIT_SOURCE_UNITS_DEFAULT;
+   }
+   return GLECMA_OK;

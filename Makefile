@@ -207,7 +207,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 
 # fuzz-replay joins these when the first parser lands with its harness and
 # seed corpus; until then there is nothing to replay.
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-gtest-full
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-gtest-full
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
@@ -261,6 +261,9 @@ $(LIBVER_GEN): force-libver
 		'/** Human-readable version of this build. */' \
 		'#define GHOTIIO_LANG_ECMASCRIPT_VERSION "$(VERSION_STRING)"' \
 		'' \
+		'/** The branch token of this build, e.g. "-0" or "-0-debug". */' \
+		'#define GHOTIIO_LANG_ECMASCRIPT_BRANCH "$(BRANCH)"' \
+		'' \
 		'/** The same version as three integers. */' \
 		'#define GHOTIIO_LANG_ECMASCRIPT_VERSION_MAJOR $(MAJOR_VERSION)' \
 		'#define GHOTIIO_LANG_ECMASCRIPT_VERSION_MINOR $(VERSION_MINOR_ONLY)' \
@@ -309,6 +312,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-stamps check-aliasing check-labels check-edges
 .PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
+.PHONY: check-limit-names check-planted
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
 .PHONY: fuzz fuzz-clean help
 
@@ -359,6 +363,12 @@ check-labels: ## Fail if a public header has no @stability free label
 check-edges: $(APP_DIR)/$(TARGET) ## Fail on a dependency outside cutil and runtime-core
 	@tools/check-edges.sh --includes .
 	@tools/check-edges.sh --links $(APP_DIR)
+
+check-limit-names: ## Fail if the limit-name registry and GLECMA_Limits disagree, or a name was removed
+	@tools/check-limit-names.sh .
+
+check-planted: ## Apply each planted defect to a scratch tree; its gate must fail (slow; run before closing a story)
+	@tools/check-planted.sh
 
 check-gtest-full: ## Prove full-suite selection and zero-test rejection
 	@tools/run-gtest-full.sh --selftest

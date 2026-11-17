@@ -216,7 +216,7 @@ static uint64_t decode_run(uint64_t iterations, double * elapsed, bool utf16) {
         setup_failed("a seed was refused by the library");
       }
       sink += glecma_source_code_points(src) + glecma_source_lines(src);
-      glecma_source_destroy(src);
+      glecma_source_release(src);
     }
   }
   *elapsed = now_ns() - start;

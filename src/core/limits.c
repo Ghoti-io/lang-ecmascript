@@ -29,12 +29,36 @@
 
 #include <ghoti.io/lang-ecmascript/limits.h>
 
+#include "core/core_internal.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 
+// A member is within the caller's struct when it ends at or before `size`.
+#define WITHIN(size, member)                                                   \
+  ((size_t)(size) >= offsetof(GLECMA_Limits, member) + sizeof(((GLECMA_Limits *)0)->member))
+
 GLECMA_Result glecma_limits_default(GLECMA_Limits * limits) {
-  if (limits == NULL) {
+  if (limits == NULL || limits->size < GLECMA_LIMITS_HEADER_SIZE) {
     return GLECMA_ERR_INVALID;
   }
-  limits->source_units = GLECMA_LIMIT_SOURCE_UNITS_DEFAULT;
+  limits->reserved = 0;
+  if (WITHIN(limits->size, source_units)) {
+    limits->source_units = GLECMA_LIMIT_SOURCE_UNITS_DEFAULT;
+  }
   return GLECMA_OK;
+}
+
+bool glecma_limits_resolve(const GLECMA_Limits * limits, GLECMA_Limits * out) {
+  GLECMA_Limits resolved = GLECMA_LIMITS_INIT;
+  if (limits != NULL) {
+    if (limits->size < GLECMA_LIMITS_HEADER_SIZE) {
+      return false;
+    }
+    if (WITHIN(limits->size, source_units)) {
+      resolved.source_units = limits->source_units;
+    }
+  }
+  *out = resolved;
+  return true;
 }

@@ -191,7 +191,7 @@ int main(void) {
   // after a CRLF, a refusal of ill-formed UTF-8 with its position, and the
   // size cap with the field it names.
   GLECMA_Source * source = NULL;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   GLECMA_Location location;
   if (glecma_source_create_utf8("a\r\nb", 4, NULL, NULL, &failure,
           &source) != GLECMA_OK ||
@@ -201,7 +201,7 @@ int main(void) {
     fprintf(stderr, "consumer: a UTF-8 source did not locate\n");
     return 1;
   }
-  glecma_source_destroy(source);
+  glecma_source_release(source);
   const uint16_t wide[] = {0xD800, 0x61};
   if (glecma_source_create_utf16(wide, 2, NULL, NULL, NULL, &source) !=
           GLECMA_OK ||
@@ -209,14 +209,14 @@ int main(void) {
     fprintf(stderr, "consumer: a UTF-16 source did not decode\n");
     return 1;
   }
-  glecma_source_destroy(source);
+  glecma_source_release(source);
   if (glecma_source_create_utf8("ab\xE0\x80", 4, NULL, NULL, &failure,
           &source) != GLECMA_ERR_CORRUPT ||
       failure.location.offset != 2) {
     fprintf(stderr, "consumer: ill-formed UTF-8 was not refused\n");
     return 1;
   }
-  GLECMA_Limits limits;
+  GLECMA_Limits limits = GLECMA_LIMITS_INIT;
   if (glecma_limits_default(&limits) != GLECMA_OK) {
     return 1;
   }

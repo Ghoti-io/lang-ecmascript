@@ -47,9 +47,9 @@
  * its copy plus a few percent, never an array of decoded code points or a
  * table of every line.
  *
- * A source is immutable once created. Any number of threads may read one at
- * once; only ::glecma_source_destroy needs the caller to know that no other
- * thread is still reading it.
+ * A source is immutable once created and its holders are counted atomically
+ * (::glecma_source_retain, ::glecma_source_release): any number of threads
+ * may read, retain and release one at once, and the last release frees it.
  */
 
 #ifndef GHOTI_IO_GLECMA_SOURCE_H
@@ -100,11 +100,15 @@ typedef enum {
  *   only when @p length is 0. Need not be NUL-terminated, and a NUL byte is
  *   U+0000 like any other code point.
  * @param length Bytes in @p text.
- * @param limits Caps, or NULL for ::glecma_limits_default.
+ * @param limits Caps with `size` set (::GLECMA_LIMITS_INIT), or NULL for
+ *   ::glecma_limits_default; a `size` below the header is
+ *   ::GLECMA_ERR_INVALID.
  * @param allocator Allocator for everything the source holds, or NULL for
  *   the default. It is copied into the source; its context must outlive the
  *   source.
- * @param failure Optional; written on every return.
+ * @param failure Optional; written on every return. Its `size` must be set
+ *   (::GLECMA_FAILURE_INIT); a smaller one than the header is
+ *   ::GLECMA_ERR_INVALID and nothing is written.
  * @param out_source Receives the source. Written only on success; on
  *   failure nothing is left allocated.
  * A NULL from the allocator is ::GLECMA_ERR_OOM, including when the
@@ -138,7 +142,9 @@ GLECMA_API GLECMA_Result glecma_source_create_utf8(const char * text,
  * @param limits Caps, or NULL for the defaults.
  * @param allocator Allocator, or NULL for the default; copied into the
  *   source.
- * @param failure Optional; written on every return.
+ * @param failure Optional; written on every return. Its `size` must be set
+ *   (::GLECMA_FAILURE_INIT); a smaller one than the header is
+ *   ::GLECMA_ERR_INVALID and nothing is written.
  * @param out_source Receives the source; written only on success.
  * @return ::GLECMA_OK, ::GLECMA_ERR_INVALID, ::GLECMA_ERR_LIMIT,
  *   ::GLECMA_ERR_OOM (a NULL from the allocator, a context's budget refusal
@@ -150,14 +156,29 @@ GLECMA_API GLECMA_Result glecma_source_create_utf16(const uint16_t * text,
     GLECMA_Source ** out_source);
 
 /**
- * @brief Destroys a source and everything it holds.
+ * @brief Takes another hold on a source.
  *
- * No other thread may be reading the source. Anything later built from a
- * source and documented as borrowing it must be destroyed first.
+ * A source is immutable after it is created and its holders are counted
+ * atomically: it may be read, retained and released from any thread without
+ * a lock. Whatever is built from a source and borrows its text holds one
+ * count of its own.
+ *
+ * @param source The source, or NULL (which does nothing).
+ * @return @p source, so a hold can be taken in an initializer.
+ */
+GLECMA_API GLECMA_Source * glecma_source_retain(GLECMA_Source * source);
+
+/**
+ * @brief Gives up a hold; the last one frees the source and what it holds.
+ *
+ * The creator holds the first count, so a source made by
+ * ::glecma_source_create_utf8 is released once for that and once for each
+ * ::glecma_source_retain. Releasing more often than the source was held is
+ * a defect in the caller and aborts the process.
  *
  * @param source The source, or NULL (which does nothing).
  */
-GLECMA_API void glecma_source_destroy(GLECMA_Source * source);
+GLECMA_API void glecma_source_release(GLECMA_Source * source);
 
 /**
  * @brief The encoding the source was created from.

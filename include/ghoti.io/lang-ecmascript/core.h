@@ -35,6 +35,7 @@
 #include <ghoti.io/lang-ecmascript/allocator.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,6 +101,11 @@ typedef enum {
  * how source maps and browser developer tools count: a code point above
  * U+FFFF is two columns wide, and a UTF-8 host still gets columns a debugger
  * front end can use.
+ *
+ * This struct is fixed forever: it has these three members and will never
+ * gain another. It is a plain value that hosts copy, store and compare, so
+ * it carries no size member; a position that needed more would be a new
+ * type.
  */
 typedef struct GLECMA_Location {
   size_t offset; ///< Index into the input, in input units.
@@ -110,14 +116,27 @@ typedef struct GLECMA_Location {
 /**
  * @brief Why a call failed, written on every return when the caller asks.
  *
+ * The first member is the size of the struct the caller was compiled
+ * against, and a caller sets it with ::GLECMA_FAILURE_INIT. The library
+ * writes only the members that lie wholly within that size, so a caller
+ * built against a shorter struct keeps working when a member is added at the
+ * end (members are only ever added at the end). A `size` smaller than the
+ * header is ::GLECMA_ERR_INVALID and nothing is written.
+ *
  * A call that takes a `GLECMA_Failure *` writes all of it on every return,
  * success included, whenever the pointer is not NULL; a field that does not
  * apply to the result is zero or NULL. Every string is static, never
  * allocated and never caller data, so the record needs no freeing and stays
  * valid for the life of the process.
+ *
+ * The members are fixed-width integers (the result is the ::GLECMA_Result
+ * value as a `uint32_t`, so the layout does not depend on the compiler's
+ * choice of enum width), pointers and the fixed ::GLECMA_Location; there is
+ * no padding to be read.
  */
 typedef struct GLECMA_Failure {
-  GLECMA_Result result;     ///< The same code the function returned.
+  uint32_t size;            ///< `sizeof(GLECMA_Failure)` as the caller knows it.
+  uint32_t result;          ///< The same code the function returned.
   const char * message;     ///< A static English description, or NULL.
   GLECMA_Location location; ///< Where in the source the failure is, for
                             ///< ::GLECMA_ERR_CORRUPT (the first byte of the
@@ -127,6 +146,10 @@ typedef struct GLECMA_Failure {
                             ///< the ::GLECMA_Limits field that was exceeded;
                             ///< NULL otherwise.
 } GLECMA_Failure;
+
+/** @brief Initializer for a ::GLECMA_Failure: sets `size`, zeroes the rest. */
+#define GLECMA_FAILURE_INIT                                                    \
+  { (uint32_t)sizeof(GLECMA_Failure), 0u, NULL, {0, 0, 0}, NULL }
 
 /**
  * @brief Static description of a result code.

@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -180,7 +180,7 @@
+   size_t next = cursor->offset + length;
+   bool ends_line;
+   if (code_point == CP_CR) {
+-    ends_line = !(next < source->units && unit_at(source, next) == CP_LF);
++    ends_line = true;
+   } else {
+     ends_line =
+         code_point == CP_LF || code_point == CP_LS || code_point == CP_PS;

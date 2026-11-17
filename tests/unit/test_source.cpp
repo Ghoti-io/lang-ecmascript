@@ -297,7 +297,7 @@ TEST(Source, EmptySourceHasNoCodePointsAndOneLine) {
     GLECMA_Location location;
     EXPECT_EQ(glecma_source_location(source, 1, &location),
         GLECMA_ERR_INVALID);
-    glecma_source_destroy(source);
+    glecma_source_release(source);
   }
 }
 
@@ -313,13 +313,13 @@ TEST(Source, MixedTerminatorsPutFOnLineSix) {
   ExpectLocation(At(narrow, 2), GLECMA_Location{2, 1, 2}, "LF of CRLF");
   ExpectLocation(At(narrow, 3), GLECMA_Location{3, 2, 0}, "b");
   EXPECT_EQ(glecma_source_lines(narrow), 6u);
-  glecma_source_destroy(narrow);
+  glecma_source_release(narrow);
 
   std::vector<uint16_t> utf16 = Utf16(cps);
   GLECMA_Source * wide = MakeUtf16(utf16);
   ExpectLocation(At(wide, 11), GLECMA_Location{11, 6, 0}, "f, UTF-16");
   EXPECT_EQ(glecma_source_lines(wide), 6u);
-  glecma_source_destroy(wide);
+  glecma_source_release(wide);
 }
 
 // A code point above U+FFFF is two UTF-16 columns wide in either encoding.
@@ -327,11 +327,11 @@ TEST(Source, AstralCodePointIsTwoColumnsWide) {
   GLECMA_Source * narrow = MakeUtf8("\xF0\x9F\x98\x80x");
   ExpectLocation(At(narrow, 4), GLECMA_Location{4, 1, 2}, "x, UTF-8");
   EXPECT_EQ(glecma_source_code_points(narrow), 2u);
-  glecma_source_destroy(narrow);
+  glecma_source_release(narrow);
   GLECMA_Source * wide = MakeUtf16({0xD83D, 0xDE00, 'x'});
   ExpectLocation(At(wide, 2), GLECMA_Location{2, 1, 2}, "x, UTF-16");
   EXPECT_EQ(glecma_source_code_points(wide), 2u);
-  glecma_source_destroy(wide);
+  glecma_source_release(wide);
 }
 
 // source.h: nothing is stripped. U+FEFF is ECMA-262 white space and stays a
@@ -346,12 +346,12 @@ TEST(Source, LeadingByteOrderMarkIsKept) {
   uint32_t first = 0;
   ASSERT_TRUE(glecma_source_cursor_next(&cursor, &first, nullptr));
   EXPECT_EQ(first, 0xFEFFu);
-  glecma_source_destroy(narrow);
+  glecma_source_release(narrow);
 
   GLECMA_Source * wide = MakeUtf16({0xFEFF, 'a'});
   EXPECT_EQ(glecma_source_code_points(wide), 2u);
   ExpectLocation(At(wide, 1), GLECMA_Location{1, 1, 1}, "a after BOM");
-  glecma_source_destroy(wide);
+  glecma_source_release(wide);
 }
 
 // UTF16DecodeString: an unpaired surrogate is a code point of its own.
@@ -369,7 +369,7 @@ TEST(Source, LoneSurrogateIsACodePointOfItsOwn) {
   EXPECT_EQ(cp, 0x61u);
   ExpectLocation(location, GLECMA_Location{1, 1, 1}, "a");
   EXPECT_FALSE(glecma_source_cursor_next(&cursor, &cp, &location));
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // The other unpaired shapes: a low surrogate first, a low before a high, and
@@ -388,20 +388,20 @@ TEST(Source, EveryUnpairedSurrogateShapeIsOneCodePoint) {
   for (const Case & c : cases) {
     GLECMA_Source * source = MakeUtf16(c.units);
     Differential(source, c.cps, true, "unpaired");
-    glecma_source_destroy(source);
+    glecma_source_release(source);
   }
 }
 
 TEST(Source, IllFormedUtf8IsCorruptAtTheFirstBadByte) {
   glecma_test::CountingAllocator counting;
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   ASSERT_EQ(glecma_source_create_utf8("ab\xE0\x80" "c", 5, nullptr,
                 counting.get(), &failure, &source),
       GLECMA_ERR_CORRUPT);
   EXPECT_EQ(source, kUntouched);
   EXPECT_EQ(counting.live(), 0u);
-  EXPECT_EQ(failure.result, GLECMA_ERR_CORRUPT);
+  EXPECT_EQ((GLECMA_Result)failure.result, GLECMA_ERR_CORRUPT);
   ASSERT_NE(failure.message, nullptr);
   EXPECT_STREQ(failure.message, "overlong UTF-8 encoding");
   EXPECT_EQ(failure.limit, nullptr);
@@ -410,7 +410,7 @@ TEST(Source, IllFormedUtf8IsCorruptAtTheFirstBadByte) {
 
 TEST(Source, EncodedSurrogateIsCorruptAtItsFirstByte) {
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   ASSERT_EQ(glecma_source_create_utf8("\xED\xA0\x80", 3, nullptr, nullptr,
                 &failure, &source),
       GLECMA_ERR_CORRUPT);
@@ -420,7 +420,7 @@ TEST(Source, EncodedSurrogateIsCorruptAtItsFirstByte) {
 
 TEST(Source, TruncatedTailIsCorruptAtItsLeadByte) {
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   ASSERT_EQ(glecma_source_create_utf8("a\xF0\x9F", 3, nullptr, nullptr,
                 &failure, &source),
       GLECMA_ERR_CORRUPT);
@@ -432,7 +432,7 @@ TEST(Source, TruncatedTailIsCorruptAtItsLeadByte) {
 // counted as for any other position: after a CRLF and an astral code point.
 TEST(Source, CorruptLocationCountsLinesAndUtf16Columns) {
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   const char text[] = "x\r\n\xF0\x9F\x98\x80\xFF";
   ASSERT_EQ(glecma_source_create_utf8(text, sizeof(text) - 1, nullptr,
                 nullptr, &failure, &source),
@@ -451,25 +451,25 @@ TEST(Source, OffsetInsideACodePointIsInvalid) {
   }
   ExpectLocation(At(narrow, 0), GLECMA_Location{0, 1, 0}, "start");
   ExpectLocation(At(narrow, 4), GLECMA_Location{4, 1, 2}, "end");
-  glecma_source_destroy(narrow);
+  glecma_source_release(narrow);
 
   GLECMA_Source * wide = MakeUtf16({0xD83D, 0xDE00});
   GLECMA_Location location = {9, 9, 9};
   EXPECT_EQ(glecma_source_location(wide, 1, &location), GLECMA_ERR_INVALID);
   EXPECT_EQ(location.offset, 9u);
   ExpectLocation(At(wide, 2), GLECMA_Location{2, 1, 2}, "end");
-  glecma_source_destroy(wide);
+  glecma_source_release(wide);
 }
 
 TEST(Source, BadArgumentsAreInvalidAndWriteNothing) {
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   glecma_test::CountingAllocator counting;
   EXPECT_EQ(glecma_source_create_utf8(nullptr, 1, nullptr, counting.get(),
                 &failure, &source),
       GLECMA_ERR_INVALID);
   EXPECT_EQ(source, kUntouched);
-  EXPECT_EQ(failure.result, GLECMA_ERR_INVALID);
+  EXPECT_EQ((GLECMA_Result)failure.result, GLECMA_ERR_INVALID);
   EXPECT_EQ(failure.limit, nullptr);
   EXPECT_EQ(glecma_source_create_utf16(nullptr, 1, nullptr, counting.get(),
                 &failure, &source),
@@ -478,7 +478,7 @@ TEST(Source, BadArgumentsAreInvalidAndWriteNothing) {
   EXPECT_EQ(glecma_source_create_utf8("a", 1, nullptr, counting.get(),
                 &failure, nullptr),
       GLECMA_ERR_INVALID);
-  EXPECT_EQ(failure.result, GLECMA_ERR_INVALID);
+  EXPECT_EQ((GLECMA_Result)failure.result, GLECMA_ERR_INVALID);
   EXPECT_EQ(glecma_source_create_utf16(nullptr, 0, nullptr, counting.get(),
                 &failure, nullptr),
       GLECMA_ERR_INVALID);
@@ -492,7 +492,7 @@ TEST(Source, BadArgumentsAreInvalidAndWriteNothing) {
   EXPECT_EQ(glecma_source_location(real, SIZE_MAX, &location),
       GLECMA_ERR_INVALID);
   EXPECT_EQ(location.offset, 9u);
-  glecma_source_destroy(real);
+  glecma_source_release(real);
 }
 
 // source.h: an allocator with a NULL function is a bad argument, refused
@@ -512,7 +512,7 @@ TEST(SourceArguments, AllocatorWithANullFunctionIsInvalid) {
 // source.h: a UTF-16 length whose byte size overflows size_t describes no
 // buffer. It is refused even when the limit has been raised to allow it.
 TEST(SourceArguments, Utf16LengthPastAnyBufferIsInvalid) {
-  GLECMA_Limits limits;
+  GLECMA_Limits limits = GLECMA_LIMITS_INIT;
   ASSERT_EQ(glecma_limits_default(&limits), GLECMA_OK);
   limits.source_units = UINT64_MAX;
   const uint16_t unit = 'a';
@@ -538,17 +538,17 @@ TEST(Source, EachAllocationFailingIsOomAndLeaksNothing) {
       counting.reset();
       counting.fail_at(n);
       GLECMA_Source * source = kUntouched;
-      GLECMA_Failure failure;
+      GLECMA_Failure failure = GLECMA_FAILURE_INIT;
       GLECMA_Result result = encoding == 0
           ? glecma_source_create_utf8(text.data(), text.size(), nullptr,
                 counting.get(), &failure, &source)
           : glecma_source_create_utf16(wide.data(), wide.size(), nullptr,
                 counting.get(), &failure, &source);
-      EXPECT_EQ(failure.result, result);
+      EXPECT_EQ((GLECMA_Result)failure.result, result);
       if (result == GLECMA_OK) {
         EXPECT_LE(counting.calls(), n) << "succeeded although allocation "
                                        << n << " was refused";
-        glecma_source_destroy(source);
+        glecma_source_release(source);
         EXPECT_EQ(counting.live(), 0u);
         break;
       }
@@ -568,7 +568,7 @@ TEST(Source, EachAllocationFailingIsOomAndLeaksNothing) {
 TEST(SourceAllocation, CorruptInputAfterAllocationLeaksNothing) {
   glecma_test::CountingAllocator counting;
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   ASSERT_EQ(glecma_source_create_utf8("abc\x80", 4, nullptr, counting.get(),
                 &failure, &source),
       GLECMA_ERR_CORRUPT);
@@ -584,23 +584,23 @@ TEST(SourceAllocation, CorruptInputAfterAllocationLeaksNothing) {
 // core.h: the record is written on every return, success included, with the
 // fields that do not apply cleared.
 TEST(SourceFailure, SuccessWritesACleanRecord) {
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   std::memset(&failure, 0xFF, sizeof(failure));
   GLECMA_Source * source = nullptr;
   ASSERT_EQ(glecma_source_create_utf8("a", 1, nullptr, nullptr, &failure,
                 &source),
       GLECMA_OK);
-  EXPECT_EQ(failure.result, GLECMA_OK);
+  EXPECT_EQ((GLECMA_Result)failure.result, GLECMA_OK);
   EXPECT_EQ(failure.message, nullptr);
   EXPECT_EQ(failure.limit, nullptr);
   ExpectLocation(failure.location, GLECMA_Location{0, 0, 0}, "success");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // core.h: location is meaningful only for CORRUPT (and later SYNTAX); a bad
 // argument leaves it zero.
 TEST(SourceFailure, InvalidArgumentLeavesTheLocationZero) {
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   std::memset(&failure, 0xFF, sizeof(failure));
   GLECMA_Source * source = kUntouched;
   EXPECT_EQ(glecma_source_create_utf8(nullptr, 3, nullptr, nullptr, &failure,
@@ -618,13 +618,13 @@ TEST(SourceOwnership, SourceKeepsItsOwnCopy) {
   text.assign("xyz");
   ExpectLocation(At(narrow, 2), GLECMA_Location{2, 2, 0}, "b");
   EXPECT_EQ(glecma_source_lines(narrow), 2u);
-  glecma_source_destroy(narrow);
+  glecma_source_release(narrow);
 
   std::vector<uint16_t> wide = {'a', '\n', 'b'};
   GLECMA_Source * copy = MakeUtf16(wide);
   wide.assign({'x', 'y', 'z'});
   ExpectLocation(At(copy, 2), GLECMA_Location{2, 2, 0}, "b");
-  glecma_source_destroy(copy);
+  glecma_source_release(copy);
 }
 
 TEST(SourceAccessors, ReportTheEncodingAndAreZeroForNull) {
@@ -636,9 +636,9 @@ TEST(SourceAccessors, ReportTheEncodingAndAreZeroForNull) {
   EXPECT_EQ(glecma_source_units(nullptr), 0u);
   EXPECT_EQ(glecma_source_code_points(nullptr), 0u);
   EXPECT_EQ(glecma_source_lines(nullptr), 0u);
-  glecma_source_destroy(nullptr);
-  glecma_source_destroy(narrow);
-  glecma_source_destroy(wide);
+  glecma_source_release(nullptr);
+  glecma_source_release(narrow);
+  glecma_source_release(wide);
 }
 
 // A NUL byte is U+0000, not a terminator of the text.
@@ -646,7 +646,7 @@ TEST(SourceAccessors, NulIsAnOrdinaryCodePoint) {
   GLECMA_Source * source = MakeUtf8(std::string("a\0b", 3));
   EXPECT_EQ(glecma_source_code_points(source), 3u);
   ExpectLocation(At(source, 2), GLECMA_Location{2, 1, 2}, "b after NUL");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 TEST(SourceDump, WritesOneSummaryLine) {
@@ -665,7 +665,7 @@ TEST(SourceDump, WritesOneSummaryLine) {
   std::fclose(out);
   EXPECT_EQ(glecma_source_dump(nullptr, stdout), GLECMA_ERR_INVALID);
   EXPECT_EQ(glecma_source_dump(source, nullptr), GLECMA_ERR_INVALID);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // source.h: a stream that reports an error is ERR_IO. A stream opened only
@@ -683,7 +683,7 @@ TEST(SourceDump, StreamThatRefusesWritesIsIo) {
   EXPECT_EQ(glecma_source_dump(source, read_only), GLECMA_ERR_IO);
   std::fclose(read_only);
   std::filesystem::remove(path);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // ---------------------------------------------------------------------------
@@ -728,7 +728,7 @@ TEST(Utf8, TableThreeEightSegmentsIntoItsMaximalSubparts) {
 
   // And through the public API, the first ill-formed subsequence is at 1.
   GLECMA_Source * source = kUntouched;
-  GLECMA_Failure failure;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   ASSERT_EQ(glecma_source_create_utf8(reinterpret_cast<const char *>(bytes),
                 sizeof(bytes), nullptr, nullptr, &failure, &source),
       GLECMA_ERR_CORRUPT);
@@ -782,7 +782,7 @@ TEST(Utf8, EachIllFormedClassIsCorruptAtItsStart) {
   };
   for (const Case & c : cases) {
     GLECMA_Source * source = kUntouched;
-    GLECMA_Failure failure;
+    GLECMA_Failure failure = GLECMA_FAILURE_INIT;
     EXPECT_EQ(glecma_source_create_utf8(c.bytes.data(), c.bytes.size(),
                   nullptr, nullptr, &failure, &source),
         GLECMA_ERR_CORRUPT)
@@ -805,7 +805,7 @@ TEST(Utf8, EveryRowOfTableThreeSevenIsAccepted) {
   GLECMA_Source * source = MakeUtf8(Utf8(cps));
   ASSERT_NE(source, nullptr);
   Differential(source, cps, false, "Table 3-7 edges");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // Every Unicode scalar value, encoded by the reference encoder, decodes to
@@ -915,10 +915,10 @@ TEST(SourceDifferential, CorpusInBothEncodingsAgreesEverywhere) {
   for (const std::vector<uint32_t> & cps : Corpus()) {
     GLECMA_Source * narrow = MakeUtf8(Utf8(cps));
     Differential(narrow, cps, false, "corpus " + std::to_string(n) + " UTF-8");
-    glecma_source_destroy(narrow);
+    glecma_source_release(narrow);
     GLECMA_Source * wide = MakeUtf16(Utf16(cps));
     Differential(wide, cps, true, "corpus " + std::to_string(n) + " UTF-16");
-    glecma_source_destroy(wide);
+    glecma_source_release(wide);
     ++n;
   }
 }
@@ -929,7 +929,7 @@ TEST(SourceDifferential, GeneratedSourcesAcrossManyCheckpointsAgree) {
     GLECMA_Source * narrow = MakeUtf8(Utf8(narrow_cps));
     Differential(narrow, narrow_cps, false,
         "generated " + std::to_string(seed) + " UTF-8");
-    glecma_source_destroy(narrow);
+    glecma_source_release(narrow);
     std::vector<uint32_t> wide_cps = Generated(seed, 3000, true);
     std::vector<uint16_t> units;
     for (uint32_t c : wide_cps) {
@@ -939,7 +939,7 @@ TEST(SourceDifferential, GeneratedSourcesAcrossManyCheckpointsAgree) {
     GLECMA_Source * wide = MakeUtf16(units);
     Differential(wide, wide_cps, true,
         "generated " + std::to_string(seed) + " UTF-16");
-    glecma_source_destroy(wide);
+    glecma_source_release(wide);
   }
 }
 
@@ -962,7 +962,7 @@ TEST(SourceCheckpoints, CodePointStraddlingABoundaryIsHandled) {
   }
   ExpectLocation(At(source, 1022), GLECMA_Location{1022, 1, 1022}, "emoji");
   ExpectLocation(At(source, 1026), GLECMA_Location{1026, 1, 1024}, "b");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // source.h and the design: one checkpoint per 1024 input units, so the
@@ -974,7 +974,7 @@ TEST(SourceCheckpoints, OneCheckpointPerIntervalOfInput) {
     GLECMA_Source * source = MakeUtf8(std::string(size, '\n'));
     EXPECT_EQ(source->checkpoint_count, size / 1024 + 1) << size;
     EXPECT_EQ(glecma_source_lines(source), size + 1) << size;
-    glecma_source_destroy(source);
+    glecma_source_release(source);
   }
 }
 
@@ -1003,7 +1003,7 @@ TEST(SourceCheckpoints, EachCheckpointIsTheFirstBoundaryOfItsInterval) {
       ExpectLocation(stored, At(source, checkpoint.offset),
           "checkpoint " + std::to_string(i));
     }
-    glecma_source_destroy(source);
+    glecma_source_release(source);
   }
 }
 
@@ -1024,7 +1024,7 @@ TEST(SourceCheckpoints, QueryStartsFromItsOwnCheckpoint) {
       "end, inside interval 2");
   ExpectLocation(At(source, 2047), GLECMA_Location{2047, 1, 2047},
       "interval 1, untouched");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // The UTF-16 straddle: a surrogate pair at units 1023 and 1024 puts
@@ -1043,7 +1043,7 @@ TEST(SourceCheckpoints, SurrogatePairStraddlingABoundaryIsHandled) {
   EXPECT_EQ(location.offset, 9u);
   ExpectLocation(At(source, 1023), GLECMA_Location{1023, 1, 1023}, "pair");
   ExpectLocation(At(source, 1025), GLECMA_Location{1025, 1, 1025}, "b");
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // Seeking and then reading gives the code point the walk read at that
@@ -1067,7 +1067,7 @@ TEST(SourceCursor, SeekThenNextMatchesTheWalk) {
     EXPECT_EQ(cp, cps[i]) << i;
     ExpectLocation(location, e.locations[i], "seek " + std::to_string(i));
   }
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // ---------------------------------------------------------------------------
@@ -1100,7 +1100,7 @@ TEST(SourceThreads, ConcurrentQueriesOnOneSourceAgree) {
     thread.join();
   }
   EXPECT_EQ(mismatches.load(), 0u);
-  glecma_source_destroy(source);
+  glecma_source_release(source);
 }
 
 // No process-wide state: creates and destroys on separate threads, each with
@@ -1114,7 +1114,7 @@ TEST(SourceThreads, ConcurrentCreatesOnManySourcesAreIndependent) {
         std::string text(200 + static_cast<size_t>(t * 37 + round), 'x');
         text += "\r\n\xE2\x80\xA8y";
         GLECMA_Source * source = nullptr;
-        GLECMA_Failure failure;
+        GLECMA_Failure failure = GLECMA_FAILURE_INIT;
         if (glecma_source_create_utf8(text.data(), text.size(), nullptr,
                 nullptr, &failure, &source) != GLECMA_OK) {
           failures++;
@@ -1127,7 +1127,7 @@ TEST(SourceThreads, ConcurrentCreatesOnManySourcesAreIndependent) {
             glecma_source_lines(source) != 3) {
           failures++;
         }
-        glecma_source_destroy(source);
+        glecma_source_release(source);
       }
     });
   }

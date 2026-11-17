@@ -51,8 +51,16 @@ Machine class: a 12-thread x86-64 laptop, 16 GB, shared with other work.
 | 1b | `calibration-xorshift` | 1.32 ns/step | 1.43 ns/step | 24.6% | | 1.32 ns/step |
 | 1b | `source-decode-utf8` | 2.43 ms | 2.60 ms | 16.9% | 308 MiB/s | 1.32 ns/step |
 | 1b | `source-decode-utf16` | 1.79 ms | 1.83 ms | 9.0% | 784 MiB/s | 1.32 ns/step |
+| 1c | `calibration-xorshift` | 1.32 ns/step | 1.35 ns/step | 12.2% | | 1.32 ns/step |
+| 1c | `source-decode-utf8` | 2.38 ms | 2.53 ms | 9.5% | 316 MiB/s | 1.32 ns/step |
+| 1c | `source-decode-utf16` | 1.58 ms | 1.59 ms | 14.0% | 891 MiB/s | 1.32 ns/step |
 
 These first figures are noisy (the calibration spread is 24.6%, over the 10%
 line) because the machine was in use; they are a first measurement, not a
 budget, and are to be retaken on a quiet machine before any budget is
 derived from them. A unit is three sources of about 256 KiB each.
+
+Story 1c (size-first structs, counted source) changed the created object by one
+counter and one atomic increment per create and release; the 1b rows are its
+"before", the 1c rows its "after", on the same machine. The differences are
+within the spread of the runs, so no change in decoder cost is claimed.

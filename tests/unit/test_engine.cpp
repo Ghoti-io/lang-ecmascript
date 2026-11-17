@@ -50,7 +50,7 @@ TEST(Descriptor, NamesTheEngineAndIsValidToRegister) {
   ASSERT_NE(d, nullptr);
   ASSERT_NE(d->name, nullptr);
   EXPECT_STREQ(d->name, GLECMA_ENGINE_NAME);
-  EXPECT_STREQ(d->name, "ecmascript");
+  EXPECT_STREQ(d->name, GLECMA_ENGINE_NAME);
   EXPECT_EQ(d->size, sizeof(GRCORE_EngineDescriptor));
   EXPECT_TRUE(grcore_engine_descriptor_valid(d));
 }

@@ -1,0 +1,11 @@
+--- a/include/ghoti.io/lang-ecmascript/limits.h
++++ b/include/ghoti.io/lang-ecmascript/limits.h
+@@ -76,7 +76,7 @@
+ typedef struct GLECMA_Limits {
+   uint32_t size;         ///< `sizeof(GLECMA_Limits)` as the caller knows it.
+   uint32_t reserved;     ///< Padding; must be zero.
+-  uint64_t source_units; ///< Input units of one source: bytes for UTF-8,
++  uint64_t source_bytes; ///< Input units of one source: bytes for UTF-8,
+                          ///< 16-bit code units for UTF-16.
+ } GLECMA_Limits;
+ 

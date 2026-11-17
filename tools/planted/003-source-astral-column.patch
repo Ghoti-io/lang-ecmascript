@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -189,7 +189,7 @@
+     cursor->line++;
+     cursor->column = 0;
+   } else {
+-    cursor->column += code_point > 0xFFFFu ? 2u : 1u;
++    cursor->column += 1u;
+   }
+   cursor->offset = next;
+ }

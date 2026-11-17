@@ -1,0 +1,4 @@
+# The names a GLECMA_Failure::limit can carry, one per line, in the order they
+# were added. Append only: a host may match on a name, so one is never removed
+# or renamed. Each is the spelling of a member of GLECMA_Limits.
+source_units

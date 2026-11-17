@@ -54,8 +54,14 @@
 extern "C" {
 #endif
 
-/** @brief The name the engine registers under, as its descriptor's `name`. */
-#define GLECMA_ENGINE_NAME "ecmascript"
+/**
+ * @brief The name the engine registers under, as its descriptor's `name`.
+ *
+ * The family name followed by this build's branch token ("ecmascript-0"), so
+ * two majors of the library in one process register under distinct names
+ * and a context never confuses one for the other.
+ */
+#define GLECMA_ENGINE_NAME "ecmascript" GHOTIIO_LANG_ECMASCRIPT_BRANCH
 
 /**
  * @brief The engine's descriptor.

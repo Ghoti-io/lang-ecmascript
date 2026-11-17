@@ -71,9 +71,12 @@ it. `make examples` builds and runs both.
   `GLECMA_ERR_SYNTAX`, appended after the shared nine results for source
   text that is not valid ECMAScript; `GLECMA_Location` (offset in input
   units, 1-based line, 0-based column in UTF-16 code units); and
-  `GLECMA_Failure` (result, static message, location, and the limit's name
-  for `GLECMA_ERR_LIMIT`), written on every return when the caller passes one.
-- `limits.h`: `GLECMA_Limits` and `glecma_limits_default`. Its one field so
+  `GLECMA_Failure` (size first, set with `GLECMA_FAILURE_INIT`; result, static
+  message, location, and the limit's name for `GLECMA_ERR_LIMIT`), written on
+  every return when the caller passes one.
+- `limits.h`: `GLECMA_Limits` (size first, set with `GLECMA_LIMITS_INIT`, so a
+  field can be added without breaking a caller built earlier) and
+  `glecma_limits_default`. Its one field so
   far is `source_units`, default 64 Mi units; zero is a cap of zero.
 - `source.h`: `glecma_source_create_utf8` and `glecma_source_create_utf16`
   copy and validate source text (ill-formed UTF-8 is `GLECMA_ERR_CORRUPT` at
@@ -81,12 +84,12 @@ it. `make examples` builds and runs both.
   nothing is stripped, a leading BOM included); `glecma_source_location`
   maps an offset to its line and column, with lines split at ECMA-262's five
   line terminators; `glecma_source_encoding`, `_units`, `_code_points`,
-  `_lines`, `_dump` and `_destroy`. A source is immutable, and any number of
+  `_lines`, `_dump`, `_retain` and `_release`. A source is immutable and atomically counted, and any number of
   threads may read one at once.
 
 ```c
 GLECMA_Source * source = NULL;
-GLECMA_Failure failure;
+GLECMA_Failure failure = GLECMA_FAILURE_INIT;
 GLECMA_Result result =
     glecma_source_create_utf8(text, length, NULL, NULL, &failure, &source);
 if (result == GLECMA_ERR_CORRUPT) {
@@ -109,7 +112,7 @@ if (glecma_source_location(source, offset, &location) == GLECMA_OK) {
   // Past the end, or inside a multi-unit code point.
   fprintf(stderr, "offset %zu is not a position\n", offset);
 }
-glecma_source_destroy(source);
+glecma_source_release(source);
 ```
 
 Outputs are written only on success, and a failure leaves nothing allocated.

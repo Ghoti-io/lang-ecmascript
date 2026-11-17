@@ -45,6 +45,8 @@
 
 #include <ghoti.io/lang-ecmascript/source.h>
 
+#include <ghoti.io/cutil/atomic.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -64,6 +66,8 @@ typedef struct GLECMA_SourceCheckpoint {
 } GLECMA_SourceCheckpoint;
 
 struct GLECMA_Source {
+  GCU_Atomic_Size refs;       ///< Holders; the only member that changes after
+                              ///< creation. Every other member is immutable.
   GLECMA_Allocator allocator; ///< A copy of the creator's allocator.
   GLECMA_Encoding encoding;   ///< The input and storage encoding.
   const void * text;          ///< `uint8_t` or `uint16_t` units; NULL when

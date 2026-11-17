@@ -1,0 +1,11 @@
+# id|name|the defect|patch (in this directory)|gate (a make target) that must fail with it applied
+# Story 1 (source text) registers 1-5; story 1c registers 6-9. Append only.
+001|source-overlong-e0|UTF-8 E0 followed by 80..9F (an overlong form) is accepted|001-source-overlong-e0.patch|test
+002|source-encoded-surrogate|UTF-8 ED followed by A0..BF (an encoded surrogate) is accepted|002-source-encoded-surrogate.patch|test
+003|source-astral-column|A code point above U+FFFF is one column wide instead of two UTF-16 code units|003-source-astral-column.patch|test
+004|source-crlf-two-lines|A CRLF counts as two line terminators|004-source-crlf-two-lines.patch|test
+005|source-limit-off-by-one|A source exactly at the source_units cap is refused|005-source-limit-off-by-one.patch|test
+006|source-retain-forgotten|glecma_source_retain does not take a hold|006-source-retain-forgotten.patch|test
+007|failure-written-past-size|The failure record is written past the size the caller declared|007-failure-written-past-size.patch|test
+008|limits-default-ignores-size|glecma_limits_default writes every member whatever the caller's size|008-limits-default-ignores-size.patch|test
+009|limit-name-renamed|A limit's name is renamed in the registry's source of truth|009-limit-name-renamed.patch|check-limit-names

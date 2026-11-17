@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -75,7 +75,7 @@
+     if (lead == 0xE0u) {
+       low = 0xA0u;
+     } else if (lead == 0xEDu) {
+-      high = 0x9Fu;
++      high = 0xBFu;
+     }
+   } else if (lead >= 0xF0u && lead <= 0xF4u) {
+     trail = 3;
