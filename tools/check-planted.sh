@@ -22,7 +22,12 @@ fresh_copy() {
   work=$scratch/tree
   rm -rf "$work"
   mkdir -p "$work"
-  (cd "$root" && git ls-files -z --cached --others --exclude-standard | xargs -0 cp --parents -t "$work")
+  if (cd "$root" && git rev-parse --git-dir >/dev/null 2>&1); then
+    (cd "$root" && git ls-files -z --cached --others --exclude-standard | xargs -0 cp --parents -t "$work")
+  else
+    # A tree shipped without its repository: everything but the build output and the fetched corpora.
+    (cd "$root" && find . -type f -not -path './build/*' -not -path './third_party/*' -print0 | xargs -0 cp --parents -t "$work")
+  fi
   # Reuse the built objects so a plant rebuilds only what it touches.
   [ -d "$root/build" ] && cp -a "$root/build" "$work/build"
   # The fetched corpora are read through a link: a plant is a patch to a
