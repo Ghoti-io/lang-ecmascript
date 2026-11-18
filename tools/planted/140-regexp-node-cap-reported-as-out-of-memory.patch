@@ -1,0 +1,14 @@
+diff --git a/src/parse/regexp.c b/src/parse/regexp.c
+index d2c529c..c5fc511 100644
+--- a/src/parse/regexp.c
++++ b/src/parse/regexp.c
+@@ -333,9 +333,6 @@ void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
+       parser_fail_limit(p, error.diag == GRX_DIAG_LIMIT_NESTING_DEPTH ? "nesting"
+           : error.diag == GRX_DIAG_LIMIT_NODES ? "nodes" : "literal_length");
+     case GRX_ERR_OOM:
+-      if (!watch.refused) {
+-        parser_fail_limit(p, "nodes");
+-      }
+       parser_fail_result(p, GLECMA_ERR_OOM);
+     case GRX_ERR_UNSUPPORTED:
+       // regex's ECMAScript dialect reads every pattern of the edition and

@@ -203,6 +203,50 @@ static GLECMA_NORETURN void fail_at_offset(Parser * p, uint32_t rule, size_t off
   parser_fail(p, rule, &at);
 }
 
+// An allocator that passes every request to the parse's own and remembers
+// whether it was ever refused.
+typedef struct {
+  GLECMA_Allocator allocator;
+  const GLECMA_Allocator * inner;
+  bool refused;
+} WatchedAllocator;
+
+static void * watch_malloc(void * ctx, size_t size) {
+  WatchedAllocator * w = (WatchedAllocator *)ctx;
+  void * p = w->inner->malloc_fn(w->inner->ctx, size);
+  w->refused = w->refused || p == NULL;
+  return p;
+}
+
+static void * watch_calloc(void * ctx, size_t count, size_t size) {
+  WatchedAllocator * w = (WatchedAllocator *)ctx;
+  void * p = w->inner->calloc_fn(w->inner->ctx, count, size);
+  w->refused = w->refused || p == NULL;
+  return p;
+}
+
+static void * watch_realloc(void * ctx, void * old, size_t size) {
+  WatchedAllocator * w = (WatchedAllocator *)ctx;
+  void * p = w->inner->realloc_fn(w->inner->ctx, old, size);
+  w->refused = w->refused || p == NULL;
+  return p;
+}
+
+static void watch_free(void * ctx, void * p) {
+  WatchedAllocator * w = (WatchedAllocator *)ctx;
+  w->inner->free_fn(w->inner->ctx, p);
+}
+
+static void watch_init(WatchedAllocator * w, const GLECMA_Allocator * inner) {
+  w->allocator.ctx = w;
+  w->allocator.malloc_fn = watch_malloc;
+  w->allocator.calloc_fn = watch_calloc;
+  w->allocator.realloc_fn = watch_realloc;
+  w->allocator.free_fn = watch_free;
+  w->inner = inner;
+  w->refused = false;
+}
+
 void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
   // The front end recurses over the pattern's groups: the stack for it must
   // be there before anything is allocated.
@@ -256,8 +300,15 @@ void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
   limits.max_nodes = p->max_nodes > p->nodes ? (size_t)(p->max_nodes - p->nodes) : 1;
   GRX_Pattern * parsed = NULL;
   grx_error_clear(&error);
+  // regex is given an allocator that notes a refusal, because regex answers
+  // "out of memory" when a node cap of exactly the size a pattern needs less
+  // one is met, with no allocation refused: that is the cap (`nodes`), and not
+  // memory running out, and only a refusal the caller's allocator made is the
+  // second.
+  WatchedAllocator watch;
+  watch_init(&watch, p->allocator);
   r = grx_pattern_parse_with_allocator((const char *)pattern.bytes, pattern_bytes,
-      GRX_SYNTAX_ECMASCRIPT, options, &limits, p->allocator, &error, &parsed);
+      GRX_SYNTAX_ECMASCRIPT, options, &limits, &watch.allocator, &error, &parsed);
   p->allocator->free_fn(p->allocator->ctx, pattern.bytes);
   if (r == GRX_OK) {
     const size_t built = grx_pattern_node_count(parsed);
@@ -282,6 +333,9 @@ void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
       parser_fail_limit(p, error.diag == GRX_DIAG_LIMIT_NESTING_DEPTH ? "nesting"
           : error.diag == GRX_DIAG_LIMIT_NODES ? "nodes" : "literal_length");
     case GRX_ERR_OOM:
+      if (!watch.refused) {
+        parser_fail_limit(p, "nodes");
+      }
       parser_fail_result(p, GLECMA_ERR_OOM);
     case GRX_ERR_UNSUPPORTED:
       // regex's ECMAScript dialect reads every pattern of the edition and

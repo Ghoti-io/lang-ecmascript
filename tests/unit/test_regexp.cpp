@@ -25,6 +25,7 @@
 #include <pthread.h>
 
 #include <functional>
+#include <string>
 
 #include "../parse_test_support.h"
 #include "../test_helpers.h"
@@ -37,7 +38,6 @@ struct Case {
   const char * source;
   uint32_t rule;     // 0 for accepted
   size_t offset;     // where the failure is, when it is a refusal
-  size_t offset_to = 0;  // when not 0, the failure may be anywhere from `offset` to here
 };
 
 void Check(const Case & c, uint32_t internal) {
@@ -51,12 +51,7 @@ void Check(const Case & c, uint32_t internal) {
     ASSERT_EQ(parsed.result, GLECMA_ERR_SYNTAX) << c.source;
     EXPECT_EQ(parsed.failure.rule, c.rule)
         << c.source << ": " << glecma_rule_name(parsed.failure.rule);
-    if (c.offset_to == 0) {
-      EXPECT_EQ(parsed.failure.location.offset, c.offset) << c.source;
-    } else {
-      EXPECT_GE(parsed.failure.location.offset, c.offset) << c.source;
-      EXPECT_LE(parsed.failure.location.offset, c.offset_to) << c.source;
-    }
+    EXPECT_EQ(parsed.failure.location.offset, c.offset) << c.source;
   }
 }
 
@@ -96,9 +91,8 @@ TEST(RegexpLiterals, APatternTheGrammarRefusesIsAnEarlyError) {
     {"x = /\\u{110000}/u;", r, 5},
     {"x = /(?=a)*/u;", r, 10},
     {"x = /(?i-i:a)/;", r, 5},
-    // The offset is regex's, and regex reports the third `&` (9) on some targets and the character after it
-    // (10) on others, both inside the class: the location is a point inside the offending construct.
-    {"x = /[a&&&b]/v;", r, 9, 10},
+    {"x = /[a&&&b]/v;", r, 9},
+    {"x = /[a&&&]/v;", r, 9},
     {"x = /(?<=a)+/u;", r, 11},
     // In a function body the checking builder never builds, and the pattern is still read.
     {"function f() { return /(/; }", r, 23},
@@ -246,4 +240,28 @@ TEST(RegexpLiterals, EveryAllocationOfAValidationMayFailWithNothingLeaked) {
 int main(int argc, char * * argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+// regex answered "out of memory", with no allocation refused, when the node cap left it exactly one node too few
+// for a pattern (found by the parser fuzzer): the parse must say the cap it met, and never memory it did not run out of.
+TEST(RegexpLiterals, ANodeCapThatAPatternMeetsIsALimitAtEveryValueOfTheCap) {
+  const std::string text = "x[/]\\/oooooooooooooooo0ooooooooooooooooomooooooooo<<=ooo\xCD\x98i;oooo =?\\b/";
+  for (uint64_t nodes = 1; nodes <= 200; nodes++) {
+    GLECMA_Limits limits = GLECMA_LIMITS_INIT;
+    glecma_limits_default(&limits);
+    limits.nodes = nodes;
+    GLECMA_Source * source = nullptr;
+    ASSERT_EQ(glecma_source_create_utf8(text.data(), text.size(), nullptr, nullptr, nullptr, &source), GLECMA_OK);
+    GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+    options.limits = &limits;
+    GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+    GLECMA_Tree * tree = nullptr;
+    const GLECMA_Result r = glecma_parse(source, &options, nullptr, &failure, &tree);
+    EXPECT_TRUE(r == GLECMA_ERR_LIMIT || r == GLECMA_ERR_SYNTAX) << "nodes " << nodes << " gave result " << r;
+    if (r == GLECMA_ERR_LIMIT) {
+      EXPECT_STREQ(failure.limit, "nodes") << nodes;
+    }
+    glecma_tree_destroy(tree);
+    glecma_source_release(source);
+  }
 }
