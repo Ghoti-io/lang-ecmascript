@@ -36,12 +36,14 @@
 #include <string.h>
 
 int main(void) {
+  const char * pin = GLECMA_UNICODE_VERSION;
   const char * engine = glecma_unicode_version();
   const char * unicode = guni_ucd_version();
   const char * regex = grx_unicode_version();
-  printf("check-data-versions: engine %s, unicode %s, regex %s (built libraries)\n",
-      engine, unicode, regex);
-  if (strcmp(engine, unicode) != 0 || strcmp(unicode, regex) != 0) {
+  printf("check-data-versions: pin %s, engine %s, unicode %s, regex %s (built libraries)\n",
+      pin, engine, unicode, regex);
+  if (strcmp(pin, engine) != 0 || strcmp(engine, unicode) != 0 ||
+      strcmp(unicode, regex) != 0) {
     fprintf(stderr, "check-data-versions: the libraries report different Unicode versions\n");
     return 1;
   }
