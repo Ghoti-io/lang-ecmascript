@@ -306,8 +306,9 @@ TEST(Stream, TheSizeCapIsCheckedAsBytesArriveAndNothingSurvives) {
     } else {
       ASSERT_EQ(r, GLECMA_ERR_LIMIT) << length;
       EXPECT_STREQ(failure.limit, "source_units");
-      // It stopped near the cap, not at the end of the stream.
-      EXPECT_LE(glecma_stream_tell(stream), size_t{1} << 16);
+      // It stopped one byte past the cap, which is how it knew: not at the
+      // end of the stream, and not a chunk later.
+      EXPECT_LE(glecma_stream_tell(stream), static_cast<size_t>(limits.source_units) + 1);
     }
     EXPECT_EQ(counting.live(), 0u) << length;
     glecma_stream_destroy(stream);

@@ -177,6 +177,10 @@ TEST(ParseLimits, NestingIsRefusedOneLevelPastItsCapNamingTheField) {
     EXPECT_STREQ(failure.limit, "nesting") << text;
     EXPECT_EQ(failure.rule, 0u);
   }
+  // The count itself is pinned, so that a cap one off in either direction is
+  // seen: a statement is a level, and so is each parenthesized group.
+  EXPECT_EQ(LeastAccepted(Repeat("(", "x", ")", 40), &GLECMA_Limits::nesting, 100000), 42u);
+  EXPECT_EQ(LeastAccepted(Repeat("{", "", "}", 40), &GLECMA_Limits::nesting, 100000), 40u);
   // Twice as deep needs twice the cap: the levels grow with the nesting.
   EXPECT_EQ(LeastAccepted(Repeat("(", "x", ")", 80), &GLECMA_Limits::nesting, 100000) -
           LeastAccepted(Repeat("(", "x", ")", 40), &GLECMA_Limits::nesting, 100000),
