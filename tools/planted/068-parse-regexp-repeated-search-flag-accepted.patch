@@ -1,0 +1,11 @@
+--- a/src/parse/regexp.c
++++ b/src/parse/regexp.c
+@@ -203,7 +203,7 @@
+   GRX_Error error;
+   grx_error_clear(&error);
+   GRX_Result r = GRX_OK;
+-  if (flags.seen_g > 1 || flags.seen_y > 1) {
++  if (0 && (flags.seen_g > 1 || flags.seen_y > 1)) {
+     r = GRX_ERR_SYNTAX;
+   } else {
+     r = grx_options_parse(GRX_SYNTAX_ECMASCRIPT, (const char *)flags.bytes, &options,

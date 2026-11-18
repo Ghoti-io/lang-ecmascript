@@ -251,6 +251,10 @@ static const RuleRow rules[] = {
       "Identifier has already been declared in this static block"},
   {GLECMA_RULE_DUPLICATE_PARAMETER, "duplicate-parameter", "15.1.1",
       "Duplicate parameter name is not allowed here"},
+  {GLECMA_RULE_REGEXP_PATTERN, "regexp-pattern", "22.2.1.1",
+      "Invalid regular expression pattern"},
+  {GLECMA_RULE_REGEXP_FLAG_SET, "regexp-flag-set", "13.2.7.1",
+      "Invalid regular expression flags"},
 };
 
 #define RULE_ROWS (sizeof(rules) / sizeof(rules[0]))

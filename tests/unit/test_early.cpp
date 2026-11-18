@@ -756,6 +756,46 @@ TEST(EarlyErrors, StaticBlocks) {
   });
 }
 
+// The checks above hold under the Module goal's settings too (the goal itself is
+// a later story's; the settings are reached through the internal entry that runs
+// a Script with them): strict code, `await` reserved, and a top level that
+// declares its functions as lexical names (clause 16.2.1.1).
+TEST(EarlyErrors, TheChecksHoldUnderTheModuleSettings) {
+  const uint32_t module = GLECMA_PARSE_INTERNAL_MODULE_RULES;
+  struct Row { const char * source; uint32_t rule; };
+  const Row rows[] = {
+    {"function f() {} function f() {}", GLECMA_RULE_SCRIPT_REDECLARATION},
+    {"var f; function f() {}", GLECMA_RULE_SCRIPT_REDECLARATION},
+    {"function f() {} var f;", GLECMA_RULE_SCRIPT_REDECLARATION},
+    {"let a; function a() {}", GLECMA_RULE_SCRIPT_REDECLARATION},
+    {"function f() { function g() {} function g() {} }", 0},
+    {"{ function f() {} function f() {} }", GLECMA_RULE_BLOCK_REDECLARATION},
+    {"var a; var a;", 0},
+    {"with (a) b;", GLECMA_RULE_WITH_STRICT},
+    {"var eval;", GLECMA_RULE_BINDING_EVAL_ARGUMENTS},
+    {"delete a;", GLECMA_RULE_DELETE_IDENTIFIER_STRICT},
+    {"function f(a, a) {}", GLECMA_RULE_DUPLICATE_PARAMETER},
+    {"return;", GLECMA_RULE_RETURN_POSITION},
+    {"new.target;", GLECMA_RULE_NEW_TARGET_POSITION},
+    {"x = await;", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"class C { #a; m() { this.#b; } }", GLECMA_RULE_PRIVATE_NAME_UNDECLARED},
+    {"a: { break a; } b: while (1) { continue b; }", 0},
+  };
+  for (const Row & row : rows) {
+    auto parsed = Parse(row.source, false, module);
+    if (row.rule == 0) {
+      EXPECT_EQ(parsed.result, GLECMA_OK) << row.source << glecma_rule_name(parsed.failure.rule);
+    } else {
+      EXPECT_EQ(parsed.result, GLECMA_ERR_SYNTAX) << row.source;
+      EXPECT_EQ(parsed.failure.rule, row.rule)
+          << row.source << ": " << glecma_rule_name(parsed.failure.rule);
+    }
+  }
+  // Without the settings the same sources are a Script's.
+  EXPECT_EQ(Parse("function f() {} function f() {}").result, GLECMA_OK);
+  EXPECT_EQ(Parse("x = await;").result, GLECMA_OK);
+}
+
 int main(int argc, char * * argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

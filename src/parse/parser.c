@@ -246,10 +246,15 @@ void parser_enter(Parser * p) {
 }
 
 void parser_check_stack(Parser * p) {
+  parser_check_stack_for(p, 0);
+}
+
+// The same, for a callee that needs `extra` bytes more than the reserve.
+void parser_check_stack_for(Parser * p, uint64_t extra) {
   uintptr_t here = PARSER_STACK_POSITION();
   uintptr_t used = p->stack_base > here ? p->stack_base - here
                                         : here - p->stack_base;
-  if ((uint64_t)used + PARSER_STACK_RESERVE > p->native_stack_bytes) {
+  if ((uint64_t)used + PARSER_STACK_RESERVE + extra > p->native_stack_bytes) {
     parser_fail_limit(p, "native_stack_bytes");
   }
 }
@@ -615,6 +620,7 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
         "the Module goal is not built");
   }
   const bool builtin = (internal & GLECMA_PARSE_INTERNAL_BUILTIN) != 0;
+  const bool module_rules = (internal & GLECMA_PARSE_INTERNAL_MODULE_RULES) != 0;
   const uint32_t mode = (internal & GLECMA_PARSE_INTERNAL_CHECKING) != 0
       ? GLECMA_BUILDER_CHECKING : GLECMA_BUILDER_TREE;
 
@@ -641,12 +647,14 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   p->body_simple = true; // a Script has no parameters
   p->params_simple = true;
   const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0;
-  p->flags = (strict_context || builtin ? PF_STRICT : 0u) |
-      (builtin ? PF_BUILTIN : 0u);
+  p->flags = (strict_context || builtin || module_rules ? PF_STRICT : 0u) |
+      (builtin ? PF_BUILTIN : 0u) | (module_rules ? PF_AWAIT_RESERVED : 0u);
+  p->top_functions_lexical = module_rules;
   GLECMA_Result lexed = builtin
       ? glecma_lexer_open_builtin(&p->lex, source, options, failure)
       : glecma_lexer_open(&p->lex, source, options,
-            strict_context ? GLECMA_LEXF_STRICT : 0u, failure);
+            module_rules ? GLECMA_LEXF_MODULE
+                         : strict_context ? GLECMA_LEXF_STRICT : 0u, failure);
   if (lexed != GLECMA_OK) {
     glecma_tree_destroy(tree);
     return lexed;

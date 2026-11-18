@@ -269,6 +269,8 @@ typedef enum {
   GLECMA_RULE_FOR_REDECLARATION = 77, ///< A lexical name of a for head that is declared twice or also var-declared in the body (clause 14.7.5.1).
   GLECMA_RULE_STATIC_BLOCK_REDECLARATION = 78, ///< A name declared twice in a class static block, or both lexically and with var (clause 15.7.1).
   GLECMA_RULE_DUPLICATE_PARAMETER = 79, ///< A repeated parameter name in strict code, an arrow function, a method or a parameter list that is not simple (clause 15.1.1).
+  GLECMA_RULE_REGEXP_PATTERN = 80, ///< A regular expression literal whose pattern is not valid for its flags (clause 22.2.1.1).
+  GLECMA_RULE_REGEXP_FLAG_SET = 81, ///< A regular expression literal whose flags are not among dgimsuvy, repeat a flag or hold both u and v (clause 13.2.7.1).
 
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.

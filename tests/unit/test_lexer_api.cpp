@@ -157,9 +157,11 @@ TEST(Rules, EveryCodeHasItsPinnedValue) {
   EXPECT_EQ(GLECMA_RULE_FOR_REDECLARATION, 77);
   EXPECT_EQ(GLECMA_RULE_STATIC_BLOCK_REDECLARATION, 78);
   EXPECT_EQ(GLECMA_RULE_DUPLICATE_PARAMETER, 79);
+  EXPECT_EQ(GLECMA_RULE_REGEXP_PATTERN, 80);
+  EXPECT_EQ(GLECMA_RULE_REGEXP_FLAG_SET, 81);
   // The count closes the enum: a rule appended later moves it, and every
   // value above must still be what it is.
-  EXPECT_EQ(GLECMA_RULE_COUNT, 80);
+  EXPECT_EQ(GLECMA_RULE_COUNT, 82);
 }
 
 TEST(Rules, EveryCodeHasANameAClauseAndAMessage) {

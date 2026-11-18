@@ -179,6 +179,7 @@ RCORE_BRANCH ?= $(if $(filter -dev,$(DEPENDENCY_RELEASE_BRANCH)),-dev,-0)$(DEPEN
 CUTIL_PC ?= ghoti.io-cutil$(CUTIL_BRANCH)
 RCORE_PC ?= ghoti.io-runtime-core$(RCORE_BRANCH)
 UNICODE_PC ?= ghoti.io-unicode$(CUTIL_BRANCH)
+REGEX_PC ?= ghoti.io-regex$(CUTIL_BRANCH)
 
 CUTIL_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags $(CUTIL_PC) 2>/dev/null)
 CUTIL_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs $(CUTIL_PC) 2>/dev/null)
@@ -213,16 +214,28 @@ endif
 endif
 INCLUDE += $(UNICODE_CFLAGS)
 
+# regex: the ECMAScript pattern grammar, which validates the regular expression
+# literals of a program (clause 13.2.7.1), at the same Unicode version.
+REGEX_CFLAGS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --cflags $(REGEX_PC) 2>/dev/null)
+REGEX_LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs $(REGEX_PC) 2>/dev/null)
+REGEX_LIBDIR := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs-only-L $(REGEX_PC) 2>/dev/null | awk '{print $$1}' | sed 's/^-L//')
+ifeq ($(strip $(REGEX_CFLAGS)),)
+ifndef SKIP_DEP_CHECK
+$(error $(REGEX_PC) was not found by pkg-config. Install regex into the same PREFIX and set PKG_CONFIG_PATH. There is deliberately no sibling-checkout fallback.)
+endif
+endif
+INCLUDE += $(REGEX_CFLAGS)
+
 SOURCES := $(shell find src -type f -name '*.c')
 LIBOBJECTS := $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
 
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-rule-codes check-test262 check-clauses check-gtest-full fuzz-replay
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-rule-codes check-data-versions check-test262 check-clauses check-gtest-full fuzz-replay
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
-ECMALIBRARY := -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
+ECMALIBRARY := -Wl,--whole-archive $(APP_DIR)/$(STATIC_TARGET) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS)
 
 ifeq ($(OS_NAME), Windows)
 TEST_LDFLAGS := -Wl,--wrap=__mingw_fprintf
@@ -239,7 +252,7 @@ TEST_EXECUTABLES := $(addprefix $(APP_DIR)/,$(addsuffix $(EXE_EXTENSION),$(TEST_
 EXAMPLE_SOURCES := $(sort $(wildcard examples/*.c))
 EXAMPLE_EXECUTABLES := $(patsubst examples/%.c,$(APP_DIR)/examples/%$(EXE_EXTENSION),$(EXAMPLE_SOURCES))
 
-TEST_LD_PATH := $(APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)
+TEST_LD_PATH := $(APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)
 
 all: $(APP_DIR)/$(TARGET) $(APP_DIR)/$(STATIC_TARGET) ## Build shared + static libraries
 
@@ -289,7 +302,7 @@ $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(LIBVER_GEN)
 
 $(APP_DIR)/$(TARGET): $(LIBOBJECTS)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $^ $(LDFLAGS) $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
 ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(APP_DIR)/$(BASE_NAME)
@@ -323,7 +336,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-stamps check-aliasing check-labels check-edges
 .PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
-.PHONY: check-limit-names check-rule-codes check-planted check-test262 check-clauses fetch-test262 fetch-ecma262
+.PHONY: check-limit-names check-rule-codes check-data-versions check-planted check-test262 check-clauses fetch-test262 fetch-ecma262
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
 .PHONY: fuzz fuzz-clean fuzz-replay fuzz-replay-asan help
 
@@ -408,6 +421,17 @@ check-test262: $(T262_DRIVER) ## The test262 parse score: pin, classification, p
 		--classification tests/data-test262-classification.tsv \
 		--tags tests/data-test262-tags.tsv --pending tests/data-test262-pending.tsv \
 		--driver $(T262_DRIVER) --features "$(T262_FEATURES)"
+
+# The Unicode version `unicode`, `regex` and this library's pin report is one
+# string. Built from the static archive like every program that calls the library.
+DATA_VERSIONS := $(APP_DIR)/check-data-versions$(EXE_EXTENSION)
+
+$(DATA_VERSIONS): tools/check-data-versions.c $(APP_DIR)/$(STATIC_TARGET) $(FLAGS_STAMP) | $(LIBVER_GEN)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(ECMALIBRARY)
+
+check-data-versions: $(DATA_VERSIONS) ## Fail if unicode, regex and the engine report different Unicode versions
+	@LD_LIBRARY_PATH="$(TEST_LD_PATH)" $(DATA_VERSIONS)
 
 check-clauses: ## Fail if the clause concordance is stale, or a cited clause is not in it
 	@python3 tools/test-check-clauses.py
@@ -497,7 +521,7 @@ ASAN_DEPFILES := $(ASAN_LIBOBJECTS:.o=.d) \
     $(foreach pair,$(TEST_PAIRS),$(ASAN_OBJ_DIR)/tests/$(basename $(notdir $(word 1,$(subst |, ,$(pair))))).d)
 -include $(ASAN_DEPFILES)
 ASAN_ARCHIVE := $(ASAN_APP_DIR)/$(STATIC_TARGET)
-ASAN_ECMALIBRARY := -Wl,--whole-archive $(ASAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
+ASAN_ECMALIBRARY := -Wl,--whole-archive $(ASAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS)
 ASAN_CFLAGS := $(CFLAGS) $(ASAN_UBSAN_FLAGS) -DGLECMA_BUILD
 ASAN_CXXFLAGS := $(CXXFLAGS) $(ASAN_UBSAN_FLAGS)
 ASAN_LDFLAGS := $(LDFLAGS) $(ASAN_UBSAN_FLAGS)
@@ -543,7 +567,7 @@ test-asan: $(ASAN_TEST_EXECUTABLES) ## Build with ASan+UBSan and run the tests
 	@for test_exe in $(ASAN_TEST_EXECUTABLES); do \
 		printf '\n### ASan+UBSan %s ###\n\n' "$$(basename $$test_exe)"; \
 		$(ASAN_PRELOAD) \
-		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 			tools/run-gtest-full.sh $$test_exe || exit 1; \
 	done
 	@$(MAKE) --no-print-directory fuzz-replay-asan
@@ -563,7 +587,7 @@ TSAN_DEPFILES := $(TSAN_LIBOBJECTS:.o=.d) \
     $(foreach pair,$(TEST_PAIRS),$(TSAN_OBJ_DIR)/tests/$(basename $(notdir $(word 1,$(subst |, ,$(pair))))).d)
 -include $(TSAN_DEPFILES)
 TSAN_ARCHIVE := $(TSAN_APP_DIR)/$(STATIC_TARGET)
-TSAN_ECMALIBRARY := -Wl,--whole-archive $(TSAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
+TSAN_ECMALIBRARY := -Wl,--whole-archive $(TSAN_ARCHIVE) -Wl,--no-whole-archive $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS)
 TSAN_CFLAGS := $(CFLAGS) $(TSAN_FLAGS) -DGLECMA_BUILD
 TSAN_CXXFLAGS := $(CXXFLAGS) $(TSAN_FLAGS)
 TSAN_LDFLAGS := $(LDFLAGS) $(TSAN_FLAGS)
@@ -596,7 +620,7 @@ $(foreach pair,$(TEST_PAIRS),\
 	$(eval $(call tsan-test-executable-rule,$(word 1,$(subst |, ,$(pair))),$(word 2,$(subst |, ,$(pair))))))
 
 TSAN_TEST_EXECUTABLES := $(addprefix $(TSAN_APP_DIR)/,$(addsuffix $(EXE_EXTENSION),$(TEST_NAMES)))
-TSAN_RUN_ENV := LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+TSAN_RUN_ENV := LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 	TSAN_OPTIONS="halt_on_error=1:history_size=7:second_deadlock_stack=1"
 
 test-tsan: $(TSAN_TEST_EXECUTABLES) ## Build with TSan and run the tests (Linux only)
@@ -651,7 +675,7 @@ fuzz-replay-asan: $(ASAN_FUZZ_REPLAYS) ## Replay the corpus under ASan and UBSan
 	fi
 	@for r in $(ASAN_FUZZ_REPLAYS); do \
 		printf '\n### ASan+UBSan fuzz replay %s ###\n' "$$(basename $$r $(EXE_EXTENSION))"; \
-		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 			$$r $(FUZZ_INPUTS) || { printf 'fuzz-replay-asan: %s failed\n' "$$r" >&2; exit 1; }; \
 	done
 
@@ -684,7 +708,7 @@ $$(FUZZ_APP_DIR)/fuzz_$2: tests/fuzz/fuzz_$2.c $$(FUZZ_OBJECTS) $$(FUZZ_FLAGS_ST
 	fi
 	@mkdir -p $$(@D) $$(FUZZ_CORPUS)/$2
 	$$(FUZZ_CC) $$(FUZZ_BIN_FLAGS) -std=c17 $(INCLUDE) \
-		-o $$@ $$< $$(FUZZ_OBJECTS) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS)
+		-o $$@ $$< $$(FUZZ_OBJECTS) $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS)
 
 fuzz-run-$2: $$(FUZZ_APP_DIR)/fuzz_$2 ## Run the $2 fuzzer for $$(FUZZ_TIME) seconds
 	@mkdir -p $$(FUZZ_CORPUS)/$2
@@ -707,7 +731,7 @@ fuzz-clean: ## Remove the fuzz build
 ####################################################################
 
 LDCONF_INSTALL_PATH ?= /etc/ld.so.conf.d
-PC_REQUIRES := $(CUTIL_PC) $(UNICODE_PC) $(RCORE_PC)
+PC_REQUIRES := $(CUTIL_PC) $(UNICODE_PC) $(REGEX_PC) $(RCORE_PC)
 PKGCONFIG_INSTALL_PATH ?= $(PC_INSTALL_PATH)
 
 CHECK_INSTALL_PREFIX ?= $(if $(PREFIX),$(PREFIX),/usr/local)
@@ -794,20 +818,20 @@ help: ## Display this help
 
 $(FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE) $(ECMALIBRARY) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(UNICODE_CFLAGS) $(CUTIL_LIBS) $(CUTIL_CFLAGS) $(TESTFLAGS) $(TEST_LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(LIB_CFLAGS) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE) $(ECMALIBRARY) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(REGEX_LIBS) $(UNICODE_CFLAGS) $(REGEX_LIBS) $(REGEX_CFLAGS) $(CUTIL_LIBS) $(CUTIL_CFLAGS) $(TESTFLAGS) $(TEST_LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(ASAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(INCLUDE) $(ASAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(INCLUDE) $(ASAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(TSAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CC) $(CXX) $(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(INCLUDE) $(TSAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
+	@printf '%s\n' '$(CC) $(CXX) $(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(INCLUDE) $(TSAN_ECMALIBRARY) $(RCORE_LIBS) $(UNICODE_LIBS) $(REGEX_LIBS) $(CUTIL_LIBS) $(TESTFLAGS) $(TEST_LDFLAGS)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(FUZZ_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(FUZZ_CC) $(FUZZ_CXX) $(FUZZ_LIB_FLAGS) $(FUZZ_BIN_FLAGS) $(INCLUDE) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(UNICODE_CFLAGS) $(CUTIL_LIBS) $(FUZZ_SAN)' > $@.new
+	@printf '%s\n' '$(FUZZ_CC) $(FUZZ_CXX) $(FUZZ_LIB_FLAGS) $(FUZZ_BIN_FLAGS) $(INCLUDE) $(RCORE_LIBS) $(RCORE_CFLAGS) $(UNICODE_LIBS) $(REGEX_LIBS) $(UNICODE_CFLAGS) $(REGEX_LIBS) $(REGEX_CFLAGS) $(CUTIL_LIBS) $(FUZZ_SAN)' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@

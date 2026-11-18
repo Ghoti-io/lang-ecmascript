@@ -1,0 +1,12 @@
+--- a/src/parse/regexp.c
++++ b/src/parse/regexp.c
+@@ -220,8 +220,7 @@
+   // The pattern, read as code points under `u` and `v` (a lone surrogate is
+   // WTF-8, which regex reads under its option for it) and as code units
+   // without them.
+-  const unsigned mode = (options & (GRX_OPT_UTF | GRX_OPT_UNICODE_SETS)) != 0
+-      ? ENC_UNICODE : ENC_LEGACY;
++  const unsigned mode = ENC_UNICODE;
+   Encoded pattern = encode_owned(p, pattern_from, pattern_to, mode);
+   const size_t pattern_bytes = pattern.length;
+   if ((options & GRX_OPT_UTF) != 0) {

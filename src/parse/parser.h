@@ -373,6 +373,10 @@ GLECMA_INTERNAL_API void parser_restore(Parser * p, const Snap * snap);
 GLECMA_INTERNAL_API void parser_enter(Parser * p);
 GLECMA_INTERNAL_API void parser_leave(Parser * p);
 GLECMA_INTERNAL_API void parser_check_stack(Parser * p);
+GLECMA_INTERNAL_API void parser_check_stack_for(Parser * p, uint64_t extra);
+/** @brief Validates a regular expression literal token (regexp.c); fails the parse when it is invalid. */
+GLECMA_INTERNAL_API void parse_validate_regexp(Parser * p,
+    const GLECMA_Token * literal);
 GLECMA_INTERNAL_API void parser_set_strict(Parser * p, bool strict);
 GLECMA_INTERNAL_API void parser_note_binding(Parser * p,
     const GLECMA_Token * name);

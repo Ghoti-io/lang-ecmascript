@@ -3,7 +3,7 @@
 # Fail on a dependency edge outside the declared ones, in either place it can
 # hide.
 #
-# lang-ecmascript depends on cutil, unicode and runtime-core. The rule is checked twice
+# lang-ecmascript depends on cutil, unicode, regex and runtime-core. The rule is checked twice
 # because the two checks see different things: a clean #include list can be
 # right while the shared object still links a forbidden library, and an
 # #include can be forbidden while the link line is clean.
@@ -25,7 +25,7 @@ set -eu
 mode="${1:?usage: check-edges.sh --includes <root> | --links <dir>}"
 target="${2:?usage: check-edges.sh --includes <root> | --links <dir>}"
 
-ALLOWED='cutil|unicode|runtime-core|lang-ecmascript'
+ALLOWED='cutil|unicode|regex|runtime-core|lang-ecmascript'
 # What may follow an allowed name in a NEEDED entry: the BRANCH suffix of a
 # build that named one (cutil-dev). A different library whose name merely
 # begins with an allowed one (cutil-extra) is an edge, and is no longer

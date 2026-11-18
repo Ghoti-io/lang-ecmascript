@@ -67,3 +67,8 @@
 063|parse-var-stops-at-the-block|A var declaration is not seen by the scopes around the block it is written in|063-parse-var-stops-at-the-block.patch|check-test262
 064|parse-strict-duplicate-parameters-accepted|A strict function may repeat a parameter name|064-parse-strict-duplicate-parameters-accepted.patch|test
 065|parse-parameter-lexical-conflict-missed|A let in a function body may redeclare a parameter|065-parse-parameter-lexical-conflict-missed.patch|test
+066|parse-regexp-never-validated|A regular expression literal is accepted without being validated|066-parse-regexp-never-validated.patch|check-test262
+067|parse-regexp-legacy-pattern-read-as-code-points|A pattern without u or v is read as code points, so an astral class range is ordered by code points|067-parse-regexp-legacy-pattern-read-as-code-points.patch|test
+068|parse-regexp-repeated-search-flag-accepted|A repeated g or y flag is accepted|068-parse-regexp-repeated-search-flag-accepted.patch|test
+069|parse-regexp-checked-only-when-built|A regular expression literal in a function body is validated only when the body is built|069-parse-regexp-checked-only-when-built.patch|test
+070|data-version-pin-differs|The engine pins a Unicode version that unicode and regex do not report|070-data-version-pin-differs.patch|check-data-versions

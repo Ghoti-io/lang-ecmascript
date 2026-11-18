@@ -22,9 +22,10 @@ or a stream, validated and copied, with exact line and column locations, under
 a size cap), reads it into tokens by the whole lexical grammar of the edition,
 Annex B included, with identifiers from `unicode` at one pinned Unicode
 version, and parses a Script into a read-only tree. The parser reports the
-grammar's errors; the early errors, the Module goal and regular expression
-validation are not built yet, and the conformance gate's ledger says exactly
-which test262 pairs wait for them. It does not yet run script: the bytecode
+grammar's errors, every early error of the edition (with Annex B's sloppy-mode
+relaxations) and the errors of regular expression literals, which `regex`
+validates; the Module goal is not built yet, and the conformance gate's ledger
+says exactly which test262 pairs wait for it. It does not yet run script: the bytecode
 compiler and interpreter come next. No interface is stable: every header is
 labelled `@stability free` until the suite's first release.
 
@@ -179,7 +180,7 @@ export PKG_CONFIG_PATH="<prefix>/share/pkgconfig"
 make test PREFIX=<prefix>
 ```
 
-`<prefix>` holds `cutil`, `unicode` and `runtime-core`, installed by the suite's
+`<prefix>` holds `cutil`, `unicode`, `regex` and `runtime-core`, installed by the suite's
 `install.sh` or by each library's `make install PREFIX=<prefix>`. pkg-config
 is the only way the library finds them. Pass `PREFIX` on every make: it is
 also what gives the built programs their run path. Once installed, a program

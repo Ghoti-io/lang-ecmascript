@@ -1,0 +1,11 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -215,7 +215,7 @@
+     parser_unexpected(p);
+   }
+   // Clause 13.2.7.1: an early error whichever builder is running.
+-  parse_validate_regexp(p, &p->tok);
++  (void)parse_validate_regexp;
+   GLECMA_BText pattern = {NULL, 0};
+   GLECMA_BText flags = {NULL, 0};
+   if (parser_materializing(p)) {

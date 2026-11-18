@@ -214,6 +214,8 @@ static PExpr regexp_literal(Parser * p) {
   if (p->tok.kind != GLECMA_TOK_REGEXP) {
     parser_unexpected(p);
   }
+  // Clause 13.2.7.1: an early error whichever builder is running.
+  parse_validate_regexp(p, &p->tok);
   GLECMA_BText pattern = {NULL, 0};
   GLECMA_BText flags = {NULL, 0};
   if (parser_materializing(p)) {

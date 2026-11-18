@@ -1,0 +1,11 @@
+--- a/include/ghoti.io/lang-ecmascript/core.h
++++ b/include/ghoti.io/lang-ecmascript/core.h
+@@ -67,7 +67,7 @@
+  * collation data, never on its own. ::glecma_unicode_version reports the
+  * version actually in use, and a test requires that it equal this macro.
+  */
+-#define GLECMA_UNICODE_VERSION "17.0.0"
++#define GLECMA_UNICODE_VERSION "16.0.0"
+ 
+ /**
+  * @brief Bytes in a feature name, the terminating NUL included.

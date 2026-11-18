@@ -290,8 +290,10 @@ two parts of the engine makes a name valid to one and invalid to the other.
 version in use: the one `unicode` reports (`guni_ucd_version()`). A test
 requires the two to be equal and equal to what `unicode` answers, so a build
 against a `unicode` of another version fails its tests rather than lexing
-differently. A check that `unicode` and the regular expression library agree
-on the version joins when the second dependency does.
+differently. `make check-data-versions` asks the built `unicode` and `regex`
+libraries and requires the three versions (theirs and the pin) to be one
+string; the suite's pin check, which compares the pin files of every library
+that generates tables, is its other half.
 
 Identifier characters are classified by `unicode`'s `ID_Start` and
 `ID_Continue` properties, which are what ECMA-262's `UnicodeIDStart` and
@@ -558,8 +560,7 @@ accessor; a public accessor is the compiler's story.
 by a directive). A Module is `GLECMA_ERR_UNSUPPORTED`, with the message that
 says so, until it is built, as are `import` and `export` declarations;
 `import(...)` and the refusal of `import.meta` in a Script are built.
-Early errors are not built in this version, and the gate's ledger says which
-pairs wait for them. What the grammar itself decides is built: every statement
+Early errors are under "Early errors", below. What the grammar itself decides is built: every statement
 and expression form of the edition; classes with fields, accessors, private
 names, static blocks and `#x in o`; destructuring; arrow and async arrow
 functions; generators and `async`/`await` as the grammar parameters `[Yield]`
@@ -583,9 +584,7 @@ heads, and refused in strict code, for the logical assignments and as a
 destructuring target, because the clause is normative-optional for a host that
 supports it and this library is built to sit under browsers; the assignment
 throws a `ReferenceError` when it runs, which the compiler emits. The
-early-error side of Annex B (`let` bound twice in a block with a function, a
-`var` in a `catch` with the same name, the `__proto__` rules) is a later
-story's.
+early-error side of Annex B is "Early errors", below.
 
 **The dump** (`glecma_tree_dump`) prints one node per line, indented, with its
 kind, operator, flags, texts and range, and walks an unknown kind by number. It
@@ -606,6 +605,124 @@ and the source outlives the tree for as long as anyone else holds it. A
 compiler that wants a function after its tree is gone reparses it from the
 source; a test destroys a tree and parses each function again from its text
 alone. The tree API promises nothing about use at run time.
+
+### Early errors
+
+Every early error of the edition is reported by the first parse, in every
+strictness, and none reads a node. The checks live in the parser's own
+records (`src/parse/early.c` and the context flags of `parser.h`), so a body
+the checking builder did not build is checked exactly as a built one is; the
+two builders must give the same result for the same input at the same place.
+
+**Context flags** are the grammar's parameters and the static semantics that
+`Contains` expresses, carried in the parser's flags: whether `return`,
+`super.x`, `super()` and `new.target` are allowed, whether `arguments` is a
+name, and whether the parser is reading parameters (where a `yield` or
+`await` expression is an error). A function takes its own context, an arrow
+function takes what the code around it allowed (`super`, `new.target` and
+`arguments` pass through it), a method may use `super.x`, a derived
+constructor `super()`, and a class field initializer or static block `super.x`
+and `new.target` but not `super()` or `arguments`.
+
+**Jump targets and labels** are a stack of labels and two counters (loops and
+breakables) that a function, an arrow function or a static block sets aside
+and restores. A label that labels an iteration statement is marked when that
+statement begins, through any run of labels before it, which is what lets
+`continue` name it. A labelled function declaration is an error as the body
+of an `if`, a loop or `with`.
+
+**Declarations** are records. Every name a scope declares is appended to one
+stack, tagged with its kind (`var`, a `for-of` var, lexical, a plain
+function, another function, a parameter, a simple or destructured catch
+parameter). A scope's records are checked once, when it ends, by the rules of
+its kind: a block or case block cannot hold a name twice or as both lexical
+and var, except that sloppy code may declare one plain function twice (Annex
+B.3.2.4); a function body, script or static block treats its top-level
+functions as var-like, and a parameter may not also be lexical there; a
+`for` head's lexical names may not be var-declared in its body; a catch
+clause shares its scope with its block, a simple catch parameter may be
+redeclared by a var but not by one a `for-of` head makes, and a destructured
+one not at all (Annex B.3.4). A var declaration stays in the stack when its
+scope ends, so that the scope around sees it too, until a function
+boundary; a scope with no lexical name, function or parameter of its own has
+nothing to check and passes them on untouched. The cost of a var is then
+one record and one check at each enclosing scope that has a lexical name, which
+the nesting cap bounds (measured: 100,000 vars in the innermost of 250 nested
+blocks that each declare a name take 0.15 s). Checking at the end, and not at each declaration, is what lets a
+directive late in a function body decide whether its parameters may repeat,
+and costs the same linear time: a scope's names are hashed once when it ends.
+*Rejected:* a hash per scope kept up as names are declared, which must also
+be undone when a cover grammar rewinds; a record stack is cut back to a mark
+and needs nothing else.
+
+The checks that hold under the Module goal (strict code, `await` reserved, a
+top level that declares its functions as lexical names, no HTML-like comments)
+are reached before that goal is served through an internal entry that parses a
+Script with those settings (`GLECMA_PARSE_INTERNAL_MODULE_RULES`), so that the
+same code is tested under both and the goal's own story adds only its syntax.
+
+**Private names** are the same shape: a class's declarations and the
+references made inside it are two stacks, and when the class ends its
+declarations are checked for repeats (a getter and a setter of one
+staticness may share a name) and its references are matched to them; what no
+declaration answers moves out to the class around, and what is left at the
+end of the parse, or was made in a class heritage, is an error.
+
+**Cover grammars** keep their rewind: an object literal's second
+`__proto__: value` is recorded as a pending error exactly as `{a = 1}` is,
+and is an error unless the literal turns out to be a pattern. A rewind cuts
+the labels, records and private names back to the mark with everything else.
+
+**Regular expression literals** are validated by `regex`'s ECMAScript front
+end (see "Regular expression literals").
+
+### Regular expression literals
+
+The pattern and flags of a literal are an early error unless `regex`'s
+ECMAScript front end accepts them (`src/parse/regexp.c`). Only the front end
+runs: the pattern is parsed and released, never compiled. The pattern is
+handed over as the UTF-8 of the source's code points, a lone surrogate (which
+a UTF-16 source can hold) as WTF-8 under regex's option for it; `g` and `y`,
+which are not pattern options, are counted here (a repeat is an error) and
+left out of the flags regex reads, which answers for the rest of the alphabet,
+a repeat and `u` with `v`. The check reads the source, never a node, so a
+literal inside a function body that the checking builder did not build is
+validated exactly as a built one is.
+
+*The two libraries share one Unicode version, and the gate says so.*
+`unicode`, `regex` and this library report 17.0.0, and `make
+check-data-versions` fails when any of the three differs (it asks the built
+libraries, not their pin files; the suite's pin check compares the files).
+*They do not share an edition or a test262 pin:* regex's ECMAScript front end
+is written against the 16th edition (ES2025) and its own test262 commit, this
+library against the 17th and its own. The 17th edition's pattern clauses
+(22.2) were compared with the 16th's through the concordance and carry no
+syntax change, and every test262 regular expression literal in scope that this
+library's pin holds is refused or accepted as the edition says, which is the
+evidence that the two agree where they meet. The front end takes no edition
+argument yet, so none is passed (RX-12's edition argument is regex's, and the
+engine's feature set names no pattern-level feature to pass either: the
+registry of features is empty).
+
+**Limits.** The pattern is bounded by the same caps as everything else:
+regex's group nesting is capped at 128 (a literal nested deeper is
+`GLECMA_ERR_LIMIT` naming `nesting`), its node count by the parse's `nodes`
+cap, its pattern length by what the literal measures; its other limits are
+off, being bounded by the pattern's length. The front end recurses over
+groups, so a literal is validated only when the native stack has the room
+for 128 levels: it took 60 KB at the deepest of four shapes (groups,
+lookaheads, alternations, classes; `tools` of the build image, GCC 16.2
+`-O2`, thread stack found by bisection), and 160 KiB is kept in reserve on top
+of the parser's own, so a thread that cannot hold it is refused with
+`native_stack_bytes` before the front end runs and never faults.
+
+*A pattern without `u` or `v` is read as code units, and regex reads code
+points,* so the two are made to agree at the hand-over: every surrogate half
+written in such a pattern (a lone one, or half of an astral character) is
+passed as its `\uXXXX` escape, which regex reads as one unit. That orders a
+class range over the halves as the edition does (`[😀-😁]` is out of order
+without the flag, and refused) and carries a lone surrogate, which WTF-8 cannot
+without `u`. Under `u` and `v` the pattern goes as WTF-8 as it is written.
 
 ### Recursive descent and the stack
 
