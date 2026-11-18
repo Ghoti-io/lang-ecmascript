@@ -704,17 +704,21 @@ argument yet, so none is passed (RX-12's edition argument is regex's, and the
 engine's feature set names no pattern-level feature to pass either: the
 registry of features is empty).
 
-**Limits.** The pattern is bounded by the same caps as everything else:
-regex's group nesting is capped at 128 (a literal nested deeper is
-`GLECMA_ERR_LIMIT` naming `nesting`), its node count by the parse's `nodes`
-cap, its pattern length by what the literal measures; its other limits are
-off, being bounded by the pattern's length. The front end recurses over
-groups, so a literal is validated only when the native stack has the room
-for 128 levels: it took 60 KB at the deepest of four shapes (groups,
-lookaheads, alternations, classes; `tools` of the build image, GCC 16.2
-`-O2`, thread stack found by bisection), and 160 KiB is kept in reserve on top
-of the parser's own, so a thread that cannot hold it is refused with
-`native_stack_bytes` before the front end runs and never faults.
+**Limits.** The pattern is bounded by the same caps as everything else. The
+front end's nesting (each group, and each alternation or class inside one,
+is a level) is capped at 256 and at what the parse's own `nesting` cap has
+left: a literal nested deeper is `GLECMA_ERR_LIMIT` naming `nesting`, never a
+syntax error. Its node count is charged to the parse's `nodes` cap and its
+pattern length is what the literal measures; its other limits are off, being
+bounded by the pattern's length. The front end recurses over the nesting, so
+a literal is validated only when the native stack has room for its deepest
+pattern: it took 114 KB for 255 levels of the worst of four shapes (groups,
+lookaheads, alternations, classes; GCC 16.2 `-O2`, a thread whose stack was
+found by bisection, which includes the thread's own base), and a literal keeps
+8 KiB and 1 KiB for each opening parenthesis or bracket in its pattern in
+reserve beyond the parser's own, so a thread that cannot hold it is refused
+with `native_stack_bytes` before the front end runs and never faults, and a
+small literal needs little.
 
 *A pattern without `u` or `v` is read as code units, and regex reads code
 points,* so the two are made to agree at the hand-over: every surrogate half

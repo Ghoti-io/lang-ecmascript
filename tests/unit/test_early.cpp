@@ -780,6 +780,16 @@ TEST(EarlyErrors, TheChecksHoldUnderTheModuleSettings) {
     {"x = await;", GLECMA_RULE_RESERVED_WORD_STRICT},
     {"class C { #a; m() { this.#b; } }", GLECMA_RULE_PRIVATE_NAME_UNDECLARED},
     {"a: { break a; } b: while (1) { continue b; }", 0},
+    // `await` is reserved everywhere in a module, in every function and arrow.
+    {"function f() { var await; }", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"function f(await) {}", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"() => { var await; };", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"function f() { await: 1; }", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"x = { m() { var await; } };", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"class C { m() { var await; } }", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"class C { x = await; }", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"function* g() { var await; }", GLECMA_RULE_RESERVED_WORD_STRICT},
+    {"x = { await: 1 }; x.await;", 0},
   };
   for (const Row & row : rows) {
     auto parsed = Parse(row.source, false, module);

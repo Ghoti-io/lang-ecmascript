@@ -47,13 +47,15 @@
 
 /**
  * The stack the regex front end may take, kept in reserve beyond what the
- * parser keeps for itself when a literal is validated: its recursive descent
- * is capped at GLECMA_REGEXP_NESTING groups. design.md says how it was measured.
+ * parser keeps for itself when a literal is validated: a base, and a share
+ * for each level of nesting the pattern can have (an upper bound: its opening
+ * parentheses and brackets). design.md says how it was measured.
  */
-#define REGEXP_STACK_RESERVE ((uint64_t)160 * 1024)
+#define REGEXP_STACK_BASE ((uint64_t)8 * 1024)
+#define REGEXP_STACK_PER_LEVEL ((uint64_t)1024)
 
-/** The deepest nesting of groups a literal's pattern may have. */
-#define REGEXP_NESTING 128u
+/** The deepest nesting a literal's pattern may have: groups, and the alternations and classes in them. */
+#define REGEXP_NESTING 256u
 
 // The UTF-8 (WTF-8 for a lone surrogate) bytes of a code point.
 static size_t encode_wtf8(uint32_t cp, uint8_t * out) {
@@ -168,17 +170,35 @@ static void encode(Parser * p, size_t from, size_t to, unsigned mode, uint8_t * 
   }
 }
 
-// The encoded source in a buffer the allocator owns.
+// The encoded source in a buffer the allocator owns: measured first, so that
+// the buffer is exactly as long as it must be and nothing is allocated while a
+// failure of the walk could still leave the parse.
 static Encoded encode_owned(Parser * p, size_t from, size_t to, unsigned mode) {
   Encoded result = {NULL, 0, 0, 0};
-  // A code unit takes at most six bytes (an escape).
-  result.bytes = (uint8_t *)p->allocator->malloc_fn(p->allocator->ctx,
-      (to - from) * 6 + 1);
+  encode(p, from, to, mode, NULL, &result, SIZE_MAX, NULL);
+  const size_t length = result.length;
+  result.bytes = (uint8_t *)p->allocator->malloc_fn(p->allocator->ctx, length + 1);
   if (result.bytes == NULL) {
     parser_fail_result(p, GLECMA_ERR_OOM);
   }
+  const unsigned seen_g = result.seen_g, seen_y = result.seen_y;
   encode(p, from, to, mode, result.bytes, &result, SIZE_MAX, NULL);
+  result.seen_g = seen_g; // counted once, by the first walk
+  result.seen_y = seen_y;
   return result;
+}
+
+// An upper bound on the levels of nesting a pattern can have: its opening
+// parentheses and brackets, which is what regex's recursion is made of.
+static size_t nesting_bound(Parser * p, size_t from, size_t to) {
+  size_t count = 0;
+  for (size_t offset = from; offset < to; offset++) {
+    uint32_t unit = glecma_lex_unit(&p->text, offset);
+    if (unit == '(' || unit == '[') {
+      count++;
+    }
+  }
+  return count < REGEXP_NESTING ? count : REGEXP_NESTING;
 }
 
 static GLECMA_NORETURN void fail_at_offset(Parser * p, uint32_t rule, size_t offset) {
@@ -190,9 +210,10 @@ static GLECMA_NORETURN void fail_at_offset(Parser * p, uint32_t rule, size_t off
 void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
   // The front end recurses over the pattern's groups: the stack for it must
   // be there before anything is allocated.
-  parser_check_stack_for(p, REGEXP_STACK_RESERVE);
   const size_t pattern_from = literal->start.offset + 1;
   const size_t pattern_to = literal->regexp_flags_offset - 1;
+  parser_check_stack_for(p, REGEXP_STACK_BASE +
+          REGEXP_STACK_PER_LEVEL * nesting_bound(p, pattern_from, pattern_to));
   const size_t flags_from = literal->regexp_flags_offset;
   const size_t flags_to = literal->end.offset;
 
@@ -229,16 +250,27 @@ void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
   }
   GRX_Limits limits;
   grx_limits_unlimited(&limits);
-  limits.max_nesting_depth = REGEXP_NESTING;
+  // The literal's own nesting counts against the parse's (a cap of zero in regex
+  // means none, so the least it is given is one level), and its nodes against
+  // the parse's node cap.
+  const uint64_t levels_left = p->max_nesting > p->depth ? p->max_nesting - p->depth : 1;
+  limits.max_nesting_depth = levels_left < REGEXP_NESTING ? (size_t)levels_left
+                                                          : REGEXP_NESTING;
   limits.max_pattern_length = pattern_bytes > 0 ? pattern_bytes : 1;
-  limits.max_nodes = p->max_nodes;
+  limits.max_nodes = p->max_nodes > p->nodes ? (size_t)(p->max_nodes - p->nodes) : 1;
   GRX_Pattern * parsed = NULL;
   grx_error_clear(&error);
   r = grx_pattern_parse_with_allocator((const char *)pattern.bytes, pattern_bytes,
       GRX_SYNTAX_ECMASCRIPT, options, &limits, p->allocator, &error, &parsed);
   p->allocator->free_fn(p->allocator->ctx, pattern.bytes);
   if (r == GRX_OK) {
+    const size_t built = grx_pattern_node_count(parsed);
     grx_pattern_free(parsed);
+    // What the front end built is charged to the parse's node cap like any node.
+    if (built > p->max_nodes - p->nodes) {
+      parser_fail_limit(p, "nodes");
+    }
+    p->nodes += built;
     return;
   }
   switch (r) {

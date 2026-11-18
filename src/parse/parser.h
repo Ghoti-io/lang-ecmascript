@@ -93,6 +93,7 @@ extern "C" {
 #define PF_NEW_TARGET 0x100u    ///< `new.target` is allowed (a function, an initializer).
 #define PF_PARAMS 0x200u        ///< Reading parameters: no `yield` or `await` expression.
 #define PF_NO_ARGUMENTS 0x400u  ///< `arguments` is not a name here (a class initializer).
+#define PF_MODULE 0x800u        ///< The Module goal's settings: `await` is reserved in every function.
 /** What an arrow function takes from the code around it. */
 #define PF_ARROW_INHERITS (PF_SUPER_PROP | PF_SUPER_CALL | PF_NEW_TARGET | PF_NO_ARGUMENTS)
 ///@}

@@ -174,6 +174,13 @@ TEST(RegexpLiterals, APatternDeeperThanTheFrontEndAllowsIsALimitAndNeverAFault) 
   EXPECT_STREQ(parsed.failure.limit, "nesting");
   const std::string ok = "x = /" + std::string(120, '(') + "a" + std::string(120, ')') + "/;";
   EXPECT_EQ(Parse(ok).result, GLECMA_OK);
+  // Groups that each hold an alternation are two levels of the front end's recursion each.
+  std::string alt = "x = /";
+  for (int i = 0; i < 100; i++) {
+    alt += "(a|";
+  }
+  alt += "b" + std::string(100, ')') + "/;";
+  EXPECT_EQ(Parse(alt).result, GLECMA_OK);
   // On a thread with little stack the literal is refused for the stack, before the
   // front end runs, whatever the grammar's own cap.
   GLECMA_Limits limits = GLECMA_LIMITS_INIT;
@@ -181,6 +188,16 @@ TEST(RegexpLiterals, APatternDeeperThanTheFrontEndAllowsIsALimitAndNeverAFault) 
   auto tight = Parse(ok, false, 0, &limits);
   EXPECT_EQ(tight.result, GLECMA_ERR_LIMIT);
   EXPECT_STREQ(tight.failure.limit, "native_stack_bytes");
+  // A small literal needs little: the reserve is by the pattern's depth, not a flat sum.
+  limits.native_stack_bytes = 48 * 1024;
+  EXPECT_EQ(Parse("x = /a+(b)/g;", false, 0, &limits).result, GLECMA_OK);
+  // The literal's own nesting counts against the parse's.
+  GLECMA_Limits few = GLECMA_LIMITS_INIT;
+  few.nesting = 8;
+  EXPECT_EQ(Parse("x = /((((a))))/;", false, 0, &few).result, GLECMA_OK);
+  auto too_deep = Parse("x = /((((((((((a))))))))))/;", false, 0, &few);
+  EXPECT_EQ(too_deep.result, GLECMA_ERR_LIMIT);
+  EXPECT_STREQ(too_deep.failure.limit, "nesting");
 }
 
 TEST(RegexpLiterals, EveryAllocationOfAValidationMayFailWithNothingLeaked) {

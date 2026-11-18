@@ -548,7 +548,9 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
   // `await` of the code around it, and it takes the rest of the context from
   // there (`super`, `new.target`, `arguments`).
   p->flags = (saved_flags & ~(PF_YIELD | PF_AWAIT | PF_AWAIT_RESERVED | PF_PARAMS)) |
-      PF_RETURN | (is_async ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
+      PF_RETURN | (is_async || (saved_flags & PF_MODULE) != 0
+                       ? (is_async ? (PF_AWAIT | PF_AWAIT_RESERVED) : PF_AWAIT_RESERVED)
+                       : 0u);
   const bool saved_simple = p->body_simple;
   const bool simple = p->params_simple;
   const JumpCtx jumps = early_jump_enter(p);

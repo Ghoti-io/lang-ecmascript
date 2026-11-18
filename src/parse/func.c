@@ -131,7 +131,8 @@ static uint32_t function_flags(uint32_t fn, uint32_t strict_and_builtin) {
       ((fn & FN_METHOD) != 0 ? PF_SUPER_PROP : 0u) |
       ((fn & FN_CONSTRUCTOR) != 0 && (fn & FN_DERIVED) != 0 ? PF_SUPER_CALL : 0u) |
       ((fn & FN_GENERATOR) != 0 ? PF_YIELD : 0u) |
-      ((fn & FN_ASYNC) != 0 ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
+      ((fn & FN_ASYNC) != 0 ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u) |
+      ((strict_and_builtin & PF_MODULE) != 0 ? (PF_MODULE | PF_AWAIT_RESERVED) : 0u);
 }
 
 // Parameters and body of a function whose scope was entered by the caller;
@@ -264,7 +265,7 @@ static void parse_static_block(Parser * p, size_t start) {
   // operator in no code of its own, it has no `return`, and `super.x` and
   // `new.target` are allowed in it but not `super()` or `arguments`
   // (clause 15.7.1).
-  p->flags = (saved & (PF_STRICT | PF_BUILTIN)) | PF_AWAIT_RESERVED |
+  p->flags = (saved & (PF_STRICT | PF_BUILTIN | PF_MODULE)) | PF_AWAIT_RESERVED |
       PF_SUPER_PROP | PF_NEW_TARGET | PF_NO_ARGUMENTS;
   p->no_in = false;
   p->body_simple = true;
@@ -379,8 +380,9 @@ static void parse_class_member(Parser * p, bool derived, bool * has_constructor)
         initial_start, initial_start);
     const uint32_t saved = p->flags;
     const bool saved_in = p->no_in;
-    p->flags = (saved & (PF_STRICT | PF_BUILTIN)) | PF_SUPER_PROP |
-        PF_NEW_TARGET | PF_NO_ARGUMENTS;
+    p->flags = (saved & (PF_STRICT | PF_BUILTIN | PF_MODULE)) | PF_SUPER_PROP |
+        PF_NEW_TARGET | PF_NO_ARGUMENTS |
+        ((saved & PF_MODULE) != 0 ? PF_AWAIT_RESERVED : 0u);
     p->no_in = false;
     PExpr initial = parse_assignment(p, 0);
     p->flags = saved;

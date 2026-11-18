@@ -648,7 +648,8 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   p->params_simple = true;
   const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0;
   p->flags = (strict_context || builtin || module_rules ? PF_STRICT : 0u) |
-      (builtin ? PF_BUILTIN : 0u) | (module_rules ? PF_AWAIT_RESERVED : 0u);
+      (builtin ? PF_BUILTIN : 0u) |
+      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE) : 0u);
   p->top_functions_lexical = module_rules;
   GLECMA_Result lexed = builtin
       ? glecma_lexer_open_builtin(&p->lex, source, options, failure)
