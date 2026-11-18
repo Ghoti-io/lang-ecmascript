@@ -1,0 +1,21 @@
+# The Node accept/refuse oracle (tools/check-node-differential.py), pinned.
+#
+# The image is the one the regular-expression library pins for its ECMAScript
+# oracle, by digest, and for the same reason: its V8 and its ICU are known
+# (V8 13.6.233.17-node.53, Unicode 17.0, the version this library's data is
+# pinned to), a tag can be moved under a name and a digest cannot, and V8's
+# regular-expression interpreter and compiler agree in this version, which
+# --regexp-interpret-all keeps true whatever later V8 replaces it. A newer pin
+# needs a written reason and its own commit and triage: a newer V8 ships more
+# of the 17th edition and answers some rows of tests/data-node-differences.tsv
+# differently.
+#
+# --experimental-vm-modules makes vm.SourceTextModule, which parses a module
+# without linking or running it, available. --no-warnings keeps its
+# experimental-feature warning off standard error, where the first line is the
+# version the gate checks.
+image=docker.io/library/node:24-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
+node=v24.21.0
+v8=13.6.233.17-node.53
+unicode=17.0
+flags=--regexp-interpret-all --experimental-vm-modules --no-warnings

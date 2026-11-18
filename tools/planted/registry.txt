@@ -136,3 +136,5 @@
 129|corpus-regexp-class-slash-ends-the-literal|A slash inside a regular expression's character class ends the literal|129-corpus-regexp-class-slash-ends-the-literal.patch|check-corpus
 130|corpus-member-hash-not-the-pinned-one|The table pins a corpus file by a hash that is not the file's, so the corpus does not verify|130-corpus-member-hash-not-the-pinned-one.patch|check-corpus
 131|corpus-license-not-admitted|A corpus file is listed under a license that is not an admitted one|131-corpus-license-not-admitted.patch|check-corpus
+132|node-delete-identifier-accepted-in-strict-code|`delete x` of a plain name is accepted in strict code, which every other engine refuses|132-node-delete-identifier-accepted-in-strict-code.patch|check-node-differential
+133|node-disagreement-not-classified|A disagreement with the pinned Node has no row in the classification table|133-node-disagreement-not-classified.patch|check-node-differential
