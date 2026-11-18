@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size);
 
@@ -39,11 +40,56 @@ int main(int argc, char * argv[]) {
     fprintf(stderr, "usage: replay FILE...\n");
     return 2;
   }
-  size_t replayed = 0;
+  /* An argument `@list` names a file that lists the inputs, one path per line: a command line holds
+   * only so many characters on some systems (32,767 on Windows), and a corpus has thousands of files. */
+  size_t count = 0;
+  char ** names = (char **)malloc(sizeof(char *) * (size_t)argc);
+  char ** owned = NULL; /* the names read from a list, which are ours to free */
+  size_t owned_count = 0;
+  if (names == NULL) {
+    return 2;
+  }
   for (int i = 1; i < argc; i++) {
-    FILE * file = fopen(argv[i], "rb");
+    if (argv[i][0] != '@') {
+      names[count++] = argv[i];
+      continue;
+    }
+    FILE * list = fopen(argv[i] + 1, "r");
+    if (list == NULL) {
+      fprintf(stderr, "replay: cannot open the list %s\n", argv[i] + 1);
+      return 2;
+    }
+    char line[4096];
+    while (fgets(line, sizeof line, list) != NULL) {
+      size_t n = strlen(line);
+      while (n > 0 && (line[n - 1] == '\n' || line[n - 1] == '\r')) {
+        line[--n] = '\0';
+      }
+      if (n == 0) {
+        continue;
+      }
+      char ** grown = (char **)realloc(names, sizeof(char *) * (count + (size_t)argc + 1));
+      char * copy = (char *)malloc(n + 1);
+      if (grown == NULL || copy == NULL) {
+        return 2;
+      }
+      names = grown;
+      char ** own = (char **)realloc(owned, sizeof(char *) * (owned_count + 1));
+      if (own == NULL) {
+        return 2;
+      }
+      owned = own;
+      memcpy(copy, line, n + 1);
+      owned[owned_count++] = copy;
+      names[count++] = copy;
+    }
+    fclose(list);
+  }
+  size_t replayed = 0;
+  for (size_t i = 0; i < count; i++) {
+    FILE * file = fopen(names[i], "rb");
     if (file == NULL) {
-      fprintf(stderr, "replay: cannot open %s\n", argv[i]);
+      fprintf(stderr, "replay: cannot open %s\n", names[i]);
       return 2;
     }
     size_t capacity = 4096;
@@ -68,13 +114,18 @@ int main(int argc, char * argv[]) {
     }
     fclose(file);
     if (buffer == NULL) {
-      fprintf(stderr, "replay: out of memory reading %s\n", argv[i]);
+      fprintf(stderr, "replay: out of memory reading %s\n", names[i]);
       return 2;
     }
     LLVMFuzzerTestOneInput(buffer, length);
     free(buffer);
     replayed++;
   }
+  for (size_t i = 0; i < owned_count; i++) {
+    free(owned[i]);
+  }
+  free(owned);
+  free(names);
   printf("replay: %zu inputs, no crash\n", replayed);
   return 0;
 }

@@ -707,9 +707,10 @@ fuzz-replay: $(FUZZ_REPLAYS) ## Feed every corpus file once through each fuzz en
 	@if [ -z "$(strip $(FUZZ_REPLAYS))" ] || [ -z "$(strip $(FUZZ_INPUTS))" ]; then \
 		printf 'fuzz-replay: no fuzz harness or no corpus file, so this measures nothing\n' >&2; exit 1; \
 	fi
+	@find tests/fuzz/corpus -type f | sort > $(APP_DIR)/fuzz/inputs.txt
 	@for r in $(FUZZ_REPLAYS); do \
 		printf '\n### Fuzz replay %s ###\n' "$$(basename $$r $(EXE_EXTENSION))"; \
-		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$r $(FUZZ_INPUTS) || { printf 'fuzz-replay: %s failed\n' "$$r" >&2; exit 1; }; \
+		LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$r @$(APP_DIR)/fuzz/inputs.txt || { printf 'fuzz-replay: %s failed\n' "$$r" >&2; exit 1; }; \
 	done
 
 # The same replay in the ASan and UBSan tree.
@@ -723,10 +724,11 @@ fuzz-replay-asan: $(ASAN_FUZZ_REPLAYS) ## Replay the corpus under ASan and UBSan
 	@if [ -z "$(strip $(ASAN_FUZZ_REPLAYS))" ] || [ -z "$(strip $(FUZZ_INPUTS))" ]; then \
 		printf 'fuzz-replay-asan: no fuzz harness or no corpus file, so this measures nothing\n' >&2; exit 1; \
 	fi
+	@find tests/fuzz/corpus -type f | sort > $(ASAN_APP_DIR)/fuzz/inputs.txt
 	@for r in $(ASAN_FUZZ_REPLAYS); do \
 		printf '\n### ASan+UBSan fuzz replay %s ###\n' "$$(basename $$r $(EXE_EXTENSION))"; \
 		LD_LIBRARY_PATH="$(ASAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
-			$$r $(FUZZ_INPUTS) || { printf 'fuzz-replay-asan: %s failed\n' "$$r" >&2; exit 1; }; \
+			$$r @$(ASAN_APP_DIR)/fuzz/inputs.txt || { printf 'fuzz-replay-asan: %s failed\n' "$$r" >&2; exit 1; }; \
 	done
 
 
