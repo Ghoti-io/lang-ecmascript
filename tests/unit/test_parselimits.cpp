@@ -342,7 +342,14 @@ TEST(ParseLimits, TheDeepestInputTheDefaultNestingAcceptsParsesOnADefaultStack) 
     {"pattern", [](size_t n) { return Repeat("[", "x", "]", n) + " = y;"; }},
     {"arrow-parameter", [](size_t n) { return Repeat("(a = ", "x", ") => 0", n); }},
     {"new", [](size_t n) { return Repeat("new ", "x", "", n); }},
-    {"label", [](size_t n) { return Repeat("a: ", "x;", "", n); }},
+    // Each label is its own: a label cannot be declared inside itself.
+    {"label", [](size_t n) {
+      std::string out;
+      for (size_t i = 0; i < n; i++) {
+        out += "l" + std::to_string(i) + ": ";
+      }
+      return out + "x;";
+    }},
     {"await", [](size_t n) { return Repeat("async function f() { await ", "x", "}", n); }},
     {"heritage", [](size_t n) { return std::string("class A") + Repeat(" extends class", " extends B {}", " {}", n); }},
   };

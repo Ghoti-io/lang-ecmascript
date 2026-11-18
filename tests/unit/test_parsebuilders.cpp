@@ -215,9 +215,9 @@ TEST(ParseBuilders, DeclarationAndReferenceEventsCarryWhatAScopeSummaryNeeds) {
     {"class A extends B { m() { return this; } static x = 1; static { y } }",
         "+script class A +class cname A ref B:r +function use this -function +field -field +static ref y:r -static -class -script"},
     {"x = class C {};", "+script ref x:w +class cname C -class -script"},
-    {"this; new.target; super.x; super(); eval(y); a.eval(y); (0, eval)(z);",
-        "+script use this use new.target use super. use super() ref eval:r ref y:r use eval ref a:r ref y:r "
-        "ref eval:r ref z:r -script"},
+    {"class A extends B { constructor() { this; new.target; super.x; super(); eval(y); a.eval(y); (0, eval)(z); } }",
+        "+script class A +class cname A ref B:r +function use this use new.target use super. use super() "
+        "ref eval:r ref y:r use eval ref a:r ref y:r ref eval:r ref z:r -function -class -script"},
     {"if (a) function f() {}", "+script ref a:r +block function f +function -function -block -script"},
     {"a: b;", "+script ref b:r -script"},
   };

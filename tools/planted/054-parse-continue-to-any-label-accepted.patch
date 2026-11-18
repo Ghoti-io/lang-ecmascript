@@ -1,0 +1,14 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -180,10 +180,7 @@
+   }
+   for (size_t i = p->label_len; i > p->label_base; i--) {
+     if (p->labels[i - 1].name == label->units) {
+-      if (p->labels[i - 1].loop) {
+-        return;
+-      }
+-      break;
++      return;
+     }
+   }
+   parser_fail(p, GLECMA_RULE_CONTINUE_TARGET, at);

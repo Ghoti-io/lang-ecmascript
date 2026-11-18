@@ -87,6 +87,14 @@ extern "C" {
 #define PF_AWAIT 0x04u          ///< `await` is an operator (an async function's code).
 #define PF_AWAIT_RESERVED 0x08u ///< `await` is not an identifier.
 #define PF_BUILTIN 0x10u        ///< The internal built-in entry.
+#define PF_RETURN 0x20u         ///< `return` is allowed (a function's body).
+#define PF_SUPER_PROP 0x40u     ///< `super.x` is allowed (a method, an initializer).
+#define PF_SUPER_CALL 0x80u     ///< `super()` is allowed (a derived constructor).
+#define PF_NEW_TARGET 0x100u    ///< `new.target` is allowed (a function, an initializer).
+#define PF_PARAMS 0x200u        ///< Reading parameters: no `yield` or `await` expression.
+#define PF_NO_ARGUMENTS 0x400u  ///< `arguments` is not a name here (a class initializer).
+/** What an arrow function takes from the code around it. */
+#define PF_ARROW_INHERITS (PF_SUPER_PROP | PF_SUPER_CALL | PF_NEW_TARGET | PF_NO_ARGUMENTS)
 ///@}
 
 /** @name What a parsed expression is, as far as its parent needs to know */
@@ -111,6 +119,8 @@ extern "C" {
 #define PA_ANDOR 0x02u   ///< An unparenthesized `&&` or `||` expression.
 #define PA_EVAL 0x04u    ///< The identifier `eval`.
 #define PA_ASYNC 0x08u   ///< The identifier `async`, written without an escape.
+#define PA_ARGUMENTS 0x10u ///< The identifier `arguments`.
+#define PA_PRIVATE 0x20u ///< A member access or optional chain that ends in `.#name`.
 ///@}
 
 /** @brief A parsed expression: its node, range and the facts its parent needs. */
@@ -136,6 +146,11 @@ typedef struct Snap {
   size_t kids;
   size_t pending;
   GLECMA_Location pending_at;
+  uint32_t pending_rule;
+  size_t labels;
+  size_t priv_refs;
+  size_t priv_decls;
+  size_t classes;
 } Snap;
 
 #define NO_PENDING SIZE_MAX
@@ -151,6 +166,48 @@ typedef struct Retro {
   uint32_t rule;
   GLECMA_Location at;
 } Retro;
+
+/** @brief A label that encloses the code being read. */
+typedef struct Label {
+  const uint16_t * name; ///< Interned.
+  bool loop;             ///< It labels an iteration statement: `continue` may name it.
+} Label;
+
+/** @name Kinds of private name a class declares */
+///@{
+#define PRIV_FIELD 1u
+#define PRIV_METHOD 2u
+#define PRIV_GETTER 3u
+#define PRIV_SETTER 4u
+///@}
+
+/** @brief A private name a class body declares. */
+typedef struct PrivDecl {
+  const uint16_t * name; ///< Interned.
+  size_t offset;
+  uint8_t kind;
+  bool is_static;
+} PrivDecl;
+
+/** @brief A use of a private name, to be matched to a declaration of an enclosing class. */
+typedef struct PrivRef {
+  const uint16_t * name; ///< Interned.
+  GLECMA_Location at;
+} PrivRef;
+
+/** @brief Where the current class's declarations and references begin. */
+typedef struct ClassFrame {
+  size_t decl_first;
+  size_t ref_first;
+} ClassFrame;
+
+/** @brief The jump targets of the code around a function: set aside while it is read. */
+typedef struct JumpCtx {
+  uint32_t loops;
+  uint32_t breakables;
+  uint32_t chain;
+  size_t label_base;
+} JumpCtx;
 
 typedef struct Parser {
   const GLECMA_Source * source;
@@ -183,6 +240,7 @@ typedef struct Parser {
   size_t assign_start;  ///< Where the assignment expression being parsed began.
   size_t pending;       ///< Offset of a CoverInitializedName `=` not yet ruled on.
   GLECMA_Location pending_at;
+  uint32_t pending_rule; ///< The rule a pending construct breaks unless it is a pattern.
 
   // Children being collected for the node about to be built.
   GLECMA_BNode * kids;
@@ -201,6 +259,23 @@ typedef struct Parser {
   // The directive prologue being read (stmt.c).
   bool prologue_item;  ///< The statement being parsed may be a directive.
   bool directive_hit;  ///< It was one.
+
+  // Early errors that need what lies around the code (early.c).
+  Label * labels;
+  size_t label_len, label_cap;
+  size_t label_base;     ///< Labels below this index belong to an enclosing function.
+  uint32_t loops;        ///< Iteration statements around, within the function.
+  uint32_t breakables;   ///< Iteration statements and switches around.
+  uint32_t label_chain;  ///< Labels directly before the statement about to be read.
+  bool last_labelled_fn; ///< The statement just read was a labelled function.
+  bool params_simple;    ///< The parameter list last read was a simple list.
+  bool body_simple;      ///< The parameters of the function whose body is read were.
+  PrivDecl * priv_decls;
+  size_t priv_decl_len, priv_decl_cap;
+  PrivRef * priv_refs;
+  size_t priv_ref_len, priv_ref_cap;
+  ClassFrame * classes;
+  size_t class_len, class_cap;
 
   // Offsets at which a parenthesized group was found to be arrow parameters.
   size_t * memo;
@@ -289,6 +364,34 @@ static inline bool token_is_kw(const GLECMA_Token * t, GLECMA_Keyword keyword) {
   return t->kind == GLECMA_TOK_NAME && t->keyword == keyword &&
       (t->flags & GLECMA_TOKF_ESCAPED) == 0;
 }
+
+/* ---- early.c: early errors that need what lies around the code ------------ */
+
+GLECMA_INTERNAL_API void early_free(Parser * p);
+/** @brief The end of the parse: what no enclosing class answered is an error. */
+GLECMA_INTERNAL_API void early_finish(Parser * p);
+/** @brief Sets aside the jump targets of the code around a function. */
+GLECMA_INTERNAL_API JumpCtx early_jump_enter(Parser * p);
+GLECMA_INTERNAL_API void early_jump_leave(Parser * p, JumpCtx saved);
+GLECMA_INTERNAL_API void early_label_push(Parser * p, const GLECMA_BText * name,
+    const GLECMA_Location * at);
+GLECMA_INTERNAL_API void early_label_pop(Parser * p);
+GLECMA_INTERNAL_API void early_label_loops(Parser * p, uint32_t count);
+GLECMA_INTERNAL_API void early_break(Parser * p, const GLECMA_BText * label,
+    const GLECMA_Location * at);
+GLECMA_INTERNAL_API void early_continue(Parser * p, const GLECMA_BText * label,
+    const GLECMA_Location * at);
+GLECMA_INTERNAL_API void early_class_enter(Parser * p);
+GLECMA_INTERNAL_API void early_class_leave(Parser * p);
+GLECMA_INTERNAL_API void early_private_declare(Parser * p, const GLECMA_BText * name,
+    const GLECMA_Location * at, uint32_t kind, bool is_static);
+GLECMA_INTERNAL_API void early_private_reference(Parser * p,
+    const GLECMA_BText * name, const GLECMA_Location * at);
+GLECMA_INTERNAL_API void early_check_arguments(Parser * p,
+    const GLECMA_Token * name);
+/** @brief Whether a token's value is the ASCII text, escapes decoded. */
+GLECMA_INTERNAL_API bool token_value_is(Parser * p, const GLECMA_Token * token,
+    const char * ascii);
 
 /* ---- expr.c --------------------------------------------------------------- */
 

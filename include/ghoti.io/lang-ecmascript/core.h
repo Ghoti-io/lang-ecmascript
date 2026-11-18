@@ -236,6 +236,31 @@ typedef enum {
   GLECMA_RULE_FOR_AWAIT_POSITION = 44, ///< `for await` outside an async function (clause 14.7.5.1).
   GLECMA_RULE_INVALID_CLASS_ELEMENT = 45, ///< A class element the grammar does not allow (clause 15.7).
   GLECMA_RULE_THROW_LINE_TERMINATOR = 46, ///< A line terminator after `throw` (clause 14.14).
+  GLECMA_RULE_BINDING_EVAL_ARGUMENTS = 47, ///< `eval` or `arguments` bound in strict code (clause 13.1.1).
+  GLECMA_RULE_RETURN_POSITION = 48, ///< A `return` outside a function body (clause 14.10).
+  GLECMA_RULE_SUPER_PROPERTY_POSITION = 49, ///< `super.x` or `super[x]` where no method, field initializer or static block encloses it (clause 16.1.1).
+  GLECMA_RULE_SUPER_CALL_POSITION = 50, ///< `super(...)` outside the constructor of a derived class (clause 16.1.1).
+  GLECMA_RULE_NEW_TARGET_POSITION = 51, ///< `new.target` outside a function, a field initializer and a static block (clause 16.1.1).
+  GLECMA_RULE_ARGUMENTS_IN_INITIALIZER = 52, ///< `arguments` in a class field initializer or static block (clause 15.7.1).
+  GLECMA_RULE_YIELD_IN_PARAMETERS = 53, ///< A `yield` expression in a generator's or an arrow function's parameters (clause 15.5.1).
+  GLECMA_RULE_AWAIT_IN_PARAMETERS = 54, ///< An `await` expression in an async function's or an arrow function's parameters (clause 15.8.1).
+  GLECMA_RULE_DELETE_IDENTIFIER_STRICT = 55, ///< `delete x` in strict code (clause 13.5.1.1).
+  GLECMA_RULE_DELETE_PRIVATE_REFERENCE = 56, ///< `delete` of a private member (clause 13.5.1.1).
+  GLECMA_RULE_WITH_STRICT = 57, ///< A `with` statement in strict code (clause 14.11.1).
+  GLECMA_RULE_DUPLICATE_PROTO = 58, ///< Two `__proto__: value` properties in an object literal that is not a pattern (clause 13.2.5.1).
+  GLECMA_RULE_CONST_WITHOUT_INITIALIZER = 59, ///< A `const` binding with no initializer (clause 14.3.1.1).
+  GLECMA_RULE_LET_BOUND_NAME = 60, ///< `let` as the name in a `let` or `const` declaration (clause 14.3.1.1).
+  GLECMA_RULE_USE_STRICT_NON_SIMPLE_PARAMETERS = 61, ///< A "use strict" directive in a function whose parameters are not a simple list (clause 15.2.1).
+  GLECMA_RULE_LABEL_REDECLARED = 62, ///< A label inside a statement that already carries the same label (clause 14.13.1).
+  GLECMA_RULE_BREAK_TARGET = 63, ///< A `break` with no enclosing loop or switch, or with a label that is not in scope (clause 14.9.1).
+  GLECMA_RULE_CONTINUE_TARGET = 64, ///< A `continue` with no enclosing loop, or with a label that does not label a loop (clause 14.8.1).
+  GLECMA_RULE_LABELLED_FUNCTION_BODY = 65, ///< A labelled function declaration as the body of an `if`, loop or `with` (clause 14.13.1).
+  GLECMA_RULE_CLASS_CONSTRUCTOR_DUPLICATE = 66, ///< A second `constructor` method in a class (clause 15.7.1).
+  GLECMA_RULE_CLASS_CONSTRUCTOR_KIND = 67, ///< A special method or a field named `constructor` (clause 15.7.1).
+  GLECMA_RULE_CLASS_STATIC_PROTOTYPE = 68, ///< A static method, accessor or field named `prototype` (clause 15.7.1).
+  GLECMA_RULE_PRIVATE_NAME_CONSTRUCTOR = 69, ///< A private member named `#constructor` (clause 15.7.1).
+  GLECMA_RULE_PRIVATE_NAME_DUPLICATE = 70, ///< A private name declared twice in one class, other than a getter and setter pair of one kind (clause 15.7.1).
+  GLECMA_RULE_PRIVATE_NAME_UNDECLARED = 71, ///< A reference to a private name that no enclosing class declares (clause 15.7.1).
 
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.

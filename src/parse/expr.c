@@ -104,6 +104,10 @@ static PExpr identifier_node(Parser * p, GLECMA_BText * name) {
   if (p->tok.keyword == GLECMA_KW_EVAL) {
     e.aux |= PA_EVAL;
   }
+  if (p->tok.keyword == GLECMA_KW_ARGUMENTS) {
+    early_check_arguments(p, &p->tok);
+    e.aux |= PA_ARGUMENTS;
+  }
   if (parser_is_kw(p, GLECMA_KW_ASYNC)) {
     e.aux |= PA_ASYNC;
   }
@@ -126,9 +130,20 @@ static GLECMA_BNode property_name_node(Parser * p) {
       p->tok.end.offset, &name, NULL);
 }
 
+// The name of a private member in the class that declares it: a node, and no reference.
+static GLECMA_BNode private_declaration_node(Parser * p) {
+  GLECMA_BText name;
+  parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
+  return parser_make_text(p, GLECMA_NODE_PRIVATE_NAME, 0, p->tok.start.offset,
+      p->tok.end.offset, &name, NULL);
+}
+
+// A use of a private name: the node, and the name recorded so that the class
+// it belongs to can answer for it (clause 15.7.1).
 static GLECMA_BNode private_name_node(Parser * p) {
   GLECMA_BText name;
   parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
+  early_private_reference(p, &name, &p->tok.start);
   return parser_make_text(p, GLECMA_NODE_PRIVATE_NAME, 0, p->tok.start.offset,
       p->tok.end.offset, &name, NULL);
 }
@@ -136,6 +151,9 @@ static GLECMA_BNode private_name_node(Parser * p) {
 bool expr_valid_target(const Parser * p, const PExpr * e, bool allow_call) {
   switch (e->shape) {
     case SH_IDENT:
+      // `eval` and `arguments` are not assignable in strict code (clause 13.15.1).
+      return (p->flags & PF_STRICT) == 0 ||
+          (e->aux & (PA_EVAL | PA_ARGUMENTS)) == 0;
     case SH_MEMBER:
       return true;
     case SH_CALL:
@@ -320,7 +338,7 @@ void parse_property_key(Parser * p, PKey * key, bool allow_private) {
         parser_unexpected(p);
       }
       key->is_private = true;
-      key->node = private_name_node(p);
+      key->node = private_declaration_node(p);
       parser_next(p);
       return;
     case GLECMA_TOK_LBRACKET: {
@@ -390,7 +408,7 @@ static bool modifier_is_name(const GLECMA_Token * after, bool need_same_line) {
   }
 }
 
-static void parse_object_property(Parser * p) {
+static void parse_object_property(Parser * p, bool * proto_seen) {
   size_t property_start = p->tok.start.offset;
   if (p->tok.kind == GLECMA_TOK_ELLIPSIS) {
     parser_next(p);
@@ -438,6 +456,18 @@ static void parse_object_property(Parser * p) {
     return;
   }
   if (p->tok.kind == GLECMA_TOK_COLON) {
+    // A second `__proto__: value` is an error unless the literal turns out to
+    // be a pattern (clause 13.2.5.1), which is the question `pending` answers.
+    if (!key.computed && (key.tok.kind == GLECMA_TOK_NAME ||
+            key.tok.kind == GLECMA_TOK_STRING) &&
+        token_value_is(p, &key.tok, "__proto__")) {
+      if (*proto_seen && p->pending == NO_PENDING) {
+        p->pending = key.start;
+        p->pending_at = key.tok.start;
+        p->pending_rule = GLECMA_RULE_DUPLICATE_PROTO;
+      }
+      *proto_seen = true;
+    }
     parser_next(p);
     PExpr value = parse_assignment(p, EF_COVER);
     parser_kid(p, key.node);
@@ -457,12 +487,16 @@ static void parse_object_property(Parser * p) {
   }
   GLECMA_BText name;
   parser_text(p, &key.tok, GLECMA_VALUE_COOKED, true, &name);
+  if (key.tok.keyword == GLECMA_KW_ARGUMENTS) {
+    early_check_arguments(p, &key.tok);
+  }
   emit_reference(p, &name, key.start, key.end, GLECMA_BREF_READ);
   size_t end = key.end;
   if (p->tok.kind == GLECMA_TOK_ASSIGN) {
     if (p->pending == NO_PENDING) {
       p->pending = p->tok.start.offset;
       p->pending_at = p->tok.start;
+      p->pending_rule = GLECMA_RULE_COVER_INITIALIZED_NAME;
     }
     parser_next(p);
     PExpr initial = parse_assignment(p, 0);
@@ -482,8 +516,9 @@ static PExpr parse_object_literal(Parser * p) {
   parser_next(p);
   bool saved_in = p->no_in;
   p->no_in = false;
+  bool proto_seen = false;
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
-    parse_object_property(p);
+    parse_object_property(p, &proto_seen);
     if (p->tok.kind != GLECMA_TOK_RBRACE) {
       parser_expect(p, GLECMA_TOK_COMMA);
     }
@@ -507,8 +542,14 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
     parser_fail_token(p, GLECMA_RULE_ARROW_LINE_TERMINATOR);
   }
   parser_next(p);
-  p->flags = (saved_flags & ~(PF_YIELD | PF_AWAIT | PF_AWAIT_RESERVED)) |
-      (is_async ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
+  // The body is the arrow's own code: it may `return`, it reads no `yield` or
+  // `await` of the code around it, and it takes the rest of the context from
+  // there (`super`, `new.target`, `arguments`).
+  p->flags = (saved_flags & ~(PF_YIELD | PF_AWAIT | PF_AWAIT_RESERVED | PF_PARAMS)) |
+      PF_RETURN | (is_async ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
+  const bool saved_simple = p->body_simple;
+  const JumpCtx jumps = early_jump_enter(p);
+  p->body_simple = p->params_simple;
   uint32_t flags = is_async ? GLECMA_NODEF_ASYNC : 0u;
   size_t end;
   GLECMA_BNode body;
@@ -529,6 +570,8 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
     end = e.end;
     flags |= GLECMA_NODEF_EXPRESSION_BODY;
   }
+  early_jump_leave(p, jumps);
+  p->body_simple = saved_simple;
   p->flags = saved_flags;
   p->no_in = saved_no_in;
   parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_ARROW, NULL, start, end);
@@ -550,6 +593,8 @@ PExpr parse_arrow_paren(Parser * p, size_t start, bool is_async) {
   if (is_async) {
     p->flags = (saved_flags | PF_AWAIT | PF_AWAIT_RESERVED) & ~PF_YIELD;
   }
+  // No `yield` or `await` expression among the parameters (clauses 15.3.1, 15.9.1).
+  p->flags |= PF_PARAMS;
   p->no_in = false;
   size_t params_end = 0;
   GLECMA_BNode params = parse_function_params(p, GLECMA_BDECL_PARAM, 0,
@@ -566,6 +611,7 @@ PExpr parse_arrow_ident(Parser * p, size_t start, bool is_async,
     const GLECMA_Token * ident, const GLECMA_BText * name) {
   const Retro outer = parser_retro_enter(p);
   parser_note_binding(p, ident);
+  p->params_simple = true;
   uint32_t saved_flags = p->flags;
   bool saved_no_in = p->no_in;
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_ARROW, NULL, start,
@@ -680,7 +726,9 @@ PARSER_NOINLINE static PExpr parse_paren(Parser * p, bool * arrow) {
     // parentheses with it.
     e.start = open;
     e.end = close_end;
-    e.aux = (uint8_t)(e.aux & PA_EVAL);
+    // What the parentheses leave visible: the names a target check reads and
+    // the private member `delete` refuses.
+    e.aux = (uint8_t)(e.aux & (PA_EVAL | PA_ARGUMENTS | PA_PRIVATE));
     if (e.shape == SH_ARROW) {
       // A parenthesized arrow function is an ordinary operand.
       e.shape = SH_FUNCTION;
@@ -747,7 +795,7 @@ PARSER_NOINLINE static PExpr parse_async_paren(Parser * p, bool * arrow) {
     return expr_of(NULL, start, start, SH_OTHER);
   }
   if (p->pending != NO_PENDING) {
-    parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+    parser_fail(p, p->pending_rule, &p->pending_at);
   }
   (void)async_token;
   GLECMA_BNode node = parser_make(p, GLECMA_NODE_CALL_EXPRESSION, 0, 0, start,
@@ -902,9 +950,13 @@ static PExpr parse_primary(Parser * p) {
 /* ---- Left-hand-side expressions -------------------------------------------------- */
 
 // `new.target`, after `new` and `.` have been read.
-static PExpr parse_new_target(Parser * p, size_t start) {
+static PExpr parse_new_target(Parser * p, size_t start,
+    const GLECMA_Location * new_at) {
   if (!parser_is_kw(p, GLECMA_KW_TARGET)) {
     parser_unexpected(p);
+  }
+  if ((p->flags & PF_NEW_TARGET) == 0) {
+    parser_fail(p, GLECMA_RULE_NEW_TARGET_POSITION, new_at);
   }
   size_t end = p->tok.end.offset;
   parser_next(p);
@@ -918,10 +970,12 @@ static PExpr member_dot(Parser * p, PExpr object, uint32_t extra_flags,
     bool allow_private) {
   // The token after the `.` or `?.`.
   GLECMA_BNode property;
+  bool is_private = false;
   if (p->tok.kind == GLECMA_TOK_NAME) {
     property = property_name_node(p);
   } else if (p->tok.kind == GLECMA_TOK_PRIVATE_NAME && allow_private) {
     property = private_name_node(p);
+    is_private = true;
   } else {
     parser_unexpected(p);
   }
@@ -932,7 +986,11 @@ static PExpr member_dot(Parser * p, PExpr object, uint32_t extra_flags,
   parser_next(p);
   GLECMA_BNode node = parser_make(p, GLECMA_NODE_MEMBER_EXPRESSION, extra_flags,
       0, object.start, end, mark);
-  return expr_of(node, object.start, end, SH_MEMBER);
+  PExpr member = expr_of(node, object.start, end, SH_MEMBER);
+  if (is_private) {
+    member.aux |= PA_PRIVATE;
+  }
+  return member;
 }
 
 static PExpr member_bracket(Parser * p, PExpr object, uint32_t extra_flags) {
@@ -1029,9 +1087,11 @@ done:
   if (chain) {
     size_t mark = p->kids_len;
     parser_kid(p, e.node);
+    const uint8_t last = (uint8_t)(e.aux & PA_PRIVATE);
     GLECMA_BNode node = parser_make(p, GLECMA_NODE_OPTIONAL_CHAIN, 0, 0,
         e.start, e.end, mark);
     e = expr_of(node, e.start, e.end, SH_OPTCHAIN);
+    e.aux = last;
   }
   return e;
 }
@@ -1041,10 +1101,14 @@ static PExpr parse_super(Parser * p) {
   size_t super_end = p->tok.end.offset;
   GLECMA_BNode super_node = parser_make(p, GLECMA_NODE_SUPER, 0, 0, start,
       super_end, p->kids_len);
+  const GLECMA_Location super_at = p->tok.start;
   parser_next(p);
   PExpr s = expr_of(super_node, start, super_end, SH_OTHER);
   switch (p->tok.kind) {
     case GLECMA_TOK_LPAREN: {
+      if ((p->flags & PF_SUPER_CALL) == 0) {
+        parser_fail(p, GLECMA_RULE_SUPER_CALL_POSITION, &super_at);
+      }
       PExpr call = call_of(p, s, 0);
       call.shape = SH_OTHER;
       parser_event(p, GLECMA_BEV_USE, GLECMA_BUSE_SUPER_CALL, NULL, start,
@@ -1052,11 +1116,17 @@ static PExpr parse_super(Parser * p) {
       return call;
     }
     case GLECMA_TOK_DOT:
+      if ((p->flags & PF_SUPER_PROP) == 0) {
+        parser_fail(p, GLECMA_RULE_SUPER_PROPERTY_POSITION, &super_at);
+      }
       parser_next(p);
       parser_event(p, GLECMA_BEV_USE, GLECMA_BUSE_SUPER_PROPERTY, NULL, start,
           super_end);
       return member_dot(p, s, 0, false); // `super.#x` is not a SuperProperty
     case GLECMA_TOK_LBRACKET:
+      if ((p->flags & PF_SUPER_PROP) == 0) {
+        parser_fail(p, GLECMA_RULE_SUPER_PROPERTY_POSITION, &super_at);
+      }
       parser_next(p);
       parser_event(p, GLECMA_BEV_USE, GLECMA_BUSE_SUPER_PROPERTY, NULL, start,
           super_end);
@@ -1142,10 +1212,11 @@ static PExpr parse_member_no_call(Parser * p) {
 
 static PExpr parse_new(Parser * p) {
   size_t start = p->tok.start.offset;
+  const GLECMA_Location new_at = p->tok.start;
   parser_next(p);
   if (p->tok.kind == GLECMA_TOK_DOT) {
     parser_next(p);
-    return parse_new_target(p, start);
+    return parse_new_target(p, start, &new_at);
   }
   PExpr callee = parse_member_no_call(p);
   if (callee.shape == SH_ARROW) {
@@ -1199,6 +1270,9 @@ static PExpr unary_inner(Parser * p) {
       } else if (parser_is_kw(p, GLECMA_KW_DELETE)) {
         op = GLECMA_OP_DELETE;
       } else if ((p->flags & PF_AWAIT) != 0 && parser_is_kw(p, GLECMA_KW_AWAIT)) {
+        if ((p->flags & PF_PARAMS) != 0) {
+          parser_fail_token(p, GLECMA_RULE_AWAIT_IN_PARAMETERS);
+        }
         parser_next(p);
         PExpr arg = parse_unary_operand(p);
         size_t mark = p->kids_len;
@@ -1230,11 +1304,21 @@ static PExpr unary_inner(Parser * p) {
   }
   if (op != GLECMA_OP_NONE) {
     parser_next(p);
+    const GLECMA_Location arg_at = p->tok.start;
     PExpr arg = parse_unary_operand(p);
     if (op == GLECMA_OP_TYPEOF && arg.shape == SH_IDENT) {
       parser_amend_reference(p, arg.ref_start, GLECMA_BREF_TYPEOF, 0);
-    } else if (op == GLECMA_OP_DELETE && arg.shape == SH_IDENT) {
-      parser_amend_reference(p, arg.ref_start, GLECMA_BREF_DELETE, 0);
+    } else if (op == GLECMA_OP_DELETE) {
+      // Clause 13.5.1.1, through any parentheses: a name in strict code, and a
+      // private member always.
+      if (arg.shape == SH_IDENT) {
+        if ((p->flags & PF_STRICT) != 0) {
+          parser_fail(p, GLECMA_RULE_DELETE_IDENTIFIER_STRICT, &arg_at);
+        }
+        parser_amend_reference(p, arg.ref_start, GLECMA_BREF_DELETE, 0);
+      } else if ((arg.aux & PA_PRIVATE) != 0) {
+        parser_fail(p, GLECMA_RULE_DELETE_PRIVATE_REFERENCE, &arg_at);
+      }
     }
     size_t mark = p->kids_len;
     parser_kid(p, arg.node);
@@ -1435,6 +1519,9 @@ static bool assignment_operator(GLECMA_TokenKind kind, uint32_t * op,
 }
 
 static PExpr parse_yield(Parser * p) {
+  if ((p->flags & PF_PARAMS) != 0) {
+    parser_fail_token(p, GLECMA_RULE_YIELD_IN_PARAMETERS);
+  }
   size_t start = p->tok.start.offset;
   size_t end = p->tok.end.offset;
   parser_next(p);
@@ -1507,7 +1594,7 @@ PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs,
         parser_fail_token(p, GLECMA_RULE_INVALID_ASSIGNMENT_TARGET);
       }
       if (p->pending != NO_PENDING) {
-        parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+        parser_fail(p, p->pending_rule, &p->pending_at);
       }
       expr_mark_write(p, &lhs, !plain);
     }
@@ -1527,7 +1614,7 @@ PARSER_NOINLINE static PExpr finish_assignment(Parser * p, PExpr lhs,
     const bool bare = !lhs.paren &&
         (lhs.shape == SH_ARRAY || lhs.shape == SH_OBJECT);
     if (!(bare && (ef & EF_COVER) != 0)) {
-      parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+      parser_fail(p, p->pending_rule, &p->pending_at);
     }
   }
   return lhs;
@@ -1554,6 +1641,7 @@ static PExpr assignment_inner(Parser * p, uint32_t ef) {
   const size_t saved_assign = p->assign_start;
   const size_t outer_pending = p->pending;
   const GLECMA_Location outer_at = p->pending_at;
+  const uint32_t outer_rule = p->pending_rule;
   p->assign_start = p->tok.start.offset;
   p->pending = NO_PENDING;
   PExpr result;
@@ -1566,6 +1654,7 @@ static PExpr assignment_inner(Parser * p, uint32_t ef) {
   if (outer_pending != NO_PENDING) {
     p->pending = outer_pending;
     p->pending_at = outer_at;
+    p->pending_rule = outer_rule;
   }
   return result;
 }

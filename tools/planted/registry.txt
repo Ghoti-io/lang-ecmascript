@@ -55,3 +55,10 @@
 050|parse-switch-duplicate-default-accepted|A second `default:` in a switch is accepted|050-parse-switch-duplicate-default-accepted.patch|test
 051|parse-retroactive-reserved-ignored|A word strict code reserves, bound in a function's name or parameters, is accepted when a directive in the body makes the function strict|051-parse-retroactive-reserved-ignored.patch|test
 052|parse-target-decision-not-remembered|A nested destructuring target is read as an expression and then as a pattern at every level|052-parse-target-decision-not-remembered.patch|test
+053|parse-break-outside-loop-accepted|A `break` with no enclosing loop or switch is accepted|053-parse-break-outside-loop-accepted.patch|test
+054|parse-continue-to-any-label-accepted|A `continue` may name a label that does not label a loop|054-parse-continue-to-any-label-accepted.patch|test
+055|parse-super-call-in-any-method-accepted|`super()` is accepted in any method, not only in a derived constructor|055-parse-super-call-in-any-method-accepted.patch|test
+056|parse-private-name-never-resolved|A reference to a private name no class declares is accepted|056-parse-private-name-never-resolved.patch|check-test262
+057|parse-delete-identifier-strict-accepted|`delete x` is accepted in strict code|057-parse-delete-identifier-strict-accepted.patch|test
+058|parse-duplicate-proto-in-a-pattern-refused|`({__proto__: a, __proto__: b} = x)` is refused, as an object literal would be|058-parse-duplicate-proto-in-a-pattern-refused.patch|test
+059|parse-use-strict-non-simple-accepted|A "use strict" directive in a function with non-simple parameters is accepted|059-parse-use-strict-non-simple-accepted.patch|check-test262

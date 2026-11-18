@@ -52,6 +52,11 @@ PExpr parse_binding_identifier(Parser * p, uint32_t decl) {
   if (rule != GLECMA_RULE_NONE) {
     parser_fail_token(p, rule);
   }
+  if (p->tok.keyword == GLECMA_KW_LET &&
+      (decl == GLECMA_BDECL_LET || decl == GLECMA_BDECL_CONST)) {
+    // `let` is not the name of a lexical binding (clause 14.3.1.1).
+    parser_fail_token(p, GLECMA_RULE_LET_BOUND_NAME);
+  }
   GLECMA_BText name;
   parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
   parser_note_binding(p, &p->tok);
@@ -173,6 +178,10 @@ static PExpr binding_object(Parser * p, uint32_t decl) {
       if (rule != GLECMA_RULE_NONE) {
         parser_fail(p, rule, &key.tok.start);
       }
+      if (key.tok.keyword == GLECMA_KW_LET &&
+          (decl == GLECMA_BDECL_LET || decl == GLECMA_BDECL_CONST)) {
+        parser_fail(p, GLECMA_RULE_LET_BOUND_NAME, &key.tok.start);
+      }
       GLECMA_BText name;
       parser_text(p, &key.tok, GLECMA_VALUE_COOKED, true, &name);
       parser_note_binding(p, &key.tok);
@@ -238,13 +247,16 @@ static PExpr destructuring_target(Parser * p, bool allow_pattern) {
     parser_snap(p, &snap);
     const size_t outer_pending = p->pending;
     const GLECMA_Location outer_at = p->pending_at;
+    const uint32_t outer_rule = p->pending_rule;
     p->pending = NO_PENDING;
     GLECMA_Location at = p->tok.start;
     PExpr literal = parse_lhs(p);
     const size_t own_pending = p->pending;
     const GLECMA_Location own_at = p->pending_at;
+    const uint32_t own_rule = p->pending_rule;
     p->pending = outer_pending;
     p->pending_at = outer_at;
+    p->pending_rule = outer_rule;
     if (!literal.paren && (literal.shape == SH_ARRAY || literal.shape == SH_OBJECT)) {
       if (!allow_pattern) {
         parser_fail(p, GLECMA_RULE_INVALID_ASSIGNMENT_TARGET, &at);
@@ -254,7 +266,7 @@ static PExpr destructuring_target(Parser * p, bool allow_pattern) {
       return parse_assignment_pattern(p);
     }
     if (own_pending != NO_PENDING) {
-      parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &own_at);
+      parser_fail(p, own_rule, &own_at);
     }
     if (!expr_valid_target(p, &literal, false)) {
       parser_fail(p, GLECMA_RULE_INVALID_ASSIGNMENT_TARGET, &at);
@@ -357,6 +369,14 @@ static PExpr assignment_object(Parser * p) {
       uint32_t rule = glecma_token_identifier_check(&key.tok, parser_idf(p));
       if (rule != GLECMA_RULE_NONE) {
         parser_fail(p, rule, &key.tok.start);
+      }
+      if (key.tok.keyword == GLECMA_KW_ARGUMENTS) {
+        early_check_arguments(p, &key.tok);
+      }
+      if ((p->flags & PF_STRICT) != 0 && (key.tok.keyword == GLECMA_KW_EVAL ||
+              key.tok.keyword == GLECMA_KW_ARGUMENTS)) {
+        // Not assignable in strict code (clause 13.15.1).
+        parser_fail(p, GLECMA_RULE_INVALID_ASSIGNMENT_TARGET, &key.tok.start);
       }
       GLECMA_BText name;
       parser_text(p, &key.tok, GLECMA_VALUE_COOKED, true, &name);

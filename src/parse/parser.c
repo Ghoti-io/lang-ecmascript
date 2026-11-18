@@ -206,6 +206,11 @@ void parser_snap(const Parser * p, Snap * snap) {
   snap->kids = p->kids_len;
   snap->pending = p->pending;
   snap->pending_at = p->pending_at;
+  snap->pending_rule = p->pending_rule;
+  snap->labels = p->label_len;
+  snap->priv_refs = p->priv_ref_len;
+  snap->priv_decls = p->priv_decl_len;
+  snap->classes = p->class_len;
 }
 
 void parser_restore(Parser * p, const Snap * snap) {
@@ -217,6 +222,11 @@ void parser_restore(Parser * p, const Snap * snap) {
   p->kids_len = snap->kids;
   p->pending = snap->pending;
   p->pending_at = snap->pending_at;
+  p->pending_rule = snap->pending_rule;
+  p->label_len = snap->labels;
+  p->priv_ref_len = snap->priv_refs;
+  p->priv_decl_len = snap->priv_decls;
+  p->class_len = snap->classes;
 }
 
 /* ---- Depth and the native stack ------------------------------------------- */
@@ -244,14 +254,27 @@ void parser_leave(Parser * p) {
   p->depth--;
 }
 
-// A binding written in sloppy code that strict code would refuse: remembered
-// (the first), in case a directive later in the same function turns the code
-// it is part of into strict code.
+// A binding's name, checked in the strictness the code has now: `eval` and
+// `arguments` cannot be bound in strict code (clause 13.1.1). In sloppy code
+// a binding that strict code would refuse is remembered (the first), in case
+// a directive later in the same function turns the code it is part of into
+// strict code.
 void parser_note_binding(Parser * p, const GLECMA_Token * name) {
-  if ((p->flags & PF_STRICT) != 0 || p->retro.rule != GLECMA_RULE_NONE) {
+  const bool restricted = name->keyword == GLECMA_KW_EVAL ||
+      name->keyword == GLECMA_KW_ARGUMENTS;
+  if ((p->flags & PF_STRICT) != 0) {
+    if (restricted) {
+      parser_fail(p, GLECMA_RULE_BINDING_EVAL_ARGUMENTS, &name->start);
+    }
+    return;
+  }
+  if (p->retro.rule != GLECMA_RULE_NONE) {
     return;
   }
   uint32_t rule = glecma_token_identifier_check(name, parser_idf(p) | GLECMA_IDF_STRICT);
+  if (rule == GLECMA_RULE_NONE && restricted) {
+    rule = GLECMA_RULE_BINDING_EVAL_ARGUMENTS;
+  }
   if (rule != GLECMA_RULE_NONE) {
     p->retro.rule = rule;
     p->retro.at = name->start;
@@ -538,6 +561,7 @@ static void run_parse(Parser * p, GLECMA_Tree * tree, uint32_t goal,
   size_t end = 0;
   bool is_strict = (p->flags & PF_STRICT) != 0;
   parse_statement_list(p, GLECMA_TOK_EOF, true, &end, &is_strict);
+  early_finish(p);
   parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
   GLECMA_BNode root = parser_make(p, GLECMA_NODE_SCRIPT,
       is_strict ? GLECMA_NODEF_STRICT : 0u, 0, 0, units, mark);
@@ -601,6 +625,9 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   p->max_nodes = limits.nodes;
   p->native_stack_bytes = limits.native_stack_bytes;
   p->pending = NO_PENDING;
+  p->pending_rule = GLECMA_RULE_COVER_INITIALIZED_NAME;
+  p->body_simple = true; // a Script has no parameters
+  p->params_simple = true;
   const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0;
   p->flags = (strict_context || builtin ? PF_STRICT : 0u) |
       (builtin ? PF_BUILTIN : 0u);
@@ -625,6 +652,7 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   if (p->memo != NULL) {
     p->allocator->free_fn(p->allocator->ctx, p->memo);
   }
+  early_free(p);
   if (p->result != GLECMA_OK) {
     GLECMA_Result result = p->result;
     glecma_failure_set(failure, result, p->message,

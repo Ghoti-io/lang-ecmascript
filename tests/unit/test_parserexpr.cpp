@@ -177,7 +177,8 @@ TEST(ParseExpressions, MembersCallsNewAndOptionalChains) {
     {"import('a', b);", "(Expression (ImportCall (StringLiteral \"a\") (Identifier b)))"},
     {"import('a', b,);", "(Expression (ImportCall (StringLiteral \"a\") (Identifier b)))"},
     {"import('a').then(b);", "(Expression (Call (Member (ImportCall (StringLiteral \"a\") _) (Identifier then)) (Identifier b)))"},
-    {"new.target;", "(Expression (MetaProperty new.target))"},
+    {"function f() { new.target; }",
+        "(FunctionDeclaration (Identifier f) (ParameterList) (FunctionBody (Expression (MetaProperty new.target))))"},
     {"async\n(a);", "(Expression (Call (Identifier async) (Identifier a)))"},
   };
   for (const Case & c : cases) {
@@ -409,7 +410,7 @@ TEST(ParseExpressions, GrammarRefusalsNameTheirRuleAndPlace) {
     {"a ? b => 1;", GLECMA_RULE_UNEXPECTED_TOKEN, 10},
     {"x => {} + 1;", GLECMA_RULE_MISSING_SEMICOLON, 8},
     {"(a, b) => {}()", GLECMA_RULE_MISSING_SEMICOLON, 12},
-    {"super.#b;", GLECMA_RULE_UNEXPECTED_TOKEN, 6},
+    {"({ m() { super.#b; } });", GLECMA_RULE_UNEXPECTED_TOKEN, 15},
     {"({#a: 1});", GLECMA_RULE_UNEXPECTED_TOKEN, 2},
     {"`${a`;", GLECMA_RULE_UNTERMINATED_TEMPLATE, 4},
     {"`\\01`;", GLECMA_RULE_TEMPLATE_ESCAPE_OCTAL, 1},

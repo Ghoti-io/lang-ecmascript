@@ -1,0 +1,12 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -157,9 +157,6 @@
+ 
+ void early_break(Parser * p, const GLECMA_BText * label, const GLECMA_Location * at) {
+   if (label == NULL) {
+-    if (p->breakables == 0) {
+-      parser_fail(p, GLECMA_RULE_BREAK_TARGET, at);
+-    }
+     return;
+   }
+   for (size_t i = p->label_len; i > p->label_base; i--) {

@@ -1,0 +1,13 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -1106,9 +1106,7 @@
+   PExpr s = expr_of(super_node, start, super_end, SH_OTHER);
+   switch (p->tok.kind) {
+     case GLECMA_TOK_LPAREN: {
+-      if ((p->flags & PF_SUPER_CALL) == 0) {
+-        parser_fail(p, GLECMA_RULE_SUPER_CALL_POSITION, &super_at);
+-      }
++      (void)super_at;
+       PExpr call = call_of(p, s, 0);
+       call.shape = SH_OTHER;
+       parser_event(p, GLECMA_BEV_USE, GLECMA_BUSE_SUPER_CALL, NULL, start,

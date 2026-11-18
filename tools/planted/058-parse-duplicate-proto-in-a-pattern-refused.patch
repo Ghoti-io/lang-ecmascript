@@ -1,0 +1,15 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -461,10 +461,8 @@
+     if (!key.computed && (key.tok.kind == GLECMA_TOK_NAME ||
+             key.tok.kind == GLECMA_TOK_STRING) &&
+         token_value_is(p, &key.tok, "__proto__")) {
+-      if (*proto_seen && p->pending == NO_PENDING) {
+-        p->pending = key.start;
+-        p->pending_at = key.tok.start;
+-        p->pending_rule = GLECMA_RULE_DUPLICATE_PROTO;
++      if (*proto_seen) {
++        parser_fail(p, GLECMA_RULE_DUPLICATE_PROTO, &key.tok.start);
+       }
+       *proto_seen = true;
+     }

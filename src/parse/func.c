@@ -44,6 +44,7 @@ GLECMA_BNode parse_function_params(Parser * p, uint32_t decl_kind, uint32_t fn,
     size_t * out_end) {
   size_t start = p->tok.start.offset;
   size_t mark = p->kids_len;
+  bool simple = true; // every parameter a plain identifier (clause 15.1.1)
   parser_expect(p, GLECMA_TOK_LPAREN);
   if ((fn & FN_GETTER) != 0) {
     // A getter takes no parameter.
@@ -52,7 +53,9 @@ GLECMA_BNode parse_function_params(Parser * p, uint32_t decl_kind, uint32_t fn,
     }
   } else if ((fn & FN_SETTER) != 0) {
     // A setter takes exactly one, which is not a rest element.
-    parser_kid(p, parse_binding_element(p, decl_kind).node);
+    PExpr only = parse_binding_element(p, decl_kind);
+    simple = only.shape == SH_IDENT;
+    parser_kid(p, only.node);
     if (p->tok.kind != GLECMA_TOK_RPAREN) {
       parser_unexpected(p);
     }
@@ -60,6 +63,7 @@ GLECMA_BNode parse_function_params(Parser * p, uint32_t decl_kind, uint32_t fn,
     while (p->tok.kind != GLECMA_TOK_RPAREN) {
       if (p->tok.kind == GLECMA_TOK_ELLIPSIS) {
         size_t rest_start = p->tok.start.offset;
+        simple = false;
         parser_next(p);
         PExpr target = parse_binding_target(p, decl_kind);
         size_t inner = p->kids_len;
@@ -71,7 +75,11 @@ GLECMA_BNode parse_function_params(Parser * p, uint32_t decl_kind, uint32_t fn,
         }
         break;
       }
-      parser_kid(p, parse_binding_element(p, decl_kind).node);
+      PExpr element = parse_binding_element(p, decl_kind);
+      if (element.shape != SH_IDENT) {
+        simple = false;
+      }
+      parser_kid(p, element.node);
       if (p->tok.kind != GLECMA_TOK_RPAREN) {
         parser_expect(p, GLECMA_TOK_COMMA);
       }
@@ -79,6 +87,7 @@ GLECMA_BNode parse_function_params(Parser * p, uint32_t decl_kind, uint32_t fn,
   }
   size_t end = p->tok.end.offset;
   parser_next(p);
+  p->params_simple = simple;
   *out_end = end;
   return parser_make(p, GLECMA_NODE_PARAMETER_LIST, 0, 0, start, end, mark);
 }
@@ -113,8 +122,14 @@ GLECMA_BNode parse_function_body(Parser * p, size_t * out_end,
 
 /* ---- Functions ---------------------------------------------------------------------- */
 
+// The context of a function's code: its own, whatever the code around it
+// allowed. A method may use `super.x` and a derived constructor `super()`;
+// no function but an arrow inherits what the code around it allowed.
 static uint32_t function_flags(uint32_t fn, uint32_t strict_and_builtin) {
-  return (strict_and_builtin & (PF_STRICT | PF_BUILTIN)) |
+  return (strict_and_builtin & (PF_STRICT | PF_BUILTIN)) | PF_RETURN |
+      PF_NEW_TARGET |
+      ((fn & FN_METHOD) != 0 ? PF_SUPER_PROP : 0u) |
+      ((fn & FN_CONSTRUCTOR) != 0 && (fn & FN_DERIVED) != 0 ? PF_SUPER_CALL : 0u) |
       ((fn & FN_GENERATOR) != 0 ? PF_YIELD : 0u) |
       ((fn & FN_ASYNC) != 0 ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
 }
@@ -125,14 +140,22 @@ static PExpr function_rest(Parser * p, size_t start, uint32_t fn,
     GLECMA_BNode id, uint32_t node_kind) {
   const uint32_t saved = p->flags;
   const bool saved_in = p->no_in;
+  const bool saved_simple = p->body_simple;
+  const JumpCtx jumps = early_jump_enter(p);
   p->flags = function_flags(fn, saved);
   p->no_in = false;
   size_t params_end = 0;
+  // Parameters are not the body: no `yield` or `await` expression in them.
+  p->flags |= PF_PARAMS;
   GLECMA_BNode params = parse_function_params(p, GLECMA_BDECL_PARAM, fn,
       &params_end);
+  p->flags &= ~PF_PARAMS;
+  p->body_simple = p->params_simple;
   size_t end = 0;
   bool strict = false;
   GLECMA_BNode body = parse_function_body(p, &end, &strict);
+  early_jump_leave(p, jumps);
+  p->body_simple = saved_simple;
   p->flags = saved;
   p->no_in = saved_in;
   parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_FUNCTION, NULL, start,
@@ -231,15 +254,23 @@ static void parse_static_block(Parser * p, size_t start) {
       start, start);
   const uint32_t saved = p->flags;
   const bool saved_in = p->no_in;
-  // A static block is function-like: `await` is reserved in it, and it is an
-  // operator in no code of its own.
-  p->flags = (saved & (PF_STRICT | PF_BUILTIN)) | PF_AWAIT_RESERVED;
+  const bool saved_simple = p->body_simple;
+  const JumpCtx jumps = early_jump_enter(p);
+  // A static block is function-like: `await` is reserved in it, it is an
+  // operator in no code of its own, it has no `return`, and `super.x` and
+  // `new.target` are allowed in it but not `super()` or `arguments`
+  // (clause 15.7.1).
+  p->flags = (saved & (PF_STRICT | PF_BUILTIN)) | PF_AWAIT_RESERVED |
+      PF_SUPER_PROP | PF_NEW_TARGET | PF_NO_ARGUMENTS;
   p->no_in = false;
+  p->body_simple = true;
   parser_next(p); // `{`
   size_t end_unused = 0;
   bool strict = true;
   parse_statement_list(p, GLECMA_TOK_RBRACE, false, &end_unused, &strict);
   size_t end = p->tok.end.offset;
+  early_jump_leave(p, jumps);
+  p->body_simple = saved_simple;
   p->flags = saved;
   p->no_in = saved_in;
   parser_next(p);
@@ -249,7 +280,7 @@ static void parse_static_block(Parser * p, size_t start) {
                      mark));
 }
 
-static void parse_class_member(Parser * p, bool derived) {
+static void parse_class_member(Parser * p, bool derived, bool * has_constructor) {
   const size_t member_start = p->tok.start.offset;
   bool is_static = false;
   GLECMA_Token after;
@@ -284,11 +315,36 @@ static void parse_class_member(Parser * p, bool derived) {
   uint32_t flags = (is_static ? GLECMA_NODEF_STATIC : 0u) |
       (key.computed ? GLECMA_NODEF_COMPUTED : 0u);
   size_t mark = p->kids_len;
-  if (p->tok.kind == GLECMA_TOK_LPAREN) {
+  const bool is_method = p->tok.kind == GLECMA_TOK_LPAREN;
+  // What the element is called (clause 15.7.1): a string names it as a word
+  // does, and a computed name or a private one is neither.
+  const bool plain_name = !key.computed && !key.is_private &&
+      (key.tok.kind == GLECMA_TOK_NAME || key.tok.kind == GLECMA_TOK_STRING);
+  const bool named_constructor = plain_name && token_value_is(p, &key.tok, "constructor");
+  if (is_static && plain_name && token_value_is(p, &key.tok, "prototype")) {
+    parser_fail(p, GLECMA_RULE_CLASS_STATIC_PROTOTYPE, &key.tok.start);
+  }
+  if (key.is_private) {
+    if (token_value_is(p, &key.tok, "constructor")) {
+      parser_fail(p, GLECMA_RULE_PRIVATE_NAME_CONSTRUCTOR, &key.tok.start);
+    }
+    GLECMA_BText name;
+    parser_text(p, &key.tok, GLECMA_VALUE_COOKED, true, &name);
+    early_private_declare(p, &name, &key.tok.start,
+        !is_method ? PRIV_FIELD : (fn & FN_GETTER) != 0 ? PRIV_GETTER
+            : (fn & FN_SETTER) != 0 ? PRIV_SETTER : PRIV_METHOD,
+        is_static);
+  }
+  if (is_method) {
     uint32_t kind = fn | FN_METHOD;
-    if (!is_static && fn == 0 && !key.computed && !key.is_private &&
-        (key.tok.kind == GLECMA_TOK_NAME || key.tok.kind == GLECMA_TOK_STRING) &&
-        token_is_ascii(p, &key.tok, "constructor")) {
+    if (!is_static && named_constructor) {
+      if ((fn & (FN_GETTER | FN_SETTER | FN_GENERATOR | FN_ASYNC)) != 0) {
+        parser_fail(p, GLECMA_RULE_CLASS_CONSTRUCTOR_KIND, &key.tok.start);
+      }
+      if (*has_constructor) {
+        parser_fail(p, GLECMA_RULE_CLASS_CONSTRUCTOR_DUPLICATE, &key.tok.start);
+      }
+      *has_constructor = true;
       kind |= FN_CONSTRUCTOR | (derived ? FN_DERIVED : 0u);
       flags |= GLECMA_NODEF_CONSTRUCTOR;
     }
@@ -305,7 +361,10 @@ static void parse_class_member(Parser * p, bool derived) {
   if (fn != 0) {
     parser_unexpected(p);
   }
-  // A field.
+  // A field, which is never called `constructor`.
+  if (named_constructor) {
+    parser_fail(p, GLECMA_RULE_CLASS_CONSTRUCTOR_KIND, &key.tok.start);
+  }
   size_t end = key.end;
   GLECMA_BNode value = NULL;
   parser_kid(p, key.node);
@@ -316,7 +375,8 @@ static void parse_class_member(Parser * p, bool derived) {
         initial_start, initial_start);
     const uint32_t saved = p->flags;
     const bool saved_in = p->no_in;
-    p->flags = saved & (PF_STRICT | PF_BUILTIN);
+    p->flags = (saved & (PF_STRICT | PF_BUILTIN)) | PF_SUPER_PROP |
+        PF_NEW_TARGET | PF_NO_ARGUMENTS;
     p->no_in = false;
     PExpr initial = parse_assignment(p, 0);
     p->flags = saved;
@@ -388,12 +448,15 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
   parser_next(p);
   const bool saved_in = p->no_in;
   p->no_in = false;
+  early_class_enter(p);
+  bool has_constructor = false;
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
     if (parser_eat(p, GLECMA_TOK_SEMICOLON)) {
       continue;
     }
-    parse_class_member(p, derived);
+    parse_class_member(p, derived, &has_constructor);
   }
+  early_class_leave(p);
   p->no_in = saved_in;
   size_t end = p->tok.end.offset;
   if (!saved_strict) {

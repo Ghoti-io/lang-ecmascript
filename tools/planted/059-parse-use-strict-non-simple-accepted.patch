@@ -1,0 +1,11 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -835,7 +835,7 @@
+             check_retroactive(p, &octal_at, octal_flags);
+             parser_set_strict(p, true);
+           }
+-          if (!p->body_simple) {
++          if (0 && !p->body_simple) {
+             // A function with parameters that are not a simple list cannot
+             // be given strictness by its own body (clause 15.2.1). What
+             // strict code would have refused before the directive is

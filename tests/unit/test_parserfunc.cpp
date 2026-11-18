@@ -205,7 +205,7 @@ TEST(ParseFunctions, ClassesInAllTheirParts) {
     {"class A { 'constructor'() {} }",
         "(ClassDeclaration (Identifier A) _ (ClassBody (MethodDefinition/ctor/method (StringLiteral \"constructor\") "
         "(Function _ (ParameterList) (FunctionBody/strict)))))"},
-    {"class A { static constructor() {} get constructor() {} }", nullptr},
+    {"class A { static constructor() {} static get constructor() {} }", nullptr},
     {"class A { get a() {} set a(v) {} }",
         "(ClassDeclaration (Identifier A) _ (ClassBody (MethodDefinition/get (Identifier a) (Function _ (ParameterList) (FunctionBody/strict))) "
         "(MethodDefinition/set (Identifier a) (Function _ (ParameterList (Identifier v)) (FunctionBody/strict)))))"},

@@ -1,0 +1,13 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -1312,9 +1312,7 @@
+       // Clause 13.5.1.1, through any parentheses: a name in strict code, and a
+       // private member always.
+       if (arg.shape == SH_IDENT) {
+-        if ((p->flags & PF_STRICT) != 0) {
+-          parser_fail(p, GLECMA_RULE_DELETE_IDENTIFIER_STRICT, &arg_at);
+-        }
++        (void)arg_at;
+         parser_amend_reference(p, arg.ref_start, GLECMA_BREF_DELETE, 0);
+       } else if ((arg.aux & PA_PRIVATE) != 0) {
+         parser_fail(p, GLECMA_RULE_DELETE_PRIVATE_REFERENCE, &arg_at);

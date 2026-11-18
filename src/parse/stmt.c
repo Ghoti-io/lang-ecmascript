@@ -76,6 +76,7 @@ GLECMA_BNode parse_variable_declaration(Parser * p, uint32_t kind, bool in_for,
   size_t count = 0;
   for (;;) {
     size_t declarator_start = p->tok.start.offset;
+    const GLECMA_Location declarator_at = p->tok.start;
     PExpr target = parse_binding_target(p, kind);
     const bool pattern = target.shape != SH_IDENT;
     GLECMA_BNode initial = NULL;
@@ -94,6 +95,9 @@ GLECMA_BNode parse_variable_declaration(Parser * p, uint32_t kind, bool in_for,
       }
       if (kind == GLECMA_BDECL_CONST) {
         info |= VDI_CONST_NO_INIT;
+        if (!in_for) {
+          parser_fail(p, GLECMA_RULE_CONST_WITHOUT_INITIALIZER, &declarator_at);
+        }
       }
     }
     if (count == 0 && pattern) {
@@ -162,6 +166,28 @@ static GLECMA_BNode paren_expression(Parser * p) {
   return e.node;
 }
 
+// The body of an `if`, a loop or `with`: a statement, and not a labelled
+// function declaration (clauses 14.6.1, 14.7.2.1, 14.7.3.1, 14.7.4.1, 14.7.5.1,
+// 14.11.1).
+static GLECMA_BNode statement_body(Parser * p) {
+  const GLECMA_Location at = p->tok.start;
+  GLECMA_BNode body = parse_statement(p);
+  if (p->last_labelled_fn) {
+    parser_fail(p, GLECMA_RULE_LABELLED_FUNCTION_BODY, &at);
+  }
+  return body;
+}
+
+// The body of a loop: the targets of `break` and `continue` are inside it.
+static GLECMA_BNode loop_body(Parser * p) {
+  p->loops++;
+  p->breakables++;
+  GLECMA_BNode body = statement_body(p);
+  p->loops--;
+  p->breakables--;
+  return body;
+}
+
 // An `if` body or label body that is a function declaration (Annex B.3.1,
 // B.3.3): a block of its own, with the declaration in it.
 static GLECMA_BNode function_in_block(Parser * p, bool in_if) {
@@ -190,14 +216,14 @@ static GLECMA_BNode parse_if(Parser * p) {
   if (parser_is_kw(p, GLECMA_KW_FUNCTION)) {
     parser_kid(p, function_in_block(p, true));
   } else {
-    parser_kid(p, parse_statement(p));
+    parser_kid(p, statement_body(p));
   }
   if (parser_is_kw(p, GLECMA_KW_ELSE)) {
     parser_next(p);
     if (parser_is_kw(p, GLECMA_KW_FUNCTION)) {
       parser_kid(p, function_in_block(p, true));
     } else {
-      parser_kid(p, parse_statement(p));
+      parser_kid(p, statement_body(p));
     }
   } else {
     parser_kid(p, NULL);
@@ -256,6 +282,9 @@ static GLECMA_BNode parse_for(Parser * p) {
       if ((info & VDI_PATTERN_NO_INIT) != 0) {
         parser_unexpected(p);
       }
+      if ((info & VDI_CONST_NO_INIT) != 0) {
+        parser_fail(p, GLECMA_RULE_CONST_WITHOUT_INITIALIZER, &p->tok.start);
+      }
       init = declaration;
     }
   } else {
@@ -278,7 +307,7 @@ static GLECMA_BNode parse_for(Parser * p) {
         p->no_in = saved_in;
       } else {
         if (p->pending != NO_PENDING) {
-          parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+          parser_fail(p, p->pending_rule, &p->pending_at);
         }
         if (!expr_valid_target(p, &head, true)) {
           parser_fail(p, GLECMA_RULE_INVALID_FOR_TARGET, &snap.tok.start);
@@ -295,7 +324,7 @@ static GLECMA_BNode parse_for(Parser * p) {
       left = head.node;
     } else {
       if (p->pending != NO_PENDING) {
-        parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+        parser_fail(p, p->pending_rule, &p->pending_at);
       }
       GLECMA_BNode node = head.node;
       if (p->tok.kind == GLECMA_TOK_COMMA) {
@@ -326,7 +355,7 @@ static GLECMA_BNode parse_for(Parser * p) {
     }
     PExpr right = is_loop_of ? parse_assignment(p, 0) : parse_expression(p);
     parser_expect(p, GLECMA_TOK_RPAREN);
-    GLECMA_BNode body = parse_statement(p);
+    GLECMA_BNode body = loop_body(p);
     parser_kid(p, left);
     parser_kid(p, right.node);
     parser_kid(p, body);
@@ -350,7 +379,7 @@ static GLECMA_BNode parse_for(Parser * p) {
       update = parse_expression(p).node;
     }
     parser_expect(p, GLECMA_TOK_RPAREN);
-    GLECMA_BNode body = parse_statement(p);
+    GLECMA_BNode body = loop_body(p);
     parser_kid(p, init);
     parser_kid(p, test);
     parser_kid(p, update);
@@ -369,6 +398,7 @@ static GLECMA_BNode parse_switch(Parser * p) {
   parser_kid(p, paren_expression(p));
   parser_expect(p, GLECMA_TOK_LBRACE);
   block_scope(p, GLECMA_BEV_SCOPE_ENTER, start, start);
+  p->breakables++;
   bool seen_default = false;
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
     size_t case_start = p->tok.start.offset;
@@ -401,6 +431,7 @@ static GLECMA_BNode parse_switch(Parser * p) {
         case_start, p->prev_end, inner);
     parser_kid(p, node);
   }
+  p->breakables--;
   size_t end = p->tok.end.offset;
   parser_next(p);
   block_scope(p, GLECMA_BEV_SCOPE_LEAVE, start, end);
@@ -446,8 +477,10 @@ static GLECMA_BNode parse_try(Parser * p) {
 
 static GLECMA_BNode parse_jump(Parser * p, uint32_t kind) {
   size_t start = p->tok.start.offset;
+  const GLECMA_Location at = p->tok.start;
   size_t mark = p->kids_len;
   parser_next(p);
+  const bool is_break = kind == GLECMA_NODE_BREAK_STATEMENT;
   if (p->tok.kind == GLECMA_TOK_NAME &&
       (p->tok.flags & GLECMA_TOKF_NEWLINE_BEFORE) == 0) {
     uint32_t rule = glecma_token_identifier_check(&p->tok, parser_idf(p));
@@ -456,27 +489,47 @@ static GLECMA_BNode parse_jump(Parser * p, uint32_t kind) {
     }
     GLECMA_BText name;
     parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
+    if (is_break) {
+      early_break(p, &name, &at);
+    } else {
+      early_continue(p, &name, &at);
+    }
     parser_kid(p, parser_make_text(p, GLECMA_NODE_IDENTIFIER, 0,
                        p->tok.start.offset, p->tok.end.offset, &name, NULL));
     parser_next(p);
   } else {
+    if (is_break) {
+      early_break(p, NULL, &at);
+    } else {
+      early_continue(p, NULL, &at);
+    }
     parser_kid(p, NULL);
   }
   parser_semicolon(p);
   return statement_node(p, kind, 0, start, mark);
 }
 
+// A labelled statement. `chain` is the number of labels directly before it,
+// which label the same statement: `continue` may name any of them when that
+// statement is a loop (clause 14.8.1). `*labelled_fn` is set when the
+// statement the labels end in is a function declaration.
 static GLECMA_BNode parse_labelled(Parser * p, const GLECMA_BText * name,
-    size_t start, size_t label_end) {
+    size_t start, size_t label_end, const GLECMA_Location * at, uint32_t chain,
+    bool * labelled_fn) {
   size_t mark = p->kids_len;
+  early_label_push(p, name, at);
   parser_kid(p, parser_make_text(p, GLECMA_NODE_IDENTIFIER, 0, start, label_end,
                      name, NULL));
   parser_next(p); // `:`
   if (parser_is_kw(p, GLECMA_KW_FUNCTION)) {
     parser_kid(p, function_in_block(p, false));
+    *labelled_fn = true;
   } else {
+    p->label_chain = chain + 1;
     parser_kid(p, parse_statement(p));
+    *labelled_fn = p->last_labelled_fn;
   }
+  early_label_pop(p);
   return statement_node(p, GLECMA_NODE_LABELLED_STATEMENT, 0, start, mark);
 }
 
@@ -496,8 +549,10 @@ static GLECMA_BNode expression_statement(Parser * p) {
   return statement_node(p, GLECMA_NODE_EXPRESSION_STATEMENT, flags, start, mark);
 }
 
-static GLECMA_BNode parse_statement_inner(Parser * p) {
+static GLECMA_BNode parse_statement_inner(Parser * p, bool * labelled_fn) {
   const size_t start = p->tok.start.offset;
+  const uint32_t chain = p->label_chain; // labels directly before this statement
+  p->label_chain = 0;
   switch (p->tok.kind) {
     case GLECMA_TOK_LBRACE:
       p->prologue_item = false;
@@ -523,18 +578,21 @@ static GLECMA_BNode parse_statement_inner(Parser * p) {
       case GLECMA_KW_IF:
         return parse_if(p);
       case GLECMA_KW_FOR:
+        early_label_loops(p, chain);
         return parse_for(p);
       case GLECMA_KW_WHILE: {
         size_t mark = p->kids_len;
+        early_label_loops(p, chain);
         parser_next(p);
         parser_kid(p, paren_expression(p));
-        parser_kid(p, parse_statement(p));
+        parser_kid(p, loop_body(p));
         return statement_node(p, GLECMA_NODE_WHILE_STATEMENT, 0, start, mark);
       }
       case GLECMA_KW_DO: {
         size_t mark = p->kids_len;
+        early_label_loops(p, chain);
         parser_next(p);
-        parser_kid(p, parse_statement(p));
+        parser_kid(p, loop_body(p));
         if (!parser_is_kw(p, GLECMA_KW_WHILE)) {
           parser_unexpected(p);
         }
@@ -550,6 +608,9 @@ static GLECMA_BNode parse_statement_inner(Parser * p) {
         return parse_jump(p, GLECMA_NODE_BREAK_STATEMENT);
       case GLECMA_KW_RETURN: {
         size_t mark = p->kids_len;
+        if ((p->flags & PF_RETURN) == 0) {
+          parser_fail_token(p, GLECMA_RULE_RETURN_POSITION);
+        }
         parser_next(p);
         if (p->tok.kind == GLECMA_TOK_SEMICOLON ||
             p->tok.kind == GLECMA_TOK_RBRACE || p->tok.kind == GLECMA_TOK_EOF ||
@@ -563,11 +624,14 @@ static GLECMA_BNode parse_statement_inner(Parser * p) {
       }
       case GLECMA_KW_WITH: {
         size_t mark = p->kids_len;
+        if ((p->flags & PF_STRICT) != 0) {
+          parser_fail_token(p, GLECMA_RULE_WITH_STRICT);
+        }
         parser_next(p);
         parser_kid(p, paren_expression(p));
         parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_WITH, NULL, start,
             start);
-        parser_kid(p, parse_statement(p));
+        parser_kid(p, statement_body(p));
         parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_WITH, NULL, start,
             p->prev_end);
         return statement_node(p, GLECMA_NODE_WITH_STATEMENT, 0, start, mark);
@@ -635,8 +699,10 @@ static GLECMA_BNode parse_statement_inner(Parser * p) {
       GLECMA_BText name;
       parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name);
       size_t label_end = p->tok.end.offset;
+      const GLECMA_Location label_at = p->tok.start;
       parser_next(p);
-      return parse_labelled(p, &name, start, label_end);
+      return parse_labelled(p, &name, start, label_end, &label_at, chain,
+          labelled_fn);
     }
   }
   return expression_statement(p);
@@ -644,7 +710,9 @@ static GLECMA_BNode parse_statement_inner(Parser * p) {
 
 GLECMA_BNode parse_statement(Parser * p) {
   parser_enter(p);
-  GLECMA_BNode node = parse_statement_inner(p);
+  bool labelled_fn = false;
+  GLECMA_BNode node = parse_statement_inner(p, &labelled_fn);
+  p->last_labelled_fn = labelled_fn;
   parser_leave(p);
   return node;
 }
@@ -766,6 +834,14 @@ void parse_statement_list(Parser * p, GLECMA_TokenKind end, bool prologue,
           if ((p->flags & PF_STRICT) == 0) {
             check_retroactive(p, &octal_at, octal_flags);
             parser_set_strict(p, true);
+          }
+          if (!p->body_simple) {
+            // A function with parameters that are not a simple list cannot
+            // be given strictness by its own body (clause 15.2.1). What
+            // strict code would have refused before the directive is
+            // reported first, being earlier in the text.
+            parser_fail(p, GLECMA_RULE_USE_STRICT_NON_SIMPLE_PARAMETERS,
+                &first.start);
           }
         } else if (octal_flags == 0 &&
             (first.flags & (GLECMA_TOKF_LEGACY_OCTAL |
