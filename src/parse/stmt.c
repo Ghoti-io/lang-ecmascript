@@ -233,6 +233,11 @@ static GLECMA_BNode parse_if(Parser * p) {
 
 static GLECMA_BNode parse_for(Parser * p) {
   const size_t start = p->tok.start.offset;
+  // A pending error of the object literal this statement is inside (a method's
+  // body) is not this statement's to forget.
+  const size_t outer_pending = p->pending;
+  const GLECMA_Location outer_at = p->pending_at;
+  const uint32_t outer_rule = p->pending_rule;
   parser_next(p); // `for`
   bool is_await = false;
   if (parser_is_kw(p, GLECMA_KW_AWAIT)) {
@@ -388,6 +393,9 @@ static GLECMA_BNode parse_for(Parser * p) {
   }
   parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_FOR, NULL, start,
       p->prev_end);
+  p->pending = outer_pending;
+  p->pending_at = outer_at;
+  p->pending_rule = outer_rule;
   return parser_make(p, node_kind, flags, 0, start, p->prev_end, mark);
 }
 
@@ -398,6 +406,7 @@ static GLECMA_BNode parse_switch(Parser * p) {
   parser_kid(p, paren_expression(p));
   parser_expect(p, GLECMA_TOK_LBRACE);
   block_scope(p, GLECMA_BEV_SCOPE_ENTER, start, start);
+  early_scope_switch(p);
   p->breakables++;
   bool seen_default = false;
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
@@ -452,11 +461,18 @@ static GLECMA_BNode parse_try(Parser * p) {
     parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_CATCH, NULL,
         catch_start, catch_start);
     if (parser_eat(p, GLECMA_TOK_LPAREN)) {
+      // A plain identifier parameter may be redeclared by a var (Annex B.3.4).
+      GLECMA_Token after;
+      const bool simple = p->tok.kind == GLECMA_TOK_NAME &&
+          parser_peek(p, &after) && after.kind == GLECMA_TOK_RPAREN;
+      p->decl_flags = simple ? DF_SIMPLE_CATCH : 0u;
       parser_kid(p, parse_binding_target(p, GLECMA_BDECL_CATCH_PARAM).node);
+      p->decl_flags = 0;
       parser_expect(p, GLECMA_TOK_RPAREN);
     } else {
       parser_kid(p, NULL);
     }
+    early_scope_catch_body(p);
     parser_kid(p, parse_block(p, true));
     parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_CATCH, NULL,
         catch_start, p->prev_end);

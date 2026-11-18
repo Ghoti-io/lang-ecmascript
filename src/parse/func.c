@@ -151,9 +151,11 @@ static PExpr function_rest(Parser * p, size_t start, uint32_t fn,
       &params_end);
   p->flags &= ~PF_PARAMS;
   p->body_simple = p->params_simple;
+  const bool simple = p->params_simple;
   size_t end = 0;
   bool strict = false;
   GLECMA_BNode body = parse_function_body(p, &end, &strict);
+  early_scope_function(p, (fn & FN_METHOD) != 0, simple, strict);
   early_jump_leave(p, jumps);
   p->body_simple = saved_simple;
   p->flags = saved;
@@ -191,7 +193,9 @@ PExpr parse_function_declaration(Parser * p, size_t start, bool is_async,
     parser_next(p);
   }
   // The name is read in the code around the function, and declared there.
+  p->decl_flags = fn == 0 ? DF_PLAIN_FUNCTION : 0u;
   PExpr id = parse_binding_identifier(p, GLECMA_BDECL_FUNCTION);
+  p->decl_flags = 0;
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_FUNCTION, NULL, start,
       start);
   PExpr function = function_rest(p, start, fn, id.node,

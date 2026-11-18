@@ -151,6 +151,8 @@ typedef struct Snap {
   size_t priv_refs;
   size_t priv_decls;
   size_t classes;
+  size_t recs;
+  size_t frames;
 } Snap;
 
 #define NO_PENDING SIZE_MAX
@@ -166,6 +168,44 @@ typedef struct Retro {
   uint32_t rule;
   GLECMA_Location at;
 } Retro;
+
+/** @name Kinds of declaration record (early.c) */
+///@{
+#define SR_VAR 1u
+#define SR_LEX 3u
+#define SR_FUNC 4u        ///< A function declaration that is no generator and not async.
+#define SR_FUNC_OTHER 5u
+#define SR_PARAM 6u
+#define SR_CATCH_SIMPLE 7u
+#define SR_CATCH_PATTERN 8u
+///@}
+
+/** The scope a switch's case block makes: a block with its own error. */
+#define SCOPE_SWITCH 100u
+
+/** @name What a declaration event needs to know that it does not carry (Parser::decl_flags) */
+///@{
+#define DF_PLAIN_FUNCTION 0x1u ///< The function being declared is no generator and not async.
+#define DF_SIMPLE_CATCH 0x2u   ///< The catch parameter is a plain identifier.
+///@}
+
+/** @brief A name a scope declares. */
+typedef struct ScopeRec {
+  const uint16_t * name; ///< Interned.
+  size_t offset;
+  uint8_t kind;          ///< SR_*.
+} ScopeRec;
+
+/** @brief A scope that is open. */
+typedef struct Frame {
+  uint8_t kind;          ///< GLECMA_BSCOPE_* or SCOPE_SWITCH.
+  bool strict;           ///< Strict code where it began.
+  bool body_pending;     ///< A catch clause's block is next and shares the scope.
+  bool body_open;        ///< ... and is being read.
+  bool params_unique;    ///< Parameters may not repeat (known when the function ends).
+  size_t declared;       ///< Records of its own that are not var declarations.
+  size_t first;          ///< Where its records begin.
+} Frame;
 
 /** @brief A label that encloses the code being read. */
 typedef struct Label {
@@ -274,6 +314,12 @@ typedef struct Parser {
   size_t priv_decl_len, priv_decl_cap;
   PrivRef * priv_refs;
   size_t priv_ref_len, priv_ref_cap;
+  ScopeRec * recs;       ///< The declarations of the open scopes, innermost last.
+  size_t rec_len, rec_cap;
+  Frame * frames;
+  size_t frame_len, frame_cap;
+  uint32_t decl_flags;   ///< DF_* for the declaration about to be made.
+  bool top_functions_lexical; ///< The top level declares functions as lexical names (a Module).
   ClassFrame * classes;
   size_t class_len, class_cap;
 
@@ -381,6 +427,14 @@ GLECMA_INTERNAL_API void early_break(Parser * p, const GLECMA_BText * label,
     const GLECMA_Location * at);
 GLECMA_INTERNAL_API void early_continue(Parser * p, const GLECMA_BText * label,
     const GLECMA_Location * at);
+GLECMA_INTERNAL_API void early_scope_enter(Parser * p, uint32_t kind);
+GLECMA_INTERNAL_API void early_scope_leave(Parser * p, uint32_t kind);
+GLECMA_INTERNAL_API void early_scope_switch(Parser * p);
+GLECMA_INTERNAL_API void early_scope_catch_body(Parser * p);
+GLECMA_INTERNAL_API void early_scope_function(Parser * p, bool unique, bool simple,
+    bool strict);
+GLECMA_INTERNAL_API void early_declare(Parser * p, uint32_t what,
+    const GLECMA_BText * name, size_t offset);
 GLECMA_INTERNAL_API void early_class_enter(Parser * p);
 GLECMA_INTERNAL_API void early_class_leave(Parser * p);
 GLECMA_INTERNAL_API void early_private_declare(Parser * p, const GLECMA_BText * name,

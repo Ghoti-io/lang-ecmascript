@@ -388,8 +388,9 @@ TEST(ParseLimits, EveryAllocationOfAParseMayFailWithNothingLeaked) {
   // Repeated until the arenas, the event list and the name table have each
   // grown more than once, so that the sweep reaches those allocations.
   std::string text = "'use strict';\n";
+  // Each copy in a block of its own: its lexical names are its own.
   for (int i = 0; i < 60; i++) {
-    text += unit;
+    text += "{\n" + unit + "}\n";
   }
   for (uint32_t internal : {0u, GLECMA_PARSE_INTERNAL_CHECKING}) {
     size_t total = 0;

@@ -211,6 +211,8 @@ void parser_snap(const Parser * p, Snap * snap) {
   snap->priv_refs = p->priv_ref_len;
   snap->priv_decls = p->priv_decl_len;
   snap->classes = p->class_len;
+  snap->recs = p->rec_len;
+  snap->frames = p->frame_len;
 }
 
 void parser_restore(Parser * p, const Snap * snap) {
@@ -227,6 +229,8 @@ void parser_restore(Parser * p, const Snap * snap) {
   p->priv_ref_len = snap->priv_refs;
   p->priv_decl_len = snap->priv_decls;
   p->class_len = snap->classes;
+  p->rec_len = snap->recs;
+  p->frame_len = snap->frames;
 }
 
 /* ---- Depth and the native stack ------------------------------------------- */
@@ -532,6 +536,14 @@ void parser_event(Parser * p, uint32_t type, uint32_t what,
   }
   event.start = start;
   event.end = end;
+  // The early errors see the scopes and declarations as the builder does.
+  if (type == GLECMA_BEV_SCOPE_ENTER) {
+    early_scope_enter(p, what);
+  } else if (type == GLECMA_BEV_SCOPE_LEAVE) {
+    early_scope_leave(p, what);
+  } else if (type == GLECMA_BEV_DECLARE) {
+    early_declare(p, what, name, start);
+  }
   GLECMA_Result r = p->builder->ops->event(p->builder, &event);
   if (r != GLECMA_OK) {
     parser_fail_result(p, r);

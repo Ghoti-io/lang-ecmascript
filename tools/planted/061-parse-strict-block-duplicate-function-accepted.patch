@@ -1,0 +1,12 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -386,8 +386,7 @@
+         if ((have & (B_LEX | B_VAR)) != 0) {
+           return CONFLICT_REDECLARED;
+         }
+-        if ((have & B_FUNC) != 0 &&
+-            (f->strict || !plain || (have & B_FOTHER) != 0)) {
++        if ((have & B_FUNC) != 0 && (!plain || (have & B_FOTHER) != 0)) {
+           return CONFLICT_REDECLARED;
+         }
+         return OK_NO_CONFLICT;

@@ -1,0 +1,11 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -426,7 +426,7 @@
+           p->top_functions_lexical;
+       switch (kind) {
+         case SR_LEX:
+-          return (have & (B_LEX | B_FUNC | B_VAR | B_PARAM)) != 0
++          return (have & (B_LEX | B_FUNC | B_VAR)) != 0
+               ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+         case SR_FUNC:
+         case SR_FUNC_OTHER:

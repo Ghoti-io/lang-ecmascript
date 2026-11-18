@@ -1,0 +1,11 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -597,7 +597,7 @@
+ // after its body: whether they may repeat is a question of its strictness.
+ void early_scope_function(Parser * p, bool unique, bool simple, bool strict) {
+   Frame * f = &p->frames[p->frame_len - 1];
+-  f->params_unique = unique || !simple || strict;
++  f->params_unique = unique || !simple;
+ }
+ 
+ void early_declare(Parser * p, uint32_t what, const GLECMA_BText * name,

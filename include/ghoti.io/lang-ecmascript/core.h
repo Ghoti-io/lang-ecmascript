@@ -261,6 +261,14 @@ typedef enum {
   GLECMA_RULE_PRIVATE_NAME_CONSTRUCTOR = 69, ///< A private member named `#constructor` (clause 15.7.1).
   GLECMA_RULE_PRIVATE_NAME_DUPLICATE = 70, ///< A private name declared twice in one class, other than a getter and setter pair of one kind (clause 15.7.1).
   GLECMA_RULE_PRIVATE_NAME_UNDECLARED = 71, ///< A reference to a private name that no enclosing class declares (clause 15.7.1).
+  GLECMA_RULE_BLOCK_REDECLARATION = 72, ///< A name declared twice in a block, or both lexically and with var (clause 14.2.1).
+  GLECMA_RULE_SWITCH_REDECLARATION = 73, ///< A name declared twice in a switch's case block, or both lexically and with var (clause 14.12.1).
+  GLECMA_RULE_SCRIPT_REDECLARATION = 74, ///< A name declared twice at the top level of a script, or both lexically and with var (clause 16.1.1).
+  GLECMA_RULE_FUNCTION_REDECLARATION = 75, ///< A lexical name in a function body that is also a parameter, declared twice, or also var-declared (clause 15.2.1).
+  GLECMA_RULE_CATCH_REDECLARATION = 76, ///< A catch parameter declared twice or redeclared by its block, other than by a var (Annex B.3.4) (clause 14.15.1).
+  GLECMA_RULE_FOR_REDECLARATION = 77, ///< A lexical name of a for head that is declared twice or also var-declared in the body (clause 14.7.5.1).
+  GLECMA_RULE_STATIC_BLOCK_REDECLARATION = 78, ///< A name declared twice in a class static block, or both lexically and with var (clause 15.7.1).
+  GLECMA_RULE_DUPLICATE_PARAMETER = 79, ///< A repeated parameter name in strict code, an arrow function, a method or a parameter list that is not simple (clause 15.1.1).
 
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.

@@ -1,0 +1,11 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -412,7 +412,7 @@
+         }
+         return OK_NO_CONFLICT;
+       }
+-      return (have & (B_LEX | B_FUNC | B_CATCH_PATTERN)) != 0
++      return (have & (B_LEX | B_FUNC | catches)) != 0
+           ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+     case GLECMA_BSCOPE_FOR:
+       if (kind == SR_LEX) {

@@ -1,0 +1,11 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -582,7 +582,7 @@
+   // What stays for the scope around: the var declarations, until a function
+   // boundary; everything else ends here.
+   size_t kept = f.first;
+-  if (frame_keeps_vars(f.kind)) {
++  if (0 && frame_keeps_vars(f.kind)) {
+     for (size_t i = f.first; i < p->rec_len; i++) {
+       if (p->recs[i].kind == SR_VAR) {
+         p->recs[kept++] = p->recs[i];

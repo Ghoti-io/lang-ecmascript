@@ -165,14 +165,23 @@ static void load_seed(Seed * s, const char * name) {
   }
   fclose(f);
 
-  size_t copies = (SEED_TARGET_BYTES + n - 1) / n;
-  s->utf8_bytes = copies * n;
+  /* Each copy is a block of its own: a seed that declares a let, a const, a
+   * class or (in strict code) a function would otherwise declare it again in
+   * every copy, which is an early error. */
+  static const char open_block[] = "{\n";
+  static const char close_block[] = "\n}\n";
+  const size_t unit = n + (sizeof(open_block) - 1) + (sizeof(close_block) - 1);
+  size_t copies = (SEED_TARGET_BYTES + unit - 1) / unit;
+  s->utf8_bytes = copies * unit;
   s->utf8 = malloc(s->utf8_bytes);
   if (!s->utf8) {
     setup_failed("out of memory");
   }
   for (size_t i = 0; i < copies; i++) {
-    memcpy(s->utf8 + i * n, raw, n);
+    char * at = s->utf8 + i * unit;
+    memcpy(at, open_block, sizeof(open_block) - 1);
+    memcpy(at + sizeof(open_block) - 1, raw, n);
+    memcpy(at + sizeof(open_block) - 1 + n, close_block, sizeof(close_block) - 1);
   }
 
   /* Transcode, so the UTF-16 case measures the same text. */

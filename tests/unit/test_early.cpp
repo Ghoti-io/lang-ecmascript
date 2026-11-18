@@ -96,6 +96,14 @@ TEST(EarlyErrors, EveryRuleNamesItsClause) {
   EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_PRIVATE_NAME_CONSTRUCTOR), "15.7.1");
   EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_PRIVATE_NAME_DUPLICATE), "15.7.1");
   EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_PRIVATE_NAME_UNDECLARED), "15.7.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_BLOCK_REDECLARATION), "14.2.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_SWITCH_REDECLARATION), "14.12.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_SCRIPT_REDECLARATION), "16.1.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_FUNCTION_REDECLARATION), "15.2.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_CATCH_REDECLARATION), "14.15.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_FOR_REDECLARATION), "14.7.5.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_STATIC_BLOCK_REDECLARATION), "15.7.1");
+  EXPECT_STREQ(glecma_rule_clause(GLECMA_RULE_DUPLICATE_PARAMETER), "15.1.1");
 }
 
 // Clause 13.1.1: `eval` and `arguments` are not bound, and not assigned, in strict code.
@@ -250,6 +258,9 @@ TEST(EarlyErrors, YieldAndAwaitInParameters) {
     {"async function f(x = async () => await 1) {}", 0, kBoth},
     {"async function f() { (x = async () => await 1) => 1; }", 0, kBoth},
     {"async function* g(x = yield) {}", y, kBoth},
+    {"function* g() { async (a = yield) => 1; }", y, kBoth},
+    {"function* g() { async ([a = yield]) => 1; }", y, kBoth},
+    {"function* g() { async (a = yield) ; }", 0, kBoth},
     {"async function* g(x = await 1) {}", a, kBoth},
   });
 }
@@ -300,6 +311,9 @@ TEST(EarlyErrors, DuplicateProto) {
     {"({__proto__: a, ['__proto__']: b, __proto__() {}, get __proto__() {}});", 0, kBoth},
     {"var __proto__ = 1; ({__proto__, __proto__: a, __proto__});", 0, kBoth},
     {"({__proto__: a}); ({__proto__: b});", 0, kBoth},
+    // A statement inside a method of the literal does not make it forget the error.
+    {"({__proto__: a, __proto__: b, m() { for (c;;) break; }});", r, kBoth},
+    {"({a = 1, m() { for (b in x) ; }});", GLECMA_RULE_COVER_INITIALIZED_NAME, kBoth},
   });
 }
 
@@ -499,6 +513,246 @@ TEST(EarlyErrors, PrivateNames) {
     {"(a = class { m() { this.#p; } }) => 1;", undeclared, kBoth},
     {"({a = class { #p; m() { this.#p; } }} = {});", 0, kBoth},
     {"async (a = class { #p; m() { this.#p; } }) => 1;", 0, kBoth},
+  });
+}
+
+// Clauses 14.2.1, 14.3.1.1, 14.12.1, 15.2.1, 16.1.1: a scope's lexically declared
+// names are unique and are not also var-declared names, and Annex B lets sloppy code
+// declare one plain function twice in a block or a case block.
+TEST(EarlyErrors, RedeclarationInBlocksAndScripts) {
+  const uint32_t blk = GLECMA_RULE_BLOCK_REDECLARATION;
+  const uint32_t scr = GLECMA_RULE_SCRIPT_REDECLARATION;
+  const uint32_t fun = GLECMA_RULE_FUNCTION_REDECLARATION;
+  const uint32_t sw = GLECMA_RULE_SWITCH_REDECLARATION;
+  RunCases({
+    {"let a; let a;", scr, kBoth},
+    {"let a; const a = 1;", scr, kBoth},
+    {"let a, a;", scr, kBoth},
+    {"let [a, a] = [];", scr, kBoth},
+    {"let {a, b: a} = {};", scr, kBoth},
+    {"let a; var a;", scr, kBoth},
+    {"var a; let a;", scr, kBoth},
+    {"let a; { var a; }", scr, kBoth},
+    {"{ var a; } let a;", scr, kBoth},
+    {"let a; function a() {}", scr, kBoth},
+    {"function a() {} let a;", scr, kBoth},
+    {"class a {} var a;", scr, kBoth},
+    {"let a; class a {}", scr, kBoth},
+    {"class a {} class a {}", scr, kBoth},
+    {"let a; for (var a;;) break;", scr, kBoth},
+    {"let a; if (b) { for (var a of c) ; }", scr, kBoth},
+    {"var a; var a; function a() {} function a() {}", 0, kBoth},
+    {"var a; function a() {} var a;", 0, kBoth},
+    {"let a; { let a; var b; } var b;", 0, kBoth},
+    {"let a; { let a; { let a; } }", 0, kBoth},
+    {"var a; { let a; }", 0, kBoth},
+    {"{ let a; } { let a; } var a;", 0, kBoth},
+    {"let a; function f() { var a; let a2; }", 0, kBoth},
+    {"let a; (function (a) { var a; });", 0, kBoth},
+    // A function's body is its own scope.
+    {"function f() { let a; let a; }", fun, kBoth},
+    {"function f() { let a; var a; }", fun, kBoth},
+    {"function f() { { var a; } let a; }", fun, kBoth},
+    {"function f() { let a; function a() {} }", fun, kBoth},
+    {"function f(a) { let a; }", fun, kBoth},
+    {"function f(a = 1) { let a; }", fun, kBoth},
+    {"function f({a}) { let a; }", fun, kBoth},
+    {"function f(a) { var a; function a() {} }", 0, kBoth},
+    {"(function f() { let f; });", 0, kBoth},
+    {"(function* f() { let f; var g; });", 0, kBoth},
+    {"x = class C { m() { let C; } };", 0, kBoth},
+    {"(a) => { let a; };", fun, kBoth},
+    {"a => { let a; };", fun, kBoth},
+    {"async (a) => { let a; };", fun, kBoth},
+    {"(a, b = 1) => { let b; };", fun, kBoth},
+    {"({ m(a) { let a; } });", fun, kBoth},
+    {"({ set s(a) { let a; } });", fun, kBoth},
+    {"class C { m(a) { let a; } }", fun, kBoth},
+    {"class C { constructor(a) { let a; } }", fun, kBoth},
+    {"(a) => { var a; };", 0, kBoth},
+    // Blocks.
+    {"{ let a; let a; }", blk, kBoth},
+    {"{ let a; var a; }", blk, kBoth},
+    {"{ var a; let a; }", blk, kBoth},
+    {"{ { var a; } let a; }", blk, kBoth},
+    {"{ let a; { var a; } }", blk, kBoth},
+    {"{ const a = 1; function a() {} }", blk, kBoth},
+    {"{ function a() {} let a; }", blk, kBoth},
+    {"{ class a {} function a() {} }", blk, kBoth},
+    {"{ function a() {} var a; }", blk, kBoth},
+    {"{ var a; function a() {} }", blk, kBoth},
+    {"if (x) { let a; let a; }", blk, kBoth},
+    {"while (x) { let a; var a; }", blk, kBoth},
+    {"try {} catch (e) { { let a; let a; } }", blk, kBoth},
+    {"try { let a; let a; } finally {}", blk, kBoth},
+    {"{ let a; { let a; } }", 0, kBoth},
+    {"{ var a; { var a; } }", 0, kBoth},
+    {"{ let a; } { var a; }", 0, kBoth},
+    // Annex B.3.2.4: duplicates among plain function declarations, in sloppy code.
+    {"{ function a() {} function a() {} }", 0, kSloppy},
+    {"{ function a() {} function a() {} }", blk, kStrict},
+    {"{ function a() {} function a() {} function a() {} }", 0, kSloppy},
+    {"{ function a() {} function* a() {} }", blk, kBoth},
+    {"{ function* a() {} function* a() {} }", blk, kBoth},
+    {"{ function a() {} async function a() {} }", blk, kBoth},
+    {"{ async function a() {} async function a() {} }", blk, kBoth},
+    {"{ function a() {} class a {} }", blk, kBoth},
+    {"{ function* a() {} function a() {} }", blk, kBoth},
+    {"function f() { function a() {} function a() {} }", 0, kBoth},
+    {"function f() { function a() {} function* a() {} async function a() {} }", 0, kBoth},
+    {"function a() {} function* a() {}", 0, kBoth},
+    {"if (x) function a() {} else function a() {}", 0, kSloppy},
+    {"a: function f() {} a2: function f() {}", 0, kSloppy},
+    {"{ a: function f() {} function f() {} }", 0, kSloppy},
+    // Switch case blocks (14.12.1, B.3.2.5).
+    {"switch (a) { case 1: let b; case 2: let b; }", sw, kBoth},
+    {"switch (a) { case 1: let b; default: var b; }", sw, kBoth},
+    {"switch (a) { case 1: var b; case 2: let b; }", sw, kBoth},
+    {"switch (a) { case 1: function b() {} case 2: let b; }", sw, kBoth},
+    {"switch (a) { case 1: class b {} case 2: class b {} }", sw, kBoth},
+    {"switch (a) { case 1: function b() {} case 2: function b() {} }", 0, kSloppy},
+    {"switch (a) { case 1: function b() {} case 2: function b() {} }", sw, kStrict},
+    {"switch (a) { case 1: function b() {} case 2: function* b() {} }", sw, kBoth},
+    {"switch (a) { case 1: let b; } switch (a) { case 1: let b; }", 0, kBoth},
+    {"switch (a) { case 1: { let b; } case 2: let b; }", 0, kBoth},
+    {"switch (a) { case 1: var b; case 2: var b; }", 0, kBoth},
+    {"let a; switch (b) { case 1: let a; }", 0, kBoth},
+    // Many plain blocks around many vars: nothing to check, and the var still conflicts at the top.
+    {"{{{{{{{{ var a; var b; }}}}}}}} let a;", scr, kBoth},
+    {"{{{{{{{{ var a; var b; }}}}}}}} let c; { { let a; } }", 0, kBoth},
+    {"let z; { let y; { { var q; } { let q2; } } }", 0, kBoth},
+    {"{ let y; { { var y; } } }", blk, kBoth},
+    // A name the code uses many times is checked in time that does not grow with the count.
+    {"{ let a0; let a1; let a2; let a3; let a4; let a5; let a6; let a7; let a8; let a9; "
+     "let b0; let b1; let b2; let b3; let b4; let b5; let b6; let b7; let b8; let b9; let a0; }", blk, kBoth},
+    {"{ let a0; let a1; let a2; let a3; let a4; let a5; let a6; let a7; let a8; let a9; "
+     "let b0; let b1; let b2; let b3; let b4; let b5; let b6; let b7; let b8; let b9; let b10; }", 0, kBoth},
+  });
+}
+
+// Clause 15.1.1: a parameter list repeats a name only in sloppy code, in a plain
+// function whose parameters are all simple.
+TEST(EarlyErrors, DuplicateParameters) {
+  const uint32_t dup = GLECMA_RULE_DUPLICATE_PARAMETER;
+  RunCases({
+    {"function f(a, a) {}", 0, kSloppy},
+    {"function f(a, a) {}", dup, kStrict},
+    {"function f(a, a) { 'use strict'; }", dup, kSloppy},
+    {"function f(a, a) { function g() { 'use strict'; } }", 0, kSloppy},
+    {"'use strict'; function f(a, a) {}", dup, kBoth},
+    {"function g() { 'use strict'; function f(a, a) {} }", dup, kBoth},
+    {"(function (a, b, a) {});", 0, kSloppy},
+    {"(function* (a, a) {});", 0, kSloppy},
+    {"async function f(a, a) {}", 0, kSloppy},
+    {"(async function (a, a) {});", 0, kSloppy},
+    {"function f(a, a = 1) {}", dup, kBoth},
+    {"function f(a = 1, a) {}", dup, kBoth},
+    {"function f(a, ...a) {}", dup, kBoth},
+    {"function f(a, [a]) {}", dup, kBoth},
+    {"function f([a, a]) {}", dup, kBoth},
+    {"function f({a, b: a}) {}", dup, kBoth},
+    {"function f({a}, {a}) {}", dup, kBoth},
+    {"function f(a, {b: [a]}) {}", dup, kBoth},
+    {"(a, a) => 1;", dup, kBoth},
+    {"a => a; (a, b, a) => 1;", dup, kBoth},
+    {"async (a, a) => 1;", dup, kBoth},
+    {"(a, [a]) => 1;", dup, kBoth},
+    {"(a, ...a) => 1;", dup, kBoth},
+    {"(a, a = 1) => 1;", dup, kBoth},
+    {"(a, b) => 1; (a, a2) => 2;", 0, kBoth},
+    {"({ m(a, a) {} });", dup, kBoth},
+    {"({ *m(a, a) {} });", dup, kBoth},
+    {"({ async m(a, a) {} });", dup, kBoth},
+    {"({ set s(a) {} });", 0, kBoth},
+    {"class C { m(a, a) {} }", dup, kBoth},
+    {"class C { constructor(a, a) {} }", dup, kBoth},
+    {"class C { static m(a, a) {} }", dup, kBoth},
+    {"class C { *m(a, a) {} }", dup, kBoth},
+    {"x = class { m(a, b) { function f(a, a) {} } };", dup, kBoth},
+    // What an inner function declares is its own.
+    {"function f(a) { function g(a, b) {} }", 0, kBoth},
+    {"function f(a, b) { (c, a) => 1; }", 0, kBoth},
+  });
+}
+
+// Clause 14.15.1 and Annex B.3.4: a catch parameter and the block it guards. A simple
+// parameter may be redeclared by a var (a for-of head included), a destructured one not.
+TEST(EarlyErrors, CatchParameters) {
+  const uint32_t c = GLECMA_RULE_CATCH_REDECLARATION;
+  RunCases({
+    {"try {} catch (e) { let e; }", c, kBoth},
+    {"try {} catch (e) { const e = 1; }", c, kBoth},
+    {"try {} catch (e) { class e {} }", c, kBoth},
+    {"try {} catch (e) { function e() {} }", c, kBoth},
+    {"try {} catch ([e]) { let e; }", c, kBoth},
+    {"try {} catch ({e}) { let e; }", c, kBoth},
+    {"try {} catch ([e, e]) {}", c, kBoth},
+    {"try {} catch ({a, b: a}) {}", c, kBoth},
+    {"try {} catch ({e}) { var e; }", c, kBoth},
+    {"try {} catch ([e]) { var e; }", c, kBoth},
+    {"try {} catch ([e]) { { var e; } }", c, kBoth},
+    {"try {} catch (e) { var e; }", 0, kBoth},
+    {"try {} catch (e) { { var e; } }", 0, kBoth},
+    {"try {} catch (e) { for (var e;;) break; }", 0, kBoth},
+    {"try {} catch (e) { for (var e in {}) ; }", 0, kBoth},
+    // The for-of exception of earlier editions is gone: a var may redeclare a simple parameter.
+    {"try {} catch (e) { for (var e of []) ; }", 0, kBoth},
+    {"try {} catch (e) { { for (var e of []) ; } }", 0, kBoth},
+    {"try {} catch ([e]) { for (var e of []) ; }", c, kBoth},
+    {"try {} catch (e) { for (var [e] in {}) ; for (var [e] of []) ; }", 0, kBoth},
+    {"try {} catch (e) { { let e; } }", 0, kBoth},
+    {"try {} catch (e) { { function e() {} } }", 0, kBoth},
+    {"try {} catch (e) { function f() { let e; var e2; } }", 0, kBoth},
+    {"try {} catch (e) { var e; } let e;", GLECMA_RULE_SCRIPT_REDECLARATION, kBoth},
+    {"let e; try {} catch (e) { let e2; }", 0, kBoth},
+    {"try {} catch (e) { } try {} catch (e) { }", 0, kBoth},
+    {"try {} catch { let e; var e2; }", 0, kBoth},
+    {"try { let e; } catch (e) { let e2; }", 0, kBoth},
+    {"try {} catch (e) { { var e; } let e2; }", 0, kBoth},
+  });
+}
+
+// Clauses 14.7.4.1, 14.7.5.1: a for head's lexical names and the body.
+TEST(EarlyErrors, ForHeads) {
+  const uint32_t f = GLECMA_RULE_FOR_REDECLARATION;
+  RunCases({
+    {"for (let a, a;;) ;", f, kBoth},
+    {"for (const a = 1, a = 2;;) ;", f, kBoth},
+    {"for (let [a, a] of b) ;", f, kBoth},
+    {"for (let {a, b: a} in c) ;", f, kBoth},
+    {"for (let a;;) { var a; }", f, kBoth},
+    {"for (const a = 1;;) var a;", f, kBoth},
+    {"for (let a of b) { var a; }", f, kBoth},
+    {"for (let a in b) { var a; }", f, kBoth},
+    {"for (let a of b) { { var a; } }", f, kBoth},
+    {"for (let a;;) if (b) { var a; }", f, kBoth},
+    {"for (let a of b) for (var a of c) ;", f, kBoth},
+    {"for (let a;;) { let a; }", 0, kBoth},
+    {"for (let a of b) { let a; { let a; } }", 0, kBoth},
+    {"for (let a of b) { var c; { var d; } }", 0, kBoth},
+    {"for (var a of b) { let a; }", 0, kBoth},
+    {"for (var a of b) { var a; }", 0, kBoth},
+    {"for (let a of b) ; for (let a of b) ;", 0, kBoth},
+    {"for (let a of b) function_(a);", 0, kBoth},
+    {"let a; for (let a;;) break;", 0, kBoth},
+    {"for (let a;;) { function g() { var a; } }", 0, kBoth},
+  });
+}
+
+// Clause 15.7.1: a static block is a scope of its own, laid out like a function body.
+TEST(EarlyErrors, StaticBlocks) {
+  const uint32_t s = GLECMA_RULE_STATIC_BLOCK_REDECLARATION;
+  RunCases({
+    {"class C { static { let a; let a; } }", s, kBoth},
+    {"class C { static { let a; var a; } }", s, kBoth},
+    {"class C { static { var a; let a; } }", s, kBoth},
+    {"class C { static { { var a; } let a; } }", s, kBoth},
+    {"class C { static { function a() {} let a; } }", s, kBoth},
+    {"class C { static { class a {} function a() {} } }", s, kBoth},
+    {"class C { static { var a; var a; function a() {} function a() {} } }", 0, kBoth},
+    {"class C { static { let a; { let a; } } static { let a; } }", 0, kBoth},
+    {"let a; class C { static { var a; } }", 0, kBoth},
+    {"class C { static { var a; } } let a;", 0, kBoth},
   });
 }
 

@@ -61,7 +61,8 @@ static void * stack_room(Parser * p, void * array, size_t length, size_t * capac
 }
 
 void early_free(Parser * p) {
-  void * stacks[] = {p->labels, p->priv_decls, p->priv_refs, p->classes};
+  void * stacks[] = {p->labels, p->priv_decls, p->priv_refs, p->classes,
+      p->recs, p->frames};
   for (size_t i = 0; i < sizeof stacks / sizeof stacks[0]; i++) {
     if (stacks[i] != NULL) {
       p->allocator->free_fn(p->allocator->ctx, stacks[i]);
@@ -330,6 +331,311 @@ void early_class_leave(Parser * p) {
   if (p->class_len == 0 && kept > frame.ref_first) {
     parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED,
         &p->priv_refs[frame.ref_first].at);
+  }
+}
+
+/* ---- Scopes and declarations (clauses 14.2.1, 14.3.1.1, 14.7.5.1, 14.12.1, 14.15.1, 15.1.1, 15.2.1, 15.7.1, 16.1.1) -- */
+
+// Every name a scope declares is a record. A scope's records lie together at
+// the end of the stack while it is open, and are checked once, when it ends:
+// what clauses 14.2.1 and the others say about LexicallyDeclaredNames and
+// VarDeclaredNames is a statement about the whole scope, which is only known
+// then (a directive late in a function body decides whether its parameters may
+// repeat). A var declaration is a record of the scope it is written in and
+// stays in the stack when that scope ends, so that the scope around sees it
+// too, until a function boundary stops it.
+
+#define B_LEX 0x01u
+#define B_FUNC 0x02u
+#define B_FPLAIN 0x04u  // a function declaration that is no generator and not async
+#define B_FOTHER 0x08u
+#define B_VAR 0x10u
+#define B_PARAM 0x40u
+#define B_CATCH_SIMPLE 0x80u
+#define B_CATCH_PATTERN 0x100u
+
+static uint32_t record_bits(uint8_t kind) {
+  switch (kind) {
+    case SR_LEX: return B_LEX;
+    case SR_FUNC: return B_FUNC | B_FPLAIN;
+    case SR_FUNC_OTHER: return B_FUNC | B_FOTHER;
+    case SR_VAR: return B_VAR;
+    case SR_PARAM: return B_PARAM;
+    case SR_CATCH_SIMPLE: return B_CATCH_SIMPLE;
+    default: return B_CATCH_PATTERN;
+  }
+}
+
+typedef enum { OK_NO_CONFLICT, CONFLICT_REDECLARED, CONFLICT_PARAMETER } Conflict;
+
+// Whether a declaration of kind `kind` clashes with what the scope already
+// holds under the same name (`have`), by the rules of the scope's kind.
+static Conflict conflict_in(const Parser * p, const Frame * f, uint32_t have,
+    uint8_t kind) {
+  const uint32_t catches = B_CATCH_SIMPLE | B_CATCH_PATTERN;
+  const bool plain = kind == SR_FUNC;
+  switch (f->kind) {
+    case GLECMA_BSCOPE_BLOCK:
+    case SCOPE_SWITCH:
+      // Annex B.3.2.4, B.3.2.5: in sloppy code a block may declare one plain
+      // function twice.
+      if (kind == SR_LEX) {
+        return (have & (B_LEX | B_FUNC | B_VAR)) != 0 ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+      }
+      if (kind == SR_FUNC || kind == SR_FUNC_OTHER) {
+        if ((have & (B_LEX | B_VAR)) != 0) {
+          return CONFLICT_REDECLARED;
+        }
+        if ((have & B_FUNC) != 0 &&
+            (f->strict || !plain || (have & B_FOTHER) != 0)) {
+          return CONFLICT_REDECLARED;
+        }
+        return OK_NO_CONFLICT;
+      }
+      return (have & (B_LEX | B_FUNC)) != 0 ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+    case GLECMA_BSCOPE_CATCH:
+      // Annex B.3.4: a simple catch parameter may be redeclared by a var.
+      if (kind == SR_CATCH_SIMPLE || kind == SR_CATCH_PATTERN) {
+        return (have & catches) != 0 ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+      }
+      if (kind == SR_LEX) {
+        return (have & (B_LEX | B_FUNC | B_VAR | catches)) != 0
+            ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+      }
+      if (kind == SR_FUNC || kind == SR_FUNC_OTHER) {
+        if ((have & (B_LEX | B_VAR | catches)) != 0) {
+          return CONFLICT_REDECLARED;
+        }
+        if ((have & B_FUNC) != 0 &&
+            (f->strict || !plain || (have & B_FOTHER) != 0)) {
+          return CONFLICT_REDECLARED;
+        }
+        return OK_NO_CONFLICT;
+      }
+      return (have & (B_LEX | B_FUNC | B_CATCH_PATTERN)) != 0
+          ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+    case GLECMA_BSCOPE_FOR:
+      if (kind == SR_LEX) {
+        return (have & (B_LEX | B_VAR)) != 0 ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+      }
+      return (have & B_LEX) != 0 ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+    default: {
+      // A script, a function or a static block: its top-level functions are
+      // var-like, unless the top level is a module's.
+      const bool functions_lexical = f->kind == GLECMA_BSCOPE_SCRIPT &&
+          p->top_functions_lexical;
+      switch (kind) {
+        case SR_LEX:
+          return (have & (B_LEX | B_FUNC | B_VAR | B_PARAM)) != 0
+              ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+        case SR_FUNC:
+        case SR_FUNC_OTHER:
+          return (have & (B_LEX | (functions_lexical ? (B_FUNC | B_VAR) : 0u))) != 0
+              ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+        case SR_PARAM:
+          return (have & B_PARAM) != 0 && f->params_unique ? CONFLICT_PARAMETER
+                                                           : OK_NO_CONFLICT;
+        default:
+          return (have & (B_LEX | (functions_lexical ? B_FUNC : 0u))) != 0
+              ? CONFLICT_REDECLARED : OK_NO_CONFLICT;
+      }
+    }
+  }
+}
+
+static uint32_t redeclaration_rule(const Frame * f) {
+  switch (f->kind) {
+    case GLECMA_BSCOPE_BLOCK: return GLECMA_RULE_BLOCK_REDECLARATION;
+    case SCOPE_SWITCH: return GLECMA_RULE_SWITCH_REDECLARATION;
+    case GLECMA_BSCOPE_CATCH: return GLECMA_RULE_CATCH_REDECLARATION;
+    case GLECMA_BSCOPE_FOR: return GLECMA_RULE_FOR_REDECLARATION;
+    case GLECMA_BSCOPE_STATIC_BLOCK: return GLECMA_RULE_STATIC_BLOCK_REDECLARATION;
+    case GLECMA_BSCOPE_SCRIPT: return GLECMA_RULE_SCRIPT_REDECLARATION;
+    default: return GLECMA_RULE_FUNCTION_REDECLARATION;
+  }
+}
+
+static bool frame_keeps_vars(uint32_t kind) {
+  switch (kind) {
+    case GLECMA_BSCOPE_BLOCK:
+    case SCOPE_SWITCH:
+    case GLECMA_BSCOPE_CATCH:
+    case GLECMA_BSCOPE_FOR:
+    case GLECMA_BSCOPE_WITH:
+    case GLECMA_BSCOPE_CLASS:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static GLECMA_Location location_of(const Parser * p, size_t offset) {
+  GLECMA_Location at = {0, 0, 0};
+  (void)glecma_source_location(p->source, offset, &at);
+  return at;
+}
+
+// The records of a scope that is ending, looked at together: the first that
+// clashes with an earlier one under the same name is the error.
+static void scope_check(Parser * p, const Frame * f) {
+  const ScopeRec * recs = p->recs + f->first;
+  const size_t count = p->rec_len - f->first;
+  if (count < 2) {
+    return;
+  }
+  Conflict found = OK_NO_CONFLICT;
+  size_t at = 0;
+  if (count <= 16) {
+    for (size_t i = 1; i < count && found == OK_NO_CONFLICT; i++) {
+      uint32_t have = 0;
+      for (size_t j = 0; j < i; j++) {
+        if (recs[j].name == recs[i].name) {
+          have |= record_bits(recs[j].kind);
+        }
+      }
+      if (have != 0) {
+        found = conflict_in(p, f, have, recs[i].kind);
+        at = i;
+      }
+    }
+  } else {
+    size_t capacity = 32;
+    while (capacity < count * 2) {
+      capacity *= 2;
+    }
+    const uint16_t ** names = (const uint16_t **)p->allocator->calloc_fn(
+        p->allocator->ctx, capacity, sizeof(const uint16_t *));
+    uint32_t * seen = (uint32_t *)p->allocator->calloc_fn(p->allocator->ctx,
+        capacity, sizeof(uint32_t));
+    if (names == NULL || seen == NULL) {
+      if (names != NULL) {
+        p->allocator->free_fn(p->allocator->ctx, (void *)names);
+      }
+      if (seen != NULL) {
+        p->allocator->free_fn(p->allocator->ctx, seen);
+      }
+      parser_fail_result(p, GLECMA_ERR_OOM);
+    }
+    const size_t mask = capacity - 1;
+    for (size_t i = 0; i < count && found == OK_NO_CONFLICT; i++) {
+      size_t slot = name_slot(recs[i].name, mask);
+      while (names[slot] != NULL && names[slot] != recs[i].name) {
+        slot = (slot + 1) & mask;
+      }
+      if (names[slot] == NULL) {
+        names[slot] = recs[i].name;
+      } else {
+        found = conflict_in(p, f, seen[slot], recs[i].kind);
+        at = i;
+      }
+      seen[slot] |= record_bits(recs[i].kind);
+    }
+    p->allocator->free_fn(p->allocator->ctx, (void *)names);
+    p->allocator->free_fn(p->allocator->ctx, seen);
+  }
+  if (found != OK_NO_CONFLICT) {
+    GLECMA_Location where = location_of(p, recs[at].offset);
+    parser_fail(p, found == CONFLICT_PARAMETER ? GLECMA_RULE_DUPLICATE_PARAMETER
+                                               : redeclaration_rule(f),
+        &where);
+  }
+}
+
+void early_scope_enter(Parser * p, uint32_t kind) {
+  if (kind == GLECMA_BSCOPE_BLOCK && p->frame_len > 0) {
+    Frame * top = &p->frames[p->frame_len - 1];
+    if (top->kind == GLECMA_BSCOPE_CATCH && top->body_pending) {
+      // The block of a catch clause shares the clause's scope (clause 14.15.1).
+      top->body_pending = false;
+      top->body_open = true;
+      return;
+    }
+  }
+  p->frames = (Frame *)stack_room(p, p->frames, p->frame_len, &p->frame_cap,
+      sizeof(Frame));
+  Frame * f = &p->frames[p->frame_len++];
+  memset(f, 0, sizeof(*f));
+  f->kind = (uint8_t)kind;
+  f->strict = (p->flags & PF_STRICT) != 0;
+  f->first = p->rec_len;
+}
+
+void early_scope_leave(Parser * p, uint32_t kind) {
+  Frame * top = &p->frames[p->frame_len - 1];
+  if (kind == GLECMA_BSCOPE_BLOCK && top->kind == GLECMA_BSCOPE_CATCH &&
+      top->body_open) {
+    top->body_open = false;
+    return;
+  }
+  const Frame f = *top;
+  p->frame_len--;
+  if (f.declared == 0) {
+    // Nothing here can clash: a scope with no lexical name, function or
+    // parameter of its own passes its var declarations on untouched, which is
+    // what makes a deep run of plain blocks cost nothing.
+    if (!frame_keeps_vars(f.kind)) {
+      p->rec_len = f.first;
+    }
+    return;
+  }
+  scope_check(p, &f);
+  // What stays for the scope around: the var declarations, until a function
+  // boundary; everything else ends here.
+  size_t kept = f.first;
+  if (frame_keeps_vars(f.kind)) {
+    for (size_t i = f.first; i < p->rec_len; i++) {
+      if (p->recs[i].kind == SR_VAR) {
+        p->recs[kept++] = p->recs[i];
+      }
+    }
+  }
+  p->rec_len = kept;
+}
+
+// The top scope is the one a switch's case block makes.
+void early_scope_switch(Parser * p) {
+  p->frames[p->frame_len - 1].kind = SCOPE_SWITCH;
+}
+
+// The next block belongs to the catch clause whose scope is open.
+void early_scope_catch_body(Parser * p) {
+  p->frames[p->frame_len - 1].body_pending = true;
+}
+
+// What the function that is ending says about its parameters, known only
+// after its body: whether they may repeat is a question of its strictness.
+void early_scope_function(Parser * p, bool unique, bool simple, bool strict) {
+  Frame * f = &p->frames[p->frame_len - 1];
+  f->params_unique = unique || !simple || strict;
+}
+
+void early_declare(Parser * p, uint32_t what, const GLECMA_BText * name,
+    size_t offset) {
+  uint8_t kind;
+  switch (what) {
+    case GLECMA_BDECL_VAR: kind = SR_VAR; break;
+    case GLECMA_BDECL_LET:
+    case GLECMA_BDECL_CONST:
+    case GLECMA_BDECL_CLASS: kind = SR_LEX; break;
+    case GLECMA_BDECL_FUNCTION:
+      kind = (p->decl_flags & DF_PLAIN_FUNCTION) != 0 ? SR_FUNC : SR_FUNC_OTHER;
+      break;
+    case GLECMA_BDECL_PARAM: kind = SR_PARAM; break;
+    case GLECMA_BDECL_CATCH_PARAM:
+      kind = (p->decl_flags & DF_SIMPLE_CATCH) != 0 ? SR_CATCH_SIMPLE
+                                                    : SR_CATCH_PATTERN;
+      break;
+    default:
+      return; // a function expression's or a class's own name is in a scope of its own
+  }
+  p->recs = (ScopeRec *)stack_room(p, p->recs, p->rec_len, &p->rec_cap,
+      sizeof(ScopeRec));
+  p->recs[p->rec_len].name = name->units;
+  p->recs[p->rec_len].offset = offset;
+  p->recs[p->rec_len].kind = kind;
+  p->rec_len++;
+  if (kind != SR_VAR) {
+    p->frames[p->frame_len - 1].declared++;
   }
 }
 

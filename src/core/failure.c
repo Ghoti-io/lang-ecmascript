@@ -235,6 +235,22 @@ static const RuleRow rules[] = {
       "Private name has already been declared"},
   {GLECMA_RULE_PRIVATE_NAME_UNDECLARED, "private-name-undeclared", "15.7.1",
       "Private name is not declared in an enclosing class"},
+  {GLECMA_RULE_BLOCK_REDECLARATION, "block-redeclaration", "14.2.1",
+      "Identifier has already been declared in this block"},
+  {GLECMA_RULE_SWITCH_REDECLARATION, "switch-redeclaration", "14.12.1",
+      "Identifier has already been declared in this switch"},
+  {GLECMA_RULE_SCRIPT_REDECLARATION, "script-redeclaration", "16.1.1",
+      "Identifier has already been declared in this script"},
+  {GLECMA_RULE_FUNCTION_REDECLARATION, "function-redeclaration", "15.2.1",
+      "Identifier has already been declared in this function"},
+  {GLECMA_RULE_CATCH_REDECLARATION, "catch-redeclaration", "14.15.1",
+      "Identifier has already been declared by this catch clause"},
+  {GLECMA_RULE_FOR_REDECLARATION, "for-redeclaration", "14.7.5.1",
+      "Identifier has already been declared in this for statement"},
+  {GLECMA_RULE_STATIC_BLOCK_REDECLARATION, "static-block-redeclaration", "15.7.1",
+      "Identifier has already been declared in this static block"},
+  {GLECMA_RULE_DUPLICATE_PARAMETER, "duplicate-parameter", "15.1.1",
+      "Duplicate parameter name is not allowed here"},
 };
 
 #define RULE_ROWS (sizeof(rules) / sizeof(rules[0]))

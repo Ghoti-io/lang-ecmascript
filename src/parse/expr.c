@@ -548,14 +548,15 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
   p->flags = (saved_flags & ~(PF_YIELD | PF_AWAIT | PF_AWAIT_RESERVED | PF_PARAMS)) |
       PF_RETURN | (is_async ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u);
   const bool saved_simple = p->body_simple;
+  const bool simple = p->params_simple;
   const JumpCtx jumps = early_jump_enter(p);
-  p->body_simple = p->params_simple;
+  p->body_simple = simple;
+  bool body_strict = (saved_flags & PF_STRICT) != 0;
   uint32_t flags = is_async ? GLECMA_NODEF_ASYNC : 0u;
   size_t end;
   GLECMA_BNode body;
   if (p->tok.kind == GLECMA_TOK_LBRACE) {
     p->no_in = false;
-    bool body_strict = false;
     body = parse_function_body(p, &end, &body_strict);
   } else {
     p->no_in = saved_no_in;
@@ -570,6 +571,7 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
     end = e.end;
     flags |= GLECMA_NODEF_EXPRESSION_BODY;
   }
+  early_scope_function(p, true, simple, body_strict);
   early_jump_leave(p, jumps);
   p->body_simple = saved_simple;
   p->flags = saved_flags;
@@ -591,7 +593,9 @@ PExpr parse_arrow_paren(Parser * p, size_t start, bool is_async) {
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_ARROW, NULL, start,
       start);
   if (is_async) {
-    p->flags = (saved_flags | PF_AWAIT | PF_AWAIT_RESERVED) & ~PF_YIELD;
+    // `yield` stays what the code around makes it, so that a yield expression
+    // in the head of an async arrow inside a generator is found (clause 15.9.1).
+    p->flags = saved_flags | PF_AWAIT | PF_AWAIT_RESERVED;
   }
   // No `yield` or `await` expression among the parameters (clauses 15.3.1, 15.9.1).
   p->flags |= PF_PARAMS;
