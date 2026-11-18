@@ -77,6 +77,22 @@ extern "C" {
 #define PARSER_NOINLINE
 #endif
 
+/**
+ * The current position of the native stack, as a number. The frame's own
+ * address, where the compiler offers it: an address-sanitized build moves
+ * locals whose address is taken to a stack of its own, which is not where
+ * the thread's stack is, and a measurement taken from one would be nonsense.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define PARSER_STACK_POSITION() ((uintptr_t)__builtin_frame_address(0))
+#elif defined(_MSC_VER)
+#include <intrin.h>
+#define PARSER_STACK_POSITION() ((uintptr_t)_AddressOfReturnAddress())
+#else
+GLECMA_INTERNAL_API uintptr_t parser_stack_here(void);
+#define PARSER_STACK_POSITION() parser_stack_here()
+#endif
+
 /** @brief A function that never returns: it leaves by `longjmp`. */
 #define GLECMA_NORETURN _Noreturn
 
@@ -324,6 +340,7 @@ typedef struct Parser {
   uint32_t label_chain;  ///< Labels directly before the statement about to be read.
   bool last_labelled_fn; ///< The statement just read was a labelled function.
   bool params_simple;    ///< The parameter list last read was a simple list.
+  bool last_body_strict; ///< The function body last read ended in strict code.
   bool body_simple;      ///< The parameters of the function whose body is read were.
   PrivDecl * priv_decls;
   size_t priv_decl_len, priv_decl_cap;
@@ -338,6 +355,9 @@ typedef struct Parser {
   size_t class_len, class_cap;
 
   // What a Module's imports and exports need (module.c).
+  const GLECMA_PrivateName * outer_private; ///< Private names of the code around (direct eval, a re-parse).
+  uint32_t outer_private_count;
+  PtrSet outer_names;    ///< The same, interned.
   PtrSet export_names;   ///< Every name the module exports.
   PtrSet attribute_keys; ///< The keys of the import attributes being read.
   ModuleRef * export_refs;
@@ -366,6 +386,59 @@ typedef struct PKey {
   bool is_name;      ///< An IdentifierName (a reserved word included).
   bool is_private;
 } PKey;
+
+/**
+ * @brief One run of the parser over a source: what the entries of every goal
+ *   hand to ::parser_execute.
+ *
+ * An entry validates its own inputs, sets the code's context up as parser
+ * flags, and gives a `run` that reads what its goal reads and finishes the
+ * tree. Everything else (the builder, the lexer, the limits, the one cleanup
+ * and the failure record) is the same for every goal and lives in one place.
+ */
+typedef struct ParseJob ParseJob;
+typedef void (*ParseRun)(Parser * p, GLECMA_Tree * tree, const ParseJob * job,
+    bool * strict);
+struct ParseJob {
+  GLECMA_Source * source;
+  const GLECMA_ParseOptions * options; ///< The limits and the feature set.
+  const GLECMA_Allocator * allocator;
+  uint32_t goal;        ///< The goal the tree records.
+  uint32_t internal;    ///< GLECMA_PARSE_INTERNAL_* (the checking builder, the built-in entry).
+  uint32_t flags;       ///< The PF_* flags of the code the run starts in.
+  bool strict_lexer;    ///< The tokenizer starts in strict code.
+  bool module_lexer;    ///< ... and under the Module goal.
+  const GLECMA_EvalContext * eval; ///< Direct eval only: copied into the tree.
+  const GLECMA_PrivateName * outer_private; ///< The private names of the code around.
+  uint32_t outer_private_count;
+  bool bounded;         ///< Read only [start, end) of the source.
+  size_t start, end;
+  ParseRun run;
+  void * data;          ///< The goal's own input, read by `run`.
+};
+
+/**
+ * @brief Checks the parse options before any work: the failure record, the
+ *   sizes, the limits and an unbuilt feature.
+ *
+ * @param limits Receives the resolved limits.
+ * @return ::GLECMA_OK, or the refusal, already written to @p failure.
+ */
+GLECMA_INTERNAL_API GLECMA_Result parser_prologue(
+    const GLECMA_ParseOptions * options, GLECMA_Failure * failure,
+    GLECMA_Limits * limits);
+/** @brief Writes a refusal and returns it. */
+GLECMA_INTERNAL_API GLECMA_Result parser_refuse(GLECMA_Failure * failure,
+    GLECMA_Result result, const char * message);
+/**
+ * @brief Runs a job: opens the tree and the tokenizer, runs the goal, and
+ *   writes the failure record.
+ *
+ * Nothing is left allocated on failure, and the tree is written only on
+ * success.
+ */
+GLECMA_INTERNAL_API GLECMA_Result parser_execute(const ParseJob * job,
+    GLECMA_Failure * failure, GLECMA_Tree ** out_tree);
 
 /* ---- parser.c: infrastructure -------------------------------------------- */
 
@@ -434,6 +507,18 @@ static inline bool token_is_kw(const GLECMA_Token * t, GLECMA_Keyword keyword) {
   return t->kind == GLECMA_TOK_NAME && t->keyword == keyword &&
       (t->flags & GLECMA_TOKF_ESCAPED) == 0;
 }
+
+/** @name Sets of interned names (parser.c): equal names are equal pointers */
+///@{
+/** @brief Adds a key; false when it was already in the set. */
+GLECMA_INTERNAL_API bool parser_ptrset_add(Parser * p, PtrSet * set,
+    const uint16_t * key);
+GLECMA_INTERNAL_API bool parser_ptrset_has(const PtrSet * set,
+    const uint16_t * key);
+/** @brief Empties a set, releasing it when it grew large. */
+GLECMA_INTERNAL_API void parser_ptrset_clear(Parser * p, PtrSet * set);
+GLECMA_INTERNAL_API void parser_ptrset_release(Parser * p, PtrSet * set);
+///@}
 
 /* ---- module.c: the Module goal's items and their early errors -------------- */
 
@@ -533,6 +618,30 @@ GLECMA_INTERNAL_API GLECMA_BNode parse_function_params(Parser * p,
     uint32_t decl_kind, uint32_t fn, size_t * out_end);
 GLECMA_INTERNAL_API GLECMA_BNode parse_function_body(Parser * p,
     size_t * out_end, bool * out_strict);
+/**
+ * @brief A whole source read as FormalParameters, to the end of the text.
+ *
+ * What the parameters of a dynamic function are read as on their own (clause
+ * 20.2.1.1.1). The list node's range is the whole source.
+ */
+GLECMA_INTERNAL_API GLECMA_BNode parse_formal_parameters(Parser * p,
+    uint32_t decl_kind);
+/**
+ * @brief A method, getter, setter or constructor read again from the text of its
+ *   `toString`, in the flags of the class around it (func.c).
+ *
+ * @return The member's function node (a FUNCTION_EXPRESSION).
+ */
+GLECMA_INTERNAL_API GLECMA_BNode parse_method_range(Parser * p, bool constructor,
+    bool derived);
+/** @brief A static block read again, from `static` to its closing brace. */
+GLECMA_INTERNAL_API GLECMA_BNode parse_static_block_range(Parser * p);
+/**
+ * @brief The parser flags of a function's own code, from its kind (FN_*) and
+ *   the strictness, built-in and Module settings of the code around it.
+ */
+GLECMA_INTERNAL_API uint32_t parser_function_flags(uint32_t fn,
+    uint32_t around);
 
 /* ---- stmt.c --------------------------------------------------------------- */
 

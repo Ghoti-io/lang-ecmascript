@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -309,7 +309,7 @@
+   job.module_lexer = module;
+   job.outer_private = c.private_names;
+   job.outer_private_count = c.private_name_count;
+-  job.bounded = true;
++  job.bounded = false;
+   job.start = (size_t)c.start;
+   job.end = (size_t)c.end;
+   job.run = run_function;

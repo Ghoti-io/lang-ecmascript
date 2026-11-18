@@ -1,0 +1,12 @@
+--- a/src/core/options.c
++++ b/src/core/options.c
+@@ -298,8 +298,7 @@
+     return GLECMA_OK;
+   }
+   // Only direct eval code has a context to inherit.
+-  if (goal != GLECMA_PARSE_DIRECT_EVAL ||
+-      given->size < GLECMA_EVAL_CONTEXT_HEADER_SIZE) {
++  if (given->size < GLECMA_EVAL_CONTEXT_HEADER_SIZE) {
+     return GLECMA_ERR_INVALID;
+   }
+   if (EVAL_WITHIN(given->size, reserved) && given->reserved != 0) {

@@ -166,6 +166,54 @@ TEST(AbiLayout, RuleAndFeatureAreAppendedAtTheEnd) {
       offsetof(GLECMA_ParseOptions, goal) + sizeof(uint32_t));
   EXPECT_EQ(sizeof(GLECMA_Failure), offsetof(GLECMA_Failure, limit) +
       sizeof(const char *) + 8 + GLECMA_FEATURE_NAME_MAX);
+  // ... and the eval context at the very end.
+  EXPECT_EQ(offsetof(GLECMA_ParseOptions, eval_context),
+      offsetof(GLECMA_ParseOptions, context) + sizeof(uint32_t));
+}
+
+// The structs the goals added: size first, fixed-width members, and no padding the
+// compiler chose (contract 22), on a host with 8-byte pointers and one with 4-byte ones.
+TEST(AbiLayout, TheGoalsStructsAreSizeFirstWithNoPadding) {
+  EXPECT_EQ(offsetof(GLECMA_EvalContext, size), 0u);
+  EXPECT_EQ(offsetof(GLECMA_EvalContext, flags), 4u);
+  EXPECT_EQ(offsetof(GLECMA_EvalContext, private_name_count), 8u);
+  EXPECT_EQ(offsetof(GLECMA_EvalContext, reserved), 12u);
+  EXPECT_EQ(offsetof(GLECMA_EvalContext, private_names), 16u);
+  EXPECT_EQ(sizeof(GLECMA_EvalContext), 16u + sizeof(void *));
+  EXPECT_EQ(offsetof(GLECMA_PrivateName, units), 0u);
+  EXPECT_EQ(offsetof(GLECMA_PrivateName, length), sizeof(void *));
+  EXPECT_EQ(offsetof(GLECMA_PrivateName, reserved), sizeof(void *) + 4u);
+  EXPECT_EQ(sizeof(GLECMA_PrivateName), sizeof(void *) + 8u);
+  EXPECT_EQ(offsetof(GLECMA_DynamicFunction, size), 0u);
+  EXPECT_EQ(offsetof(GLECMA_DynamicFunction, kind), 4u);
+  EXPECT_EQ(offsetof(GLECMA_DynamicFunction, parameters), 8u);
+  EXPECT_EQ(sizeof(GLECMA_DynamicFunction), 8u + 2 * sizeof(void *));
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, size), 0u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, kind), 4u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, start), 8u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, end), 16u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, flags), 24u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, private_name_count), 28u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, private_names), 32u);
+  EXPECT_EQ(offsetof(GLECMA_FunctionContext, features), 32u + sizeof(void *));
+  EXPECT_EQ(sizeof(GLECMA_FunctionContext), 32u + 2 * sizeof(void *));
+}
+
+// A caller that declares the header of each size-first struct alone gets the defaults
+// of the rest, and nothing is written past it.
+TEST(AbiGoals, AHeaderOnlyStructIsTheDefaultsAndIsNotWrittenPast) {
+  struct HeaderOnlyEval { uint32_t size; uint32_t flags; };
+  Guarded<HeaderOnlyEval> eval;
+  eval.header.size = sizeof(HeaderOnlyEval);
+  eval.header.flags = 0xFFu;
+  ASSERT_EQ(glecma_eval_context_default(reinterpret_cast<GLECMA_EvalContext *>(&eval)), GLECMA_OK);
+  EXPECT_TRUE(eval.intact());
+  EXPECT_EQ(eval.header.flags, 0u);
+  struct HeaderOnlyOptions { uint32_t size; uint32_t reserved; };
+  Guarded<HeaderOnlyOptions> options;
+  options.header.size = sizeof(HeaderOnlyOptions);
+  ASSERT_EQ(glecma_parse_options_default(reinterpret_cast<GLECMA_ParseOptions *>(&options)), GLECMA_OK);
+  EXPECT_TRUE(options.intact());
 }
 
 TEST(SourceCount, RetainThenReleaseKeepsTheSourceUntilTheLastHolder) {

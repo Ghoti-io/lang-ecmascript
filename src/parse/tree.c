@@ -102,6 +102,8 @@ struct GLECMA_Tree {
   size_t table_capacity;
   size_t table_count;
   uint32_t body_depth;
+  GLECMA_EvalContext eval_context; // the context a direct eval was parsed in
+  bool has_eval_context;
 };
 
 static const uint16_t empty_units[1] = {0};
@@ -465,6 +467,40 @@ GLECMA_TreeBuilder * glecma_tree_builder(GLECMA_Tree * tree) {
   return &tree->builder;
 }
 
+GLECMA_Result glecma_tree_set_eval_context(GLECMA_Tree * tree,
+    const GLECMA_EvalContext * context) {
+  GLECMA_EvalContext copy = *context;
+  copy.size = (uint32_t)sizeof(copy);
+  copy.private_names = NULL;
+  if (context->private_name_count > 0) {
+    const size_t bytes = (size_t)context->private_name_count *
+        sizeof(GLECMA_PrivateName);
+    if (bytes / sizeof(GLECMA_PrivateName) != context->private_name_count) {
+      return GLECMA_ERR_OOM; // no buffer that long exists (a 32-bit size_t)
+    }
+    GLECMA_PrivateName * names = (GLECMA_PrivateName *)arena_alloc(
+        &tree->allocator, &tree->texts, bytes);
+    if (names == NULL) {
+      return GLECMA_ERR_OOM;
+    }
+    for (uint32_t i = 0; i < context->private_name_count; i++) {
+      GLECMA_BText text;
+      GLECMA_Result r = copy_units(tree, context->private_names[i].units,
+          context->private_names[i].length, &text);
+      if (r != GLECMA_OK) {
+        return r;
+      }
+      names[i].units = text.units;
+      names[i].length = (uint32_t)text.length;
+      names[i].reserved = 0;
+    }
+    copy.private_names = names;
+  }
+  tree->eval_context = copy;
+  tree->has_eval_context = true;
+  return GLECMA_OK;
+}
+
 void glecma_tree_finish(GLECMA_Tree * tree, GLECMA_BNode root, uint32_t goal,
     bool strict) {
   tree->root = (const GLECMA_Node *)root;
@@ -515,6 +551,10 @@ uint32_t glecma_tree_goal(const GLECMA_Tree * tree) {
 
 bool glecma_tree_strict(const GLECMA_Tree * tree) {
   return tree != NULL && tree->strict;
+}
+
+const GLECMA_EvalContext * glecma_tree_eval_context(const GLECMA_Tree * tree) {
+  return tree != NULL && tree->has_eval_context ? &tree->eval_context : NULL;
 }
 
 /* ---- The walker ---------------------------------------------------------- */

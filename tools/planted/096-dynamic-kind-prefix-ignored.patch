@@ -1,0 +1,11 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -281,7 +281,7 @@
+   // The assembled text: prefix, " anonymous(", P, LF, ") {", the body with its
+   // line feeds, "}".
+   if (result == GLECMA_OK) {
+-    result = units_ascii(allocator, &whole_units, prefixes[function->kind]);
++    result = units_ascii(allocator, &whole_units, prefixes[0]);
+   }
+   if (result == GLECMA_OK) {
+     result = units_ascii(allocator, &whole_units, " anonymous(");

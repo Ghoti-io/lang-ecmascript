@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -297,7 +297,7 @@
+   job.internal = internal;
+   job.flags = (strict ? PF_STRICT : 0u) | (builtin ? PF_BUILTIN : 0u) |
+       (module ? (PF_MODULE | PF_AWAIT_RESERVED) : 0u) |
+-      ((c.flags & GLECMA_CONTEXT_NEW_TARGET) != 0 ? PF_NEW_TARGET : 0u) |
++      0u |
+       ((c.flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 ? PF_SUPER_PROP : 0u) |
+       ((c.flags & GLECMA_CONTEXT_SUPER_CALL) != 0 ? PF_SUPER_CALL : 0u) |
+       ((c.flags & GLECMA_CONTEXT_YIELD) != 0 ? PF_YIELD : 0u) |

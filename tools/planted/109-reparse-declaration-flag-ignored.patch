@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -276,7 +276,7 @@
+ 
+   ReparseData data;
+   data.kind = c.kind;
+-  data.declaration = (c.flags & GLECMA_FNCTX_DECLARATION) != 0;
++  data.declaration = false;
+   const bool builtin = (internal & GLECMA_PARSE_INTERNAL_BUILTIN) != 0;
+   // The context of the code around the function, as parser flags.
+   const bool module = (c.flags & GLECMA_CONTEXT_MODULE) != 0;

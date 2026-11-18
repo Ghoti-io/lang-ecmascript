@@ -90,11 +90,27 @@ it. `make examples` builds and runs both.
   (256 levels), `nodes` (16 Mi) and `native_stack_bytes` (1 MiB, the stack the
   caller grants a parse); zero is a cap of zero.
 - `options.h`: `GLECMA_ParseOptions` (size first: the limits, a feature set,
-  the goal and the context; `glecma_parse_options_default`) and `GLECMA_FeatureSet`
+  the goal, the context and the eval context; `glecma_parse_options_default`),
+  the goals (`GLECMA_PARSE_SCRIPT`, `_MODULE`, `_DIRECT_EVAL` and `_INDIRECT_EVAL`
+  for `glecma_parse`; `_DYNAMIC_FUNCTION` and `_FUNCTION` are recorded in the
+  trees of the entries in `goals.h`), the context flags (`GLECMA_CONTEXT_*`),
+  `GLECMA_EvalContext` (what direct eval code inherits from the code that
+  called `eval`: its strictness, `new.target`, `super` property and call,
+  `arguments` in a field initializer, and the private names in scope;
+  `glecma_eval_context_default`) and `GLECMA_FeatureSet`
   (`glecma_feature_set_add`, `glecma_feature_set_has`). The pinned edition is
   what an empty feature set accepts; this build defines no feature, so every
   entry that takes the options refuses a non-empty set with
   `GLECMA_ERR_UNSUPPORTED`, naming the feature, before it reads anything.
+- `goals.h`: `glecma_parse_dynamic_function` reads the function
+  `Function`, `GeneratorFunction`, `AsyncFunction` and `AsyncGeneratorFunction`
+  make from their arguments (the parameters alone, the body alone, and the
+  assembled text, as clause 20.2.1.1.1 requires), and `glecma_parse_function`
+  reads one function again from its range of its source, with
+  `GLECMA_FunctionContext` (its kind, its strictness, the flags of the code
+  around it, the private names in scope and the first parse's feature set), to
+  give the tree the first parse gave it. A function that does not read again
+  is `GLECMA_ERR_INTERNAL`, never a syntax error.
 - `source.h`: `glecma_source_create_utf8` and `glecma_source_create_utf16`
   copy and validate source text (ill-formed UTF-8 is `GLECMA_ERR_CORRUPT` at
   the first bad byte; a lone UTF-16 surrogate is a code point of its own;
@@ -111,7 +127,10 @@ it. `make examples` builds and runs both.
   caller destroys with `glecma_tree_destroy`; the tree is read through
   `glecma_tree_root` and the walker (`glecma_node_kind`, `_flags`,
   `_operator`, `_start`, `_end`, `_location`, `_child_count`, `_child`,
-  `_text`), and listed with `glecma_tree_dump`. A node's children are
+  `_text`), and listed with `glecma_tree_dump`; `glecma_tree_goal`,
+  `glecma_tree_strict` and `glecma_tree_eval_context` give the goal the tree was
+  read for, the strictness it ended in and, for direct eval code, the context
+  it was read in. A node's children are
   positional (an empty slot is `NULL`), its range is exactly the text
   `Function.prototype.toString` gives for a function or class, and a walker
   that has a default case for a kind it does not know keeps working as kinds

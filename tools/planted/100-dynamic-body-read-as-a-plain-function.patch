@@ -1,0 +1,11 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -69,7 +69,7 @@
+   const size_t units = glecma_source_units(p->source);
+   parser_next(p);
+   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_FUNCTION, NULL, 0, units);
+-  p->flags = parser_function_flags(data->fn, 0u);
++  p->flags = parser_function_flags(0u, 0u);
+   GLECMA_Result began = p->builder->ops->body_begin(p->builder);
+   if (began != GLECMA_OK) {
+     parser_fail_result(p, began);

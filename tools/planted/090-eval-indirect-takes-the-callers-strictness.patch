@@ -1,0 +1,11 @@
+--- a/src/core/options.c
++++ b/src/core/options.c
+@@ -242,7 +242,7 @@
+     return GLECMA_ERR_INVALID;
+   }
+   // Indirect eval code has no caller: nothing it could inherit strictness from.
+-  if (goal == GLECMA_PARSE_INDIRECT_EVAL && context != 0) {
++  if (goal == GLECMA_PARSE_INDIRECT_EVAL && context != 0 && 0) {
+     return GLECMA_ERR_INVALID;
+   }
+   *out_goal = goal;

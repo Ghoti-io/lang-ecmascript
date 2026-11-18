@@ -1,0 +1,13 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -335,10 +335,6 @@
+   job.data = &data;
+   if (result == GLECMA_OK) {
+     // 1. The parameters, alone.
+-    job.source = parameter_source;
+-    job.run = run_parameters;
+-    result = parser_execute(&job, failure, &discarded);
+-    glecma_tree_destroy(discarded);
+     discarded = NULL;
+   }
+   if (result == GLECMA_OK) {

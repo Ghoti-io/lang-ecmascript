@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -279,7 +279,7 @@
+   data.declaration = (c.flags & GLECMA_FNCTX_DECLARATION) != 0;
+   const bool builtin = (internal & GLECMA_PARSE_INTERNAL_BUILTIN) != 0;
+   // The context of the code around the function, as parser flags.
+-  const bool module = (c.flags & GLECMA_CONTEXT_MODULE) != 0;
++  const bool module = false;
+   // The kinds that exist only in a class are class code, which is strict; a
+   // method or an accessor may be an object literal's, so its strictness is the
+   // context's.

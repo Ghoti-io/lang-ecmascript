@@ -37,6 +37,13 @@
  * and place when it was a syntax error, or `DIFF <tree> | <checking>`. No
  * check reads a node, so the two must agree (tools/check-differential.py).
  *
+ * With `--reparse` it parses each pair with the tree builder and, when the parse
+ * is accepted, reads every function of the tree again from its range
+ * (glecma_parse_function) in the context the tree says it had, and requires the
+ * tree that gives to equal the first parse's: `REPARSED <functions> <by kind>`
+ * or `FAIL <what differed>`, and `SKIP <result>` for a pair that was refused
+ * (tests/reparse_support.h; tools/check-reparse.py).
+ *
  * It is the only place the gate calls the library: `parse_pair` is a call of
  * the public parse entry. Work not built answers ERR_UNSUPPORTED, which is
  * never an acceptance and never a SyntaxError.
@@ -45,6 +52,8 @@
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
 
 #include "parse/parse_internal.h"
+
+#include "../reparse_support.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -148,8 +157,41 @@ static int read_file(const char * path, char ** text, size_t * length) {
   return 1;
 }
 
+// The function re-parse check of one pair: the tree is read, and every function
+// of it is read again.
+static void reparse_pair(GLECMA_Source * source, Mode mode) {
+  GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+  options.goal = mode == MODE_MODULE ? GLECMA_PARSE_MODULE : GLECMA_PARSE_SCRIPT;
+  GLECMA_Tree * tree = NULL;
+  GLECMA_Result result = glecma_parse(source, &options, NULL, NULL, &tree);
+  if (result != GLECMA_OK) {
+    printf("SKIP %s\n", result_name(result));
+    return;
+  }
+  RpStats stats;
+  memset(&stats, 0, sizeof stats);
+  char message[600];
+  if (rp_check_tree(source, tree, &options, &stats, message, sizeof message) != 0) {
+    // One line: the message may hold a newline from a failure text.
+    for (char * c = message; *c != '\0'; c++) {
+      if (*c == '\n') {
+        *c = ' ';
+      }
+    }
+    printf("FAIL %s\n", message);
+  } else {
+    printf("REPARSED %llu", (unsigned long long)stats.functions);
+    for (unsigned k = 1; k < GLECMA_FNKIND_COUNT; k++) {
+      printf(" %llu", (unsigned long long)stats.kinds[k]);
+    }
+    printf("\n");
+  }
+  glecma_tree_destroy(tree);
+}
+
 int main(int argc, char ** argv) {
   const int differential = argc > 1 && strcmp(argv[1], "--differential") == 0;
+  const int reparse = argc > 1 && strcmp(argv[1], "--reparse") == 0;
   static const char directive[] = "\"use strict\";\n";
   static char line[1 << 14];
   while (fgets(line, sizeof line, stdin) != NULL) {
@@ -197,6 +239,13 @@ int main(int argc, char ** argv) {
     GLECMA_Source * source = NULL;
     GLECMA_Result result = glecma_source_create_utf8(
         begin, begin_length, NULL, NULL, &failure, &source);
+    if (result == GLECMA_OK && reparse) {
+      reparse_pair(source, mode);
+      glecma_source_release(source);
+      free(prefixed);
+      free(text);
+      continue;
+    }
     if (result == GLECMA_OK && differential) {
       char tree_answer[160], checking_answer[160];
       describe(source, mode, 0, tree_answer, sizeof tree_answer);

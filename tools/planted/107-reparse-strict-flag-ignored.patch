@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -283,7 +283,7 @@
+   // The kinds that exist only in a class are class code, which is strict; a
+   // method or an accessor may be an object literal's, so its strictness is the
+   // context's.
+-  const bool strict = (c.flags & GLECMA_CONTEXT_STRICT) != 0 || module ||
++  const bool strict = module ||
+       builtin || c.kind == GLECMA_FNKIND_CONSTRUCTOR ||
+       c.kind == GLECMA_FNKIND_DERIVED_CONSTRUCTOR ||
+       c.kind == GLECMA_FNKIND_FIELD_INITIALIZER ||

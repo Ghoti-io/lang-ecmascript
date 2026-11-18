@@ -77,11 +77,12 @@ documentation and tested as a choice.
 | Syntax result, locations, failure record | `core.h` | `GLECMA_ERR_SYNTAX` appended after the shared nine; `GLECMA_Location`; `GLECMA_Failure`, which every parse call writes |
 | Limits | `limits.h` | `GLECMA_Limits` and `glecma_limits_default`; the source, token, literal-length, nesting, node and native-stack caps (`source_units`, `tokens`, `literal_length`, `nesting`, `nodes`, `native_stack_bytes`) |
 | Rule codes | `core.h` | `GLECMA_Rule`, the append-only codes of the rules a syntax error can break, with `glecma_rule_name` and `glecma_rule_clause` |
-| Parse options, feature set | `options.h` | `GLECMA_ParseOptions` (the limits, a feature set, the goal and the context) and `GLECMA_FeatureSet` (`glecma_feature_set_add`, `glecma_feature_set_has`); a set naming a feature the build lacks is refused. The names the build defines are the rows of `src/core/features.def`, which is empty |
+| Parse options, feature set | `options.h` | `GLECMA_ParseOptions` (the limits, a feature set, the goal, the context and the eval context), the goals and context flags, `GLECMA_EvalContext`, and `GLECMA_FeatureSet` (`glecma_feature_set_add`, `glecma_feature_set_has`); a set naming a feature the build lacks is refused. The names the build defines are the rows of `src/core/features.def`, which is empty |
+| Goals beyond a source | `goals.h`, `src/parse/dynamic.c`, `src/parse/reparse.c` | `glecma_parse_dynamic_function` and `glecma_parse_function` with `GLECMA_FunctionContext`: CreateDynamicFunction's parsing steps, and one function read again from its range (see "The dynamic-function goal" and "The function re-parse goal") |
 | Unicode version | `core.h` | `GLECMA_UNICODE_VERSION` and `glecma_unicode_version()` |
 | Tokenizer | `src/lex/` (internal) | The whole lexical grammar, with Annex B, in each input element goal; reached through two internal entries |
 | Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump, `glecma_source_retain` and `glecma_source_release` (the holders are counted atomically; the last release frees) |
-| Parser and tree | `tree.h`, `src/parse/` | `glecma_parse`: a Script into a read-only tree (`GLECMA_Tree`) with a walker, source ranges, a dump and one counted reference to its source; the builder interface with the tree builder and the checking builder; declaration and reference events (see "The parser") |
+| Parser and tree | `tree.h`, `src/parse/` | `glecma_parse`: a Script, a Module, or direct or indirect eval code into a read-only tree (`GLECMA_Tree`) with a walker, source ranges, a dump and one counted reference to its source; the builder interface with the tree builder and the checking builder; declaration and reference events (see "The parser") |
 | Input stream | `stream.h` | `GLECMA_Stream` over memory, a file or a host's reader, and `glecma_source_create_stream` |
 | Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
 | test262 gate | `tools/check-test262.py`, `tests/t262/`, `tools/test262/` | The pinned corpus, fetched and checked against a list of checksums; the classification and tag tables; the parse score in `make test` with a pending ledger (see "test262") |
@@ -330,9 +331,11 @@ holding the limits and a feature set, filled by `glecma_parse_options_default`
 or `GLECMA_PARSE_OPTIONS_INIT`. A member beyond the caller's declared size
 takes its default, so a caller built before a member was added keeps working,
 and a test is built against a header-only struct. The goal and its context
-are the last two members: `GLECMA_PARSE_SCRIPT` or `GLECMA_PARSE_MODULE`, and
-the context flags (`GLECMA_CONTEXT_STRICT`, which can add strictness and never
-remove it). A goal that is not one is `GLECMA_ERR_INVALID`. Every parse entry
+are the next two members: a goal (`GLECMA_PARSE_SCRIPT`, `GLECMA_PARSE_MODULE`
+and the eval goals, "The eval goals" below) and the context flags
+(`GLECMA_CONTEXT_STRICT`, which can add strictness and never remove it). The
+last member is the eval context, a pointer to a caller-supplied struct that
+only the direct eval goal takes. A goal that is not one is `GLECMA_ERR_INVALID`. Every parse entry
 takes the options, and the options are the only way to ask for anything: no
 member selects the internal built-in entry.
 
@@ -752,6 +755,146 @@ specifier and an attribute's key and value are not export names and are not
 checked. The test262 gate covers all 869 module pairs the ledger held, and
 `tests/unit/test_module.cpp` states each rule with the control that is
 accepted.
+
+### The eval goals
+
+`eval` has two goals, and both read the Script grammar (clause 19.2.1.1).
+**Indirect eval** (`GLECMA_PARSE_INDIRECT_EVAL`) is a Script in the global
+context: it takes no context and no inherited strictness, and a caller that
+gives either is `GLECMA_ERR_INVALID`, because it has no caller to inherit from.
+**Direct eval** (`GLECMA_PARSE_DIRECT_EVAL`) is a Script read in the context of
+the code that called `eval`, which the caller supplies as a struct on the parse
+options, `GLECMA_EvalContext`: size-first like the options, so a caller built
+before a member was added keeps working. It carries what PerformEval derives
+from the running execution context: whether the caller is strict, in a function
+(`new.target`), in a method (`super.x`), in a derived constructor (`super()`)
+or in a class field initializer (`arguments` is not a name), and the private
+names in scope. The flags are the same constants as the options' own context
+flags (`GLECMA_CONTEXT_*`), which also serve the function re-parse goal; a
+flag that implies another (a derived constructor is a method, a method is in a
+function) without it is `GLECMA_ERR_INVALID`, so a caller's mistake is a
+refusal and not a guess.
+
+The parser reads the flags into the same context flags it keeps for code in a
+function, so the eval code is checked by the one set of checks: `super.x` is
+refused unless the flag allowed it, whatever function the eval code itself
+declares, and an arrow function in the eval code inherits what the caller had
+(clause 15.3) while a function does not. **Private names** are the one input
+that is not a flag: the references no class of the eval code declares are
+answered by the names in scope (`AllPrivateIdentifiersValid`, clause 15.7.1)
+and the rest are `private-name-undeclared`. The names are interned through the
+builder at the start of the parse, so a reference is matched to them by
+pointer like every other name, and a name written with escapes or outside the
+BMP is the name it spells. *Rejected:* passing the names as a callback, which
+makes the cost per reference a call into the host and a host that is a
+compiler a re-entrancy hazard; and taking them as UTF-8, which the tree's
+texts are not.
+
+**The tree records its goal, final strictness and context**, so the compiler
+reads them from the tree and is not passed them twice: `glecma_tree_goal`,
+`glecma_tree_strict` and `glecma_tree_eval_context`. The tree keeps its own
+copy of the context, names included, in the arena that holds its texts; the
+caller's memory may go as soon as the call returns. Eval code is a Script, so
+its tree's root is a Script node, and the goal is what tells it from one.
+
+### The dynamic-function goal
+
+`glecma_parse_dynamic_function` is the parsing half of CreateDynamicFunction
+(clause 20.2.1.1.1), for the four constructors (`Function`, `GeneratorFunction`,
+`AsyncFunction`, `AsyncGeneratorFunction`). The caller gives the kind and the
+two texts, the parameters (the arguments before the last, joined with `,`: that
+is ToString and a concatenation on the caller's values) and the body, as
+sources, so a lone surrogate in either arrives intact. The algorithm reads the
+parameters alone as FormalParameters, the body alone as the kind's body, and
+then the text it assembles as the kind's function expression, with every early
+error of both; this does exactly that, as three runs of the parser, each over a
+source of its own, and keeps the last one's tree.
+
+Each piece is read alone so that each is valid alone: `new Function("/*", "*/
+) {")` joins into a function and is not one, because neither piece is a
+valid text on its own. That is the whole reason for the three runs, and the
+reason the line feeds are in the assembled text: a line comment that ends the
+parameters would otherwise swallow the closing parenthesis. The kind chooses
+the parser flags of each reading (`yield` an operator in a generator's body,
+`await` in an async function's), so `yield 1` is a statement in one body and a
+syntax error in another. The tree is the function expression of the assembled
+text, whose source (`glecma_tree_source`) is that text, the text of the
+function's `toString`; its root is the whole of it and its name, `anonymous`,
+is the text's and is not bound inside the function, as the algorithm sets a
+name and binds none. A failure's location is in the text that was being read:
+the body's with the leading line feed not counted (so that a message points at
+the caller's text), and for an error only the assembled text has (a duplicate
+parameter in strict code, a directive over non-simple parameters), the
+assembled text, which a failed call does not return. *Rejected:* one reading of
+the assembled text, which accepts every text the algorithm refuses for being
+valid only joined; and reading the body inside the parentheses-and-braces of a
+wrapper without a source of its own, which gives the body no offsets of its own
+and no way to cap or limit it separately.
+
+Every goal reads through one entry, `parser_execute` (`src/parse/entry.c`): the
+builder, the tokenizer, the limits, the one cleanup and the failure record are
+the same for a Script and for the three readings here, so a goal is a job
+(its source, its starting flags, a function that reads what it reads) and a
+few lines.
+
+### The function re-parse goal
+
+A function is compiled on its first call, after the tree of the script that
+holds it is gone, so it is read again from its range of the source it was first
+read in: `glecma_parse_function`, with `GLECMA_FunctionContext` (size-first),
+which holds the inputs the cross-milestone contract gives for that goal: the
+range, the kind, the strictness, the flags (`super` property and call,
+`new.target`, `yield`, `await`, inside a class field initializer or static
+block, module code), the private names in scope and the feature set of the first
+parse. The kinds are every form that has a body: functions, generators, async
+functions and async generators, arrow and async arrow functions, methods,
+getters, setters, base and derived constructors, field initializers and static
+blocks. The result is the first parse's tree for that function, with locations
+in the whole source, and a function that reads again differently is a defect,
+never the program's syntax error: `GLECMA_ERR_INTERNAL`.
+
+**The context is the parser's own flags at the place the function begins.**
+Each flag of the struct is one parser flag, and the function's kind decides its
+own (a function's `new.target`, a generator's `yield`, a method's `super.x`, a
+derived constructor's `super()`; an arrow takes what is around it), so the
+same code makes the same decisions in both parses: the re-parse is the first
+parse's own grammar, started at a function, and not a second parser. *Rejected:*
+a separate function grammar, which would have to be kept equal to the first;
+and storing the parser's flags as one number in the compiled unit, which
+would make the parser's private bit layout part of every cached program.
+Two inputs are not in the contract's list and are here for correctness: whether
+the function was written as a declaration, which decides the tree's kind and
+where its name is bound (`GLECMA_FNCTX_DECLARATION`), and the class static block
+as a flag of its own, because an arrow function in one has the block's
+`arguments` rule but not its reserved `await` (test262's
+`static-init-await-binding-valid` is a function named `await` in an arrow in a
+static block).
+
+**Only the range is read.** The tokenizer is told the text ends where the
+function does. The token after a function the first parse read as a regular
+expression (a `/` after a function declaration) would otherwise be read as
+division here, and could fail on text that is not the function's; with the
+range bound, nothing past it is read. A method's range starts at its first
+modifier or its name, and so contains its name: it is read to find where the
+parameters begin, and the builder is taken back to where it stood, so that the
+references and functions of a computed name, which belong to the class's code,
+are not the method's (a test shows the events). A class field initializer is
+read as an Expression, because a parenthesized initializer's range holds what
+is inside the parentheses (`(a, b)`).
+
+**The equality is shown over the corpus.** `make check-reparse` (in
+`TEST_GATES`) walks the tree of every test262 pair in scope with the rules of the
+grammar, derives the context of each function from the tree alone (a second
+statement of the context, in `tests/reparse_support.h`, which shares nothing
+with the parser's flags), reads it again, and requires an equal tree: the same
+kinds, flags, operators, ranges, texts and children, and the goal and strictness
+the function should have. Every function is read twice, once with the strictness
+it inherited and once with the strictness its code has (its own directive
+included), which must give the same tree. At the pin that is 156,911 functions
+of every kind. It cannot see a flag that only forbids (a function that was
+accepted is never refused for a missing prohibition), so the unit tests give
+each flag a function that needs it and is refused without it, and the real-world
+corpus joins the gate when it is pinned.
 
 ### Regular expression literals
 

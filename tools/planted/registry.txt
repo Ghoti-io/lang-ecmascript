@@ -86,3 +86,36 @@
 081|module-import-binding-not-lexical|An import's local name is recorded as a var, so a var may redeclare it|081-module-import-binding-not-lexical.patch|check-test262
 082|module-exported-declarations-not-collected|The names an export declaration binds are not exported names, so export var a; export {a} is accepted|082-module-exported-declarations-not-collected.patch|test
 083|module-string-local-accepted|A string literal names the local binding of an export with no from clause|083-module-string-local-accepted.patch|check-test262
+084|eval-new-target-flag-ignored|A direct eval does not inherit new.target from the code that called it|084-eval-new-target-flag-ignored.patch|test
+085|eval-super-property-flag-ignored|A direct eval does not inherit super.x from the method that called it|085-eval-super-property-flag-ignored.patch|test
+086|eval-super-call-flag-ignored|A direct eval does not inherit super() from the derived constructor that called it|086-eval-super-call-flag-ignored.patch|test
+087|eval-field-initializer-flag-ignored|A direct eval in a class field initializer may name arguments|087-eval-field-initializer-flag-ignored.patch|test
+088|eval-private-names-looked-up-in-the-wrong-set|A private name of the code around a direct eval does not answer a reference to it|088-eval-private-names-looked-up-in-the-wrong-set.patch|test
+089|eval-context-accepted-by-other-goals|A Script or a Module given an eval context uses it or ignores it, and does not refuse it|089-eval-context-accepted-by-other-goals.patch|test
+090|eval-indirect-takes-the-callers-strictness|Indirect eval code accepts a strict context, which it has no caller to inherit from|090-eval-indirect-takes-the-callers-strictness.patch|test
+091|eval-context-not-copied-into-the-tree|The tree keeps the caller's private-name array and not a copy of it|091-eval-context-not-copied-into-the-tree.patch|test
+092|eval-implied-flags-unchecked|An eval context with super.x and not new.target, or super() and not super.x, is accepted|092-eval-implied-flags-unchecked.patch|test
+093|dynamic-parameters-not-read-alone|The parameters of a dynamic function are not read on their own, so a comment opened in them and closed by the body is accepted|093-dynamic-parameters-not-read-alone.patch|test
+094|dynamic-body-not-read-alone|The body of a dynamic function is not read on its own, so a body that closes the function early is accepted|094-dynamic-body-not-read-alone.patch|test
+095|dynamic-no-line-feed-after-the-parameters|The assembled text has no line feed after the parameters, so a line comment ending them swallows the closing parenthesis|095-dynamic-no-line-feed-after-the-parameters.patch|test
+096|dynamic-kind-prefix-ignored|Every kind of dynamic function is assembled with the prefix of a plain function|096-dynamic-kind-prefix-ignored.patch|test
+097|dynamic-failure-not-placed-in-the-body|A failure in the body is placed in the assembled text of the body's line feed, one unit and one line late|097-dynamic-failure-not-placed-in-the-body.patch|test
+098|dynamic-strictness-not-recorded|The tree of a dynamic function whose body is strict does not say so|098-dynamic-strictness-not-recorded.patch|test
+099|dynamic-options-goal-ignored|A dynamic function is read with options that name a Module, a strict context or an eval context|099-dynamic-options-goal-ignored.patch|test
+100|dynamic-body-read-as-a-plain-function|The body alone is read as a plain function's, whatever the kind, so a generator's yield is not an operator|100-dynamic-body-read-as-a-plain-function.patch|test
+101|reparse-super-property-flag-ignored|A function read again does not inherit super.x from the method around it|101-reparse-super-property-flag-ignored.patch|check-reparse
+102|reparse-new-target-flag-ignored|A function read again does not inherit new.target from the function around it|102-reparse-new-target-flag-ignored.patch|check-reparse
+103|reparse-super-call-flag-ignored|A function read again does not inherit super() from the derived constructor around it|103-reparse-super-call-flag-ignored.patch|check-reparse
+104|reparse-yield-flag-ignored|A function read again does not know it is inside a generator, so yield is a name where it was an operator|104-reparse-yield-flag-ignored.patch|check-reparse
+105|reparse-await-flag-ignored|A function read again does not know it is inside an async function or a module's top level|105-reparse-await-flag-ignored.patch|check-reparse
+106|reparse-field-initializer-flag-ignored|A function read again inside a class field initializer may name arguments|106-reparse-field-initializer-flag-ignored.patch|test
+107|reparse-strict-flag-ignored|A function read again is read as sloppy code whatever the strictness it had|107-reparse-strict-flag-ignored.patch|test
+108|reparse-module-flag-ignored|A function read again in module code does not know it is, so import.meta is refused in it|108-reparse-module-flag-ignored.patch|check-reparse
+109|reparse-declaration-flag-ignored|A function declaration is read again as an expression|109-reparse-declaration-flag-ignored.patch|check-reparse
+110|reparse-private-names-ignored|A function read again is not given the private names of the classes around it|110-reparse-private-names-ignored.patch|check-reparse
+111|reparse-range-not-bounded|The tokenizer reads past the end of the function's range, so what follows it can fail the read|111-reparse-range-not-bounded.patch|test
+112|reparse-failure-is-a-syntax-error|A function the first parse accepted that does not read again is reported as a syntax error and not as an internal one|112-reparse-failure-is-a-syntax-error.patch|test
+113|reparse-method-name-keeps-its-references|A method read again keeps the references and functions of its computed name as its own|113-reparse-method-name-keeps-its-references.patch|test
+114|reparse-feature-sets-not-compared|A function context and parse options that name different feature sets are accepted|114-reparse-feature-sets-not-compared.patch|test
+115|reparse-kind-text-mismatch-accepted|A function read as a kind its text is not (a generator as a plain function, an async arrow as an arrow) is accepted|115-reparse-kind-text-mismatch-accepted.patch|test
+116|reparse-initializer-flags-missing|A class field initializer read again has not the method's super.x, new.target and arguments rule it had|116-reparse-initializer-flags-missing.patch|check-reparse

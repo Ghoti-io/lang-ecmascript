@@ -1,0 +1,12 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -242,8 +242,7 @@
+   uint32_t goal, context;
+   const GLECMA_EvalContext * eval;
+   glecma_parse_options_raw(options, &goal, &context, &eval);
+-  if ((goal != GLECMA_PARSE_SCRIPT && goal != GLECMA_PARSE_DYNAMIC_FUNCTION) ||
+-      context != 0 || eval != NULL) {
++  if (0 && (goal != GLECMA_PARSE_SCRIPT || context != 0 || eval != NULL)) {
+     return parser_refuse(failure, GLECMA_ERR_INVALID,
+         "a dynamic function takes no goal, strictness or eval context of its own");
+   }

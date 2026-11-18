@@ -1,0 +1,11 @@
+--- a/src/parse/entry.c
++++ b/src/parse/entry.c
+@@ -250,7 +250,7 @@
+       // What the code that called `eval` allows (clause 19.2.1.1).
+       ((eval.flags & GLECMA_CONTEXT_NEW_TARGET) != 0 ? PF_NEW_TARGET : 0u) |
+       ((eval.flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 ? PF_SUPER_PROP : 0u) |
+-      ((eval.flags & GLECMA_CONTEXT_SUPER_CALL) != 0 ? PF_SUPER_CALL : 0u) |
++      0u |
+       ((eval.flags & GLECMA_CONTEXT_FIELD_INITIALIZER) != 0 ? PF_NO_ARGUMENTS : 0u);
+   job.strict_lexer = strict_context;
+   job.module_lexer = module;

@@ -106,6 +106,112 @@ GLECMA_API bool glecma_feature_set_has(const GLECMA_FeatureSet * set,
     const char * name);
 
 /**
+ * @name Goals
+ *
+ * Which grammar a source is parsed for. A value that is no goal is
+ * ::GLECMA_ERR_INVALID.
+ *
+ * ::glecma_parse serves the first four. The dynamic-function goal and the
+ * function re-parse goal have entries of their own, which take more than a
+ * source (`goals.h`); their numbers are here because a tree records the goal
+ * it was parsed for, and ::glecma_parse refuses them.
+ */
+///@{
+#define GLECMA_PARSE_SCRIPT 0u ///< A Script, sloppy unless a directive or the context makes it strict.
+#define GLECMA_PARSE_MODULE 1u ///< A Module (clause 16.2): always strict; `import` and `export` declarations, top-level `await` and `import.meta`.
+#define GLECMA_PARSE_DIRECT_EVAL 2u ///< Direct eval code (clause 19.2.1.1): a Script read in the context of the code that called `eval`, which ::GLECMA_ParseOptions::eval_context describes.
+#define GLECMA_PARSE_INDIRECT_EVAL 3u ///< Indirect eval code (clause 19.2.1.1): a Script in the global context; it takes no context, and no inherited strictness.
+#define GLECMA_PARSE_DYNAMIC_FUNCTION 4u ///< A function made by CreateDynamicFunction (clause 20.2.1.1.1): `glecma_parse_dynamic_function`.
+#define GLECMA_PARSE_FUNCTION 5u ///< One function read again from its source range: `glecma_parse_function`.
+///@}
+
+/**
+ * @name Context flags
+ *
+ * What the host knows about the code that the source cannot say. They are the
+ * flags of the code *around* what is parsed. Strictness can only be added,
+ * never removed: a source's own directive can make code strict, and nothing
+ * can make strict code sloppy.
+ *
+ * ::GLECMA_ParseOptions::context takes ::GLECMA_CONTEXT_STRICT alone, a Script's
+ * or a Module's strictness before its first token. The direct eval goal takes
+ * the first five in ::GLECMA_EvalContext::flags, and the function re-parse
+ * goal takes all of them in ::GLECMA_FunctionContext::flags.
+ */
+///@{
+#define GLECMA_CONTEXT_STRICT 0x1u ///< The code is strict before its first token.
+#define GLECMA_CONTEXT_NEW_TARGET 0x2u ///< `new.target` is allowed: the code is inside a function.
+#define GLECMA_CONTEXT_SUPER_PROPERTY 0x4u ///< `super.x` is allowed: inside a method, a class field initializer or a static block. Implies ::GLECMA_CONTEXT_NEW_TARGET.
+#define GLECMA_CONTEXT_SUPER_CALL 0x8u ///< `super()` is allowed: inside the constructor of a derived class. Implies ::GLECMA_CONTEXT_SUPER_PROPERTY.
+#define GLECMA_CONTEXT_FIELD_INITIALIZER 0x10u ///< `arguments` is not a name: inside a class field initializer or a class static block, an arrow function in either included. Implies ::GLECMA_CONTEXT_SUPER_PROPERTY.
+#define GLECMA_CONTEXT_STATIC_BLOCK 0x20u ///< The code of a class static block itself: `arguments` is not a name and `await` is reserved. An arrow function in a static block takes ::GLECMA_CONTEXT_FIELD_INITIALIZER, not this: its body is not the block's own code. Implies ::GLECMA_CONTEXT_SUPER_PROPERTY.
+#define GLECMA_CONTEXT_YIELD 0x40u ///< `yield` is an operator: inside a generator.
+#define GLECMA_CONTEXT_AWAIT 0x80u ///< `await` is an operator: inside an async function, or a Module's top level.
+#define GLECMA_CONTEXT_MODULE 0x100u ///< The code is a Module's, and `await` is reserved in it and in every function inside it. Implies ::GLECMA_CONTEXT_STRICT.
+/** What ::GLECMA_ParseOptions::context accepts. */
+#define GLECMA_CONTEXT_MASK 0x1u
+/** What ::GLECMA_EvalContext::flags accepts. */
+#define GLECMA_CONTEXT_EVAL_MASK 0x1Fu
+/** What ::GLECMA_FunctionContext::flags accepts, beside ::GLECMA_FNCTX_DECLARATION. */
+#define GLECMA_CONTEXT_FUNCTION_MASK 0x1FFu
+///@}
+
+/**
+ * @brief The name of a private member (`#x`), without the `#`.
+ *
+ * UTF-16 code units, as the tree's texts are. The units are the caller's and
+ * must outlive the call they are passed to.
+ */
+typedef struct GLECMA_PrivateName {
+  const uint16_t * units; ///< The name's code units, not NUL-terminated.
+  uint32_t length;        ///< How many; at least one.
+  uint32_t reserved;      ///< Padding; must be zero.
+} GLECMA_PrivateName;
+
+/**
+ * @brief The context direct eval code inherits from the code that called
+ *   `eval` (clause 19.2.1.1).
+ *
+ * Size-first: the first member is the size of the struct the caller was
+ * compiled against; a member beyond it takes its default. Initialize with
+ * ::GLECMA_EVAL_CONTEXT_INIT or ::glecma_eval_context_default.
+ *
+ * `flags` is a combination of the first five ::GLECMA_CONTEXT_STRICT ...
+ * ::GLECMA_CONTEXT_FIELD_INITIALIZER, each implying the one before it where its
+ * comment says so (a flag whose implied flag is missing is
+ * ::GLECMA_ERR_INVALID). The private names are the names the code that called
+ * `eval` could write as `#x`: those of every class around it. A `#x` in the
+ * eval code that no class in the code itself declares must be one of them
+ * (AllPrivateIdentifiersValid, clause 15.7.1), or the eval code is
+ * ::GLECMA_RULE_PRIVATE_NAME_UNDECLARED. The parse copies what it needs and
+ * the caller's memory may be released when the call returns; the tree keeps its
+ * own copy (::glecma_tree_eval_context).
+ */
+typedef struct GLECMA_EvalContext {
+  uint32_t size;               ///< `sizeof(GLECMA_EvalContext)` as the caller knows it.
+  uint32_t flags;              ///< ::GLECMA_CONTEXT_STRICT and the other flags of ::GLECMA_CONTEXT_EVAL_MASK.
+  uint32_t private_name_count; ///< Entries of `private_names`.
+  uint32_t reserved;           ///< Padding; must be zero.
+  const GLECMA_PrivateName * private_names; ///< The names in scope, or NULL when there are none.
+} GLECMA_EvalContext;
+
+/** @brief Initializer for a ::GLECMA_EvalContext: its size, and the global context. */
+#define GLECMA_EVAL_CONTEXT_INIT                                               \
+  { (uint32_t)sizeof(GLECMA_EvalContext), 0u, 0u, 0u, NULL }
+
+/**
+ * @brief Writes the global context (no flags, no private names) into @p context.
+ *
+ * Reads `context->size` and writes only the members within it.
+ *
+ * @param context Caller-owned storage with `size` set. NULL, or a `size` below
+ *   the header, is ::GLECMA_ERR_INVALID and writes nothing.
+ * @return ::GLECMA_OK, or ::GLECMA_ERR_INVALID.
+ */
+GLECMA_API GLECMA_Result glecma_eval_context_default(
+    GLECMA_EvalContext * context);
+
+/**
  * @brief What every entry that tokenizes or parses takes.
  *
  * Size-first, like ::GLECMA_Limits: the first member is the size of the
@@ -115,34 +221,11 @@ GLECMA_API bool glecma_feature_set_has(const GLECMA_FeatureSet * set,
  * keeps working. Members are only ever added at the end. A `size` smaller
  * than the header is ::GLECMA_ERR_INVALID. `reserved` must be zero.
  *
- * The limits and the feature set are what the tokenizer reads; the goal and
- * its context are what the parser adds. No member selects the internal built-in mode of the tokenizer: that mode
- * is reached only through an internal entry, so user source can never spell
- * an intrinsic.
+ * The limits and the feature set are what the tokenizer reads; the goal, its
+ * context flags and the eval context are what the parser adds. No member
+ * selects the internal built-in mode of the tokenizer: that mode is reached
+ * only through an internal entry, so user source can never spell an intrinsic.
  */
-/**
- * @name Goals
- *
- * Which grammar a source is parsed for. A value that is no goal is
- * ::GLECMA_ERR_INVALID.
- */
-///@{
-#define GLECMA_PARSE_SCRIPT 0u ///< A Script, sloppy unless a directive or the context makes it strict.
-#define GLECMA_PARSE_MODULE 1u ///< A Module (clause 16.2): always strict; `import` and `export` declarations, top-level `await` and `import.meta`.
-///@}
-
-/**
- * @name Context flags
- *
- * What the host knows about the code that the source cannot say.
- * Strictness can only be added, never removed: a source's own directive can
- * make code strict, and nothing can make strict code sloppy.
- */
-///@{
-#define GLECMA_CONTEXT_STRICT 0x1u ///< The code is strict before its first token.
-#define GLECMA_CONTEXT_MASK 0x1u   ///< Every bit defined; the rest must be zero.
-///@}
-
 typedef struct GLECMA_ParseOptions {
   uint32_t size;     ///< `sizeof(GLECMA_ParseOptions)` as the caller knows it.
   uint32_t reserved; ///< Padding; must be zero.
@@ -151,15 +234,20 @@ typedef struct GLECMA_ParseOptions {
                                       ///< to.
   const GLECMA_FeatureSet * features; ///< The features asked for, or NULL for
                                       ///< none. Must outlive the call.
-  uint32_t goal;      ///< ::GLECMA_PARSE_SCRIPT or ::GLECMA_PARSE_MODULE.
-  uint32_t context;   ///< ::GLECMA_CONTEXT_STRICT and the other flags; bits
-                      ///< beyond ::GLECMA_CONTEXT_MASK must be zero.
+  uint32_t goal;      ///< A ::GLECMA_PARSE_SCRIPT and the other goals.
+  uint32_t context;   ///< ::GLECMA_CONTEXT_STRICT; bits beyond
+                      ///< ::GLECMA_CONTEXT_MASK must be zero.
+  const GLECMA_EvalContext * eval_context; ///< For ::GLECMA_PARSE_DIRECT_EVAL
+                      ///< only: the context of the code that called `eval`,
+                      ///< or NULL for the global context. Any other goal
+                      ///< refuses a context with ::GLECMA_ERR_INVALID. Must
+                      ///< outlive the call.
 } GLECMA_ParseOptions;
 
 /** @brief Initializer for a ::GLECMA_ParseOptions: its size, and defaults. */
 #define GLECMA_PARSE_OPTIONS_INIT                                              \
   { (uint32_t)sizeof(GLECMA_ParseOptions), 0u, NULL, NULL, GLECMA_PARSE_SCRIPT, \
-    0u }
+    0u, NULL }
 
 /**
  * @brief Writes the default options into @p options.

@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -301,7 +301,7 @@
+       ((c.flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 ? PF_SUPER_PROP : 0u) |
+       ((c.flags & GLECMA_CONTEXT_SUPER_CALL) != 0 ? PF_SUPER_CALL : 0u) |
+       ((c.flags & GLECMA_CONTEXT_YIELD) != 0 ? PF_YIELD : 0u) |
+-      ((c.flags & GLECMA_CONTEXT_AWAIT) != 0 ? (PF_AWAIT | PF_AWAIT_RESERVED) : 0u) |
++      0u |
+       ((c.flags & GLECMA_CONTEXT_FIELD_INITIALIZER) != 0 ? PF_NO_ARGUMENTS : 0u) |
+       ((c.flags & GLECMA_CONTEXT_STATIC_BLOCK) != 0
+           ? (PF_NO_ARGUMENTS | PF_AWAIT_RESERVED) : 0u);

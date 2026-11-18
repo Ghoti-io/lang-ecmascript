@@ -42,75 +42,9 @@
 
 #include <string.h>
 
-/* ---- Sets of interned names ----------------------------------------------- */
-
-static size_t ptr_slot(const uint16_t * key, size_t mask) {
-  return (size_t)(((uintptr_t)key >> 4) * (uintptr_t)0x9E3779B97F4A7C15ull >> 20) & mask;
-}
-
-// Adds a key; false when it was already there.
-static bool ptrset_add(Parser * p, PtrSet * set, const uint16_t * key) {
-  if ((set->count + 1) * 2 > set->capacity) {
-    size_t capacity = set->capacity == 0 ? 16 : set->capacity * 2;
-    if (capacity > SIZE_MAX / sizeof(*set->keys)) {
-      parser_fail_result(p, GLECMA_ERR_OOM);
-    }
-    const uint16_t ** keys = (const uint16_t **)p->allocator->calloc_fn(
-        p->allocator->ctx, capacity, sizeof(*keys));
-    if (keys == NULL) {
-      parser_fail_result(p, GLECMA_ERR_OOM);
-    }
-    for (size_t i = 0; i < set->capacity; i++) {
-      if (set->keys[i] != NULL) {
-        size_t slot = ptr_slot(set->keys[i], capacity - 1);
-        while (keys[slot] != NULL) {
-          slot = (slot + 1) & (capacity - 1);
-        }
-        keys[slot] = set->keys[i];
-      }
-    }
-    if (set->keys != NULL) {
-      p->allocator->free_fn(p->allocator->ctx, (void *)set->keys);
-    }
-    set->keys = keys;
-    set->capacity = capacity;
-  }
-  size_t mask = set->capacity - 1;
-  size_t slot = ptr_slot(key, mask);
-  while (set->keys[slot] != NULL) {
-    if (set->keys[slot] == key) {
-      return false;
-    }
-    slot = (slot + 1) & mask;
-  }
-  set->keys[slot] = key;
-  set->count++;
-  return true;
-}
-
-static void ptrset_release(Parser * p, PtrSet * set) {
-  if (set->keys != NULL) {
-    p->allocator->free_fn(p->allocator->ctx, (void *)set->keys);
-  }
-  memset(set, 0, sizeof(*set));
-}
-
-// Empties a set for the next use, without a cost out of proportion to what it
-// held: a big one is released, a small one is wiped.
-static void ptrset_clear(Parser * p, PtrSet * set) {
-  if (set->capacity > 64) {
-    ptrset_release(p, set);
-    return;
-  }
-  if (set->keys != NULL) {
-    memset((void *)set->keys, 0, set->capacity * sizeof(*set->keys));
-  }
-  set->count = 0;
-}
-
 void module_free(Parser * p) {
-  ptrset_release(p, &p->export_names);
-  ptrset_release(p, &p->attribute_keys);
+  parser_ptrset_release(p, &p->export_names);
+  parser_ptrset_release(p, &p->attribute_keys);
   if (p->export_refs != NULL) {
     p->allocator->free_fn(p->allocator->ctx, p->export_refs);
     p->export_refs = NULL;
@@ -209,7 +143,7 @@ static void expect_word(Parser * p, GLECMA_Keyword keyword) {
 
 static void add_export(Parser * p, const uint16_t * name,
     const GLECMA_Location * at) {
-  if (!ptrset_add(p, &p->export_names, name)) {
+  if (!parser_ptrset_add(p, &p->export_names, name)) {
     parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, at);
   }
 }
@@ -262,29 +196,15 @@ void module_finish(Parser * p) {
   // between declarations, so that it is released with the parser whichever
   // way the parse ends.
   for (size_t i = p->frames[0].first; i < p->rec_len; i++) {
-    (void)ptrset_add(p, &p->attribute_keys, p->recs[i].name);
+    (void)parser_ptrset_add(p, &p->attribute_keys, p->recs[i].name);
   }
   size_t missing = SIZE_MAX;
-  const PtrSet * names = &p->attribute_keys;
   for (size_t i = 0; i < p->export_ref_len && missing == SIZE_MAX; i++) {
-    const uint16_t * name = p->export_refs[i].name;
-    bool found = false;
-    if (names->keys != NULL) {
-      size_t mask = names->capacity - 1;
-      size_t slot = ptr_slot(name, mask);
-      while (names->keys[slot] != NULL) {
-        if (names->keys[slot] == name) {
-          found = true;
-          break;
-        }
-        slot = (slot + 1) & mask;
-      }
-    }
-    if (!found) {
+    if (!parser_ptrset_has(&p->attribute_keys, p->export_refs[i].name)) {
       missing = i;
     }
   }
-  ptrset_release(p, &p->attribute_keys);
+  parser_ptrset_release(p, &p->attribute_keys);
   if (missing != SIZE_MAX) {
     GLECMA_Location at = location_of(p, p->export_refs[missing].offset);
     parser_fail(p, GLECMA_RULE_MODULE_EXPORT_UNDECLARED, &at);
@@ -301,7 +221,7 @@ static GLECMA_BNode import_attributes(Parser * p) {
   while (p->tok.kind != GLECMA_TOK_RBRACE) {
     const size_t entry = p->kids_len;
     ModuleName key = read_name(p, false);
-    if (!ptrset_add(p, &p->attribute_keys, key.text.units)) {
+    if (!parser_ptrset_add(p, &p->attribute_keys, key.text.units)) {
       parser_fail(p, GLECMA_RULE_IMPORT_ATTRIBUTE_DUPLICATE, &key.token.start);
     }
     parser_expect(p, GLECMA_TOK_COLON);
@@ -316,7 +236,7 @@ static GLECMA_BNode import_attributes(Parser * p) {
   }
   const size_t end = p->tok.end.offset;
   parser_next(p);
-  ptrset_clear(p, &p->attribute_keys);
+  parser_ptrset_clear(p, &p->attribute_keys);
   return parser_make(p, GLECMA_NODE_IMPORT_ATTRIBUTES, 0, 0, start, end, mark);
 }
 

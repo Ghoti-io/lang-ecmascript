@@ -60,13 +60,26 @@
 #define glecma_engine_find GHOTIIO_LANG_ECMASCRIPT(glecma_engine_find)
 #define glecma_engine_register GHOTIIO_LANG_ECMASCRIPT(glecma_engine_register)
 
+// goals.h
+#define GLECMA_DynamicFunction GHOTIIO_LANG_ECMASCRIPT(GLECMA_DynamicFunction)
+#define GLECMA_FunctionContext GHOTIIO_LANG_ECMASCRIPT(GLECMA_FunctionContext)
+#define glecma_parse_dynamic_function                                          \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_parse_dynamic_function)
+#define glecma_parse_function GHOTIIO_LANG_ECMASCRIPT(glecma_parse_function)
+#define glecma_parse_function_internal                                         \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_parse_function_internal)
+
 // limits.h
 #define GLECMA_Limits GHOTIIO_LANG_ECMASCRIPT(GLECMA_Limits)
 #define glecma_limits_default GHOTIIO_LANG_ECMASCRIPT(glecma_limits_default)
 
 // options.h
+#define GLECMA_EvalContext GHOTIIO_LANG_ECMASCRIPT(GLECMA_EvalContext)
 #define GLECMA_FeatureSet GHOTIIO_LANG_ECMASCRIPT(GLECMA_FeatureSet)
 #define GLECMA_ParseOptions GHOTIIO_LANG_ECMASCRIPT(GLECMA_ParseOptions)
+#define GLECMA_PrivateName GHOTIIO_LANG_ECMASCRIPT(GLECMA_PrivateName)
+#define glecma_eval_context_default                                            \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_eval_context_default)
 #define glecma_feature_set_add GHOTIIO_LANG_ECMASCRIPT(glecma_feature_set_add)
 #define glecma_feature_set_has GHOTIIO_LANG_ECMASCRIPT(glecma_feature_set_has)
 #define glecma_parse_options_default                                           \
@@ -153,6 +166,7 @@
 #define glecma_lexer_reset GHOTIIO_LANG_ECMASCRIPT(glecma_lexer_reset)
 #define glecma_lexer_run GHOTIIO_LANG_ECMASCRIPT(glecma_lexer_run)
 #define glecma_lexer_set_strict GHOTIIO_LANG_ECMASCRIPT(glecma_lexer_set_strict)
+#define glecma_lexer_set_range GHOTIIO_LANG_ECMASCRIPT(glecma_lexer_set_range)
 #define glecma_parse_options_resolve \
   GHOTIIO_LANG_ECMASCRIPT(glecma_parse_options_resolve)
 #define glecma_rule_message GHOTIIO_LANG_ECMASCRIPT(glecma_rule_message)
@@ -199,6 +213,7 @@
 #define glecma_parse GHOTIIO_LANG_ECMASCRIPT(glecma_parse)
 #define glecma_tree_destroy GHOTIIO_LANG_ECMASCRIPT(glecma_tree_destroy)
 #define glecma_tree_dump GHOTIIO_LANG_ECMASCRIPT(glecma_tree_dump)
+#define glecma_tree_eval_context GHOTIIO_LANG_ECMASCRIPT(glecma_tree_eval_context)
 #define glecma_tree_goal GHOTIIO_LANG_ECMASCRIPT(glecma_tree_goal)
 #define glecma_tree_root GHOTIIO_LANG_ECMASCRIPT(glecma_tree_root)
 #define glecma_tree_source GHOTIIO_LANG_ECMASCRIPT(glecma_tree_source)
@@ -220,6 +235,16 @@
 #define glecma_token_value_into GHOTIIO_LANG_ECMASCRIPT(glecma_token_value_into)
 #define glecma_parse_options_goal \
   GHOTIIO_LANG_ECMASCRIPT(glecma_parse_options_goal)
+#define glecma_parse_options_raw \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_parse_options_raw)
+#define glecma_parse_options_eval \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_parse_options_eval)
+#define glecma_context_flags_valid \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_context_flags_valid)
+#define glecma_private_names_valid \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_private_names_valid)
+#define glecma_tree_set_eval_context \
+  GHOTIIO_LANG_ECMASCRIPT(glecma_tree_set_eval_context)
 
 // The parser's internal functions (src/parse/parser.h).
 #define parser_fail GHOTIIO_LANG_ECMASCRIPT(parser_fail)
@@ -240,6 +265,16 @@
 #define parser_set_strict GHOTIIO_LANG_ECMASCRIPT(parser_set_strict)
 #define parser_memo_add GHOTIIO_LANG_ECMASCRIPT(parser_memo_add)
 #define parser_memo_has GHOTIIO_LANG_ECMASCRIPT(parser_memo_has)
+#define parser_ptrset_add GHOTIIO_LANG_ECMASCRIPT(parser_ptrset_add)
+#define parser_ptrset_has GHOTIIO_LANG_ECMASCRIPT(parser_ptrset_has)
+#define parser_ptrset_clear GHOTIIO_LANG_ECMASCRIPT(parser_ptrset_clear)
+#define parser_ptrset_release GHOTIIO_LANG_ECMASCRIPT(parser_ptrset_release)
+#define module_free GHOTIIO_LANG_ECMASCRIPT(module_free)
+#define parse_module_items GHOTIIO_LANG_ECMASCRIPT(parse_module_items)
+#define module_finish GHOTIIO_LANG_ECMASCRIPT(module_finish)
+#define parser_prologue GHOTIIO_LANG_ECMASCRIPT(parser_prologue)
+#define parser_refuse GHOTIIO_LANG_ECMASCRIPT(parser_refuse)
+#define parser_execute GHOTIIO_LANG_ECMASCRIPT(parser_execute)
 #define parser_kid GHOTIIO_LANG_ECMASCRIPT(parser_kid)
 #define parser_make GHOTIIO_LANG_ECMASCRIPT(parser_make)
 #define parser_make_body GHOTIIO_LANG_ECMASCRIPT(parser_make_body)

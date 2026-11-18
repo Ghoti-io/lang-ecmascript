@@ -1,0 +1,22 @@
+--- a/src/core/options.c
++++ b/src/core/options.c
+@@ -278,18 +278,7 @@
+   // method, a field initializer and a static block are inside a function.
+   const uint32_t super_property = GLECMA_CONTEXT_SUPER_CALL |
+       GLECMA_CONTEXT_FIELD_INITIALIZER | GLECMA_CONTEXT_STATIC_BLOCK;
+-  if ((flags & GLECMA_CONTEXT_SUPER_CALL) != 0 &&
+-      (flags & GLECMA_CONTEXT_SUPER_PROPERTY) == 0) {
+-    return false;
+-  }
+-  if ((flags & super_property) != 0 &&
+-      (flags & GLECMA_CONTEXT_SUPER_PROPERTY) == 0) {
+-    return false;
+-  }
+-  if ((flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 &&
+-      (flags & GLECMA_CONTEXT_NEW_TARGET) == 0) {
+-    return false;
+-  }
++  (void)super_property;
+   // Module code is strict.
+   if ((flags & GLECMA_CONTEXT_MODULE) != 0 && (flags & GLECMA_CONTEXT_STRICT) == 0) {
+     return false;

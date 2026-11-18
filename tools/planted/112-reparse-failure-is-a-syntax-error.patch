@@ -1,0 +1,11 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -315,7 +315,7 @@
+   job.run = run_function;
+   job.data = &data;
+   GLECMA_Result result = parser_execute(&job, failure, out_tree);
+-  if (result == GLECMA_ERR_SYNTAX) {
++  if (result == GLECMA_ERR_SYNTAX && 0) {
+     // The first parse reported every early error: a function it accepted that
+     // does not read again is a defect, and is not the program's syntax error.
+     GLECMA_Location where = {0, 0, 0};

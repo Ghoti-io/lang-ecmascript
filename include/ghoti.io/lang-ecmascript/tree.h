@@ -311,7 +311,7 @@ GLECMA_API const GLECMA_Node * glecma_tree_root(const GLECMA_Tree * tree);
 /** @brief The source the tree was parsed from, which the tree keeps alive. */
 GLECMA_API const GLECMA_Source * glecma_tree_source(const GLECMA_Tree * tree);
 
-/** @brief The goal the tree was parsed for: ::GLECMA_PARSE_SCRIPT or ::GLECMA_PARSE_MODULE. */
+/** @brief The goal the tree was parsed for: a ::GLECMA_PARSE_SCRIPT or one of the other goals. */
 GLECMA_API uint32_t glecma_tree_goal(const GLECMA_Tree * tree);
 
 /**
@@ -321,6 +321,19 @@ GLECMA_API uint32_t glecma_tree_goal(const GLECMA_Tree * tree);
  * prologue that holds `"use strict"` makes the top level strict.
  */
 GLECMA_API bool glecma_tree_strict(const GLECMA_Tree * tree);
+
+/**
+ * @brief The context a direct eval's code was parsed in.
+ *
+ * The tree keeps its own copy of what the caller gave, the private names
+ * included, so the compiler reads the context from the tree and is not passed
+ * it twice.
+ *
+ * @return The context, valid until the tree is destroyed; NULL for a tree of any
+ *   goal but ::GLECMA_PARSE_DIRECT_EVAL.
+ */
+GLECMA_API const GLECMA_EvalContext * glecma_tree_eval_context(
+    const GLECMA_Tree * tree);
 
 /** @brief A node's kind. A kind this header does not list is a newer library's. */
 GLECMA_API uint32_t glecma_node_kind(const GLECMA_Node * node);

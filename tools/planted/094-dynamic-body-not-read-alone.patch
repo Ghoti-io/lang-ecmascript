@@ -1,0 +1,17 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -343,14 +343,7 @@
+   }
+   if (result == GLECMA_OK) {
+     // 2. The body, alone.
+-    job.source = body_source;
+-    job.run = run_body;
+-    result = parser_execute(&job, failure, &discarded);
+-    glecma_tree_destroy(discarded);
+     discarded = NULL;
+-    if (result != GLECMA_OK) {
+-      place_in_body(failure);
+-    }
+   }
+   if (result == GLECMA_OK) {
+     // 3. The assembled text, as the kind's function expression, with every

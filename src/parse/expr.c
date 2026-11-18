@@ -576,6 +576,7 @@ static PExpr finish_arrow(Parser * p, size_t start, bool is_async,
     flags |= GLECMA_NODEF_EXPRESSION_BODY;
   }
   early_scope_function(p, true, simple, body_strict);
+  p->last_body_strict = body_strict;
   early_jump_leave(p, jumps);
   p->body_simple = saved_simple;
   p->flags = saved_flags;

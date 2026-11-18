@@ -1,0 +1,11 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -269,7 +269,7 @@
+ // each must be a private name of the code around, or it is an error.
+ static void early_outer_answer(Parser * p, size_t first) {
+   for (size_t i = first; i < p->priv_ref_len; i++) {
+-    if (!parser_ptrset_has(&p->outer_names, p->priv_refs[i].name)) {
++    if (!parser_ptrset_has(&p->export_names, p->priv_refs[i].name)) {
+       parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED, &p->priv_refs[i].at);
+     }
+   }

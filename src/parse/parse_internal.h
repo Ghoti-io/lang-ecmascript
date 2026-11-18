@@ -35,6 +35,7 @@
 
 #include <ghoti.io/lang-ecmascript/macros.h>
 
+#include <ghoti.io/lang-ecmascript/goals.h>
 #include <ghoti.io/lang-ecmascript/tree.h>
 
 #ifdef __cplusplus
@@ -54,6 +55,18 @@ extern "C" {
  *   ::GLECMA_PARSE_INTERNAL_CHECKING, or 0.
  */
 GLECMA_INTERNAL_API GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
+    const GLECMA_ParseOptions * options, const GLECMA_Allocator * allocator,
+    uint32_t internal, GLECMA_Failure * failure, GLECMA_Tree ** out_tree);
+
+/**
+ * @brief Reads one function again, with the internal flags.
+ *
+ * Takes what ::glecma_parse_function takes and returns what it returns;
+ * @p internal is ::GLECMA_PARSE_INTERNAL_BUILTIN (the function is one of the
+ * engine's own built-ins) or ::GLECMA_PARSE_INTERNAL_CHECKING, or 0.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_parse_function_internal(
+    GLECMA_Source * source, const GLECMA_FunctionContext * context,
     const GLECMA_ParseOptions * options, const GLECMA_Allocator * allocator,
     uint32_t internal, GLECMA_Failure * failure, GLECMA_Tree ** out_tree);
 

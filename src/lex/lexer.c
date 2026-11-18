@@ -301,6 +301,25 @@ void glecma_lexer_reset(GLECMA_Lexer * lexer, const GLECMA_Location * where) {
   lexer->error.result = GLECMA_OK;
 }
 
+GLECMA_Result glecma_lexer_set_range(GLECMA_Lexer * lexer, size_t start,
+    size_t end) {
+  if (lexer == NULL || start >= end || end > lexer->source->units) {
+    return GLECMA_ERR_INVALID;
+  }
+  GLECMA_Location from = {0, 0, 0};
+  if (glecma_source_location(lexer->source, start, &from) != GLECMA_OK) {
+    return GLECMA_ERR_INVALID;
+  }
+  GLECMA_Location to = {0, 0, 0};
+  if (glecma_source_location(lexer->source, end, &to) != GLECMA_OK) {
+    return GLECMA_ERR_INVALID;
+  }
+  glecma_lexer_reset(lexer, &from);
+  lexer->bounded = true;
+  lexer->limit = end;
+  return GLECMA_OK;
+}
+
 void glecma_lexer_failure(const GLECMA_Lexer * lexer,
     GLECMA_Failure * failure) {
   glecma_failure_set(failure, lexer->error.result, lexer->error.message,
@@ -745,6 +764,9 @@ GLECMA_Result glecma_lexer_next(GLECMA_Lexer * lexer, uint32_t goal,
   }
   GLECMA_LexText text;
   glecma_lex_text_init(&text, lexer->source);
+  if (lexer->bounded && text.units > lexer->limit) {
+    text.units = lexer->limit;
+  }
 
   bool newline = false;
   GLECMA_Result result = skip_trivia(lexer, &text, &newline);

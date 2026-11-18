@@ -40,20 +40,13 @@
  */
 #define PARSER_STACK_RESERVE ((uint64_t)24 * 1024)
 
-/**
- * The current position of the native stack, as a number. The frame's own
- * address, where the compiler offers it: an address-sanitized build moves
- * locals whose address is taken to a stack of its own, which is not where
- * the thread's stack is, and a measurement taken from one would be nonsense.
- */
-#if defined(__GNUC__) || defined(__clang__)
-#define PARSER_STACK_POSITION() ((uintptr_t)__builtin_frame_address(0))
-#elif defined(_MSC_VER)
-#include <intrin.h>
-#define PARSER_STACK_POSITION() ((uintptr_t)_AddressOfReturnAddress())
-#else
-#define PARSER_STACK_POSITION() ((uintptr_t)&parser_stack_marker)
-static volatile char parser_stack_marker;
+#if !defined(__GNUC__) && !defined(__clang__) && !defined(_MSC_VER)
+// The one compiler-independent way to see where the native stack is: a local's
+// address, in a function that cannot be inlined into its caller.
+PARSER_NOINLINE uintptr_t parser_stack_here(void) {
+  volatile char marker = 0;
+  return (uintptr_t)&marker;
+}
 #endif
 
 /* ---- Failure ------------------------------------------------------------- */
@@ -358,6 +351,88 @@ bool parser_memo_has(const Parser * p, size_t key) {
   return false;
 }
 
+/* ---- Sets of interned names ------------------------------------------------ */
+
+static size_t ptr_slot(const uint16_t * key, size_t mask) {
+  return (size_t)(((uintptr_t)key >> 4) * (uintptr_t)0x9E3779B97F4A7C15ull >> 20) & mask;
+}
+
+// Adds a key; false when it was already there.
+bool parser_ptrset_add(Parser * p, PtrSet * set, const uint16_t * key) {
+  if ((set->count + 1) * 2 > set->capacity) {
+    size_t capacity = set->capacity == 0 ? 16 : set->capacity * 2;
+    if (capacity > SIZE_MAX / sizeof(*set->keys)) {
+      parser_fail_result(p, GLECMA_ERR_OOM);
+    }
+    const uint16_t ** keys = (const uint16_t **)p->allocator->calloc_fn(
+        p->allocator->ctx, capacity, sizeof(*keys));
+    if (keys == NULL) {
+      parser_fail_result(p, GLECMA_ERR_OOM);
+    }
+    for (size_t i = 0; i < set->capacity; i++) {
+      if (set->keys[i] != NULL) {
+        size_t slot = ptr_slot(set->keys[i], capacity - 1);
+        while (keys[slot] != NULL) {
+          slot = (slot + 1) & (capacity - 1);
+        }
+        keys[slot] = set->keys[i];
+      }
+    }
+    if (set->keys != NULL) {
+      p->allocator->free_fn(p->allocator->ctx, (void *)set->keys);
+    }
+    set->keys = keys;
+    set->capacity = capacity;
+  }
+  size_t mask = set->capacity - 1;
+  size_t slot = ptr_slot(key, mask);
+  while (set->keys[slot] != NULL) {
+    if (set->keys[slot] == key) {
+      return false;
+    }
+    slot = (slot + 1) & mask;
+  }
+  set->keys[slot] = key;
+  set->count++;
+  return true;
+}
+
+void parser_ptrset_release(Parser * p, PtrSet * set) {
+  if (set->keys != NULL) {
+    p->allocator->free_fn(p->allocator->ctx, (void *)set->keys);
+  }
+  memset(set, 0, sizeof(*set));
+}
+
+// Empties a set for the next use, without a cost out of proportion to what it
+// held: a big one is released, a small one is wiped.
+void parser_ptrset_clear(Parser * p, PtrSet * set) {
+  if (set->capacity > 64) {
+    parser_ptrset_release(p, set);
+    return;
+  }
+  if (set->keys != NULL) {
+    memset((void *)set->keys, 0, set->capacity * sizeof(*set->keys));
+  }
+  set->count = 0;
+}
+
+// Whether a key is in the set.
+bool parser_ptrset_has(const PtrSet * set, const uint16_t * key) {
+  if (set->keys == NULL) {
+    return false;
+  }
+  size_t mask = set->capacity - 1;
+  size_t slot = ptr_slot(key, mask);
+  while (set->keys[slot] != NULL) {
+    if (set->keys[slot] == key) {
+      return true;
+    }
+    slot = (slot + 1) & mask;
+  }
+  return false;
+}
+
 /* ---- Nodes, text and events ----------------------------------------------- */
 
 void parser_kid(Parser * p, GLECMA_BNode node) {
@@ -558,147 +633,4 @@ void parser_event(Parser * p, uint32_t type, uint32_t what,
 void parser_amend_reference(Parser * p, size_t start, uint32_t add,
     uint32_t clear) {
   p->builder->ops->amend(p->builder, start, add, clear);
-}
-
-/* ---- The entries ---------------------------------------------------------- */
-
-static GLECMA_Result refuse(GLECMA_Failure * failure, GLECMA_Result result,
-    const char * message) {
-  glecma_failure_set(failure, result, message, NULL, NULL, 0, NULL);
-  return result;
-}
-
-// Parses the top level into `tree`; the failure, if any, is left in `p`.
-static void run_parse(Parser * p, GLECMA_Tree * tree, uint32_t goal,
-    bool * strict) {
-  parser_next(p);
-  size_t units = glecma_source_units(p->source);
-  const bool module = goal == GLECMA_PARSE_MODULE;
-  parser_event(p, GLECMA_BEV_SCOPE_ENTER,
-      module ? GLECMA_BSCOPE_MODULE : GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
-  size_t mark = p->kids_len;
-  bool is_strict = (p->flags & PF_STRICT) != 0;
-  if (module) {
-    // A Module has no directive prologue: it is strict, and its items are
-    // statements, imports and exports (clause 16.2.1).
-    parse_module_items(p);
-    module_finish(p);
-  } else {
-    size_t end = 0;
-    parse_statement_list(p, GLECMA_TOK_EOF, true, &end, &is_strict);
-  }
-  early_finish(p);
-  parser_event(p, GLECMA_BEV_SCOPE_LEAVE,
-      module ? GLECMA_BSCOPE_MODULE : GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
-  GLECMA_BNode root = parser_make(p,
-      module ? GLECMA_NODE_MODULE : GLECMA_NODE_SCRIPT,
-      is_strict ? GLECMA_NODEF_STRICT : 0u, 0, 0, units, mark);
-  *strict = is_strict;
-  glecma_tree_finish(tree, root, goal, is_strict);
-}
-
-GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
-    const GLECMA_ParseOptions * options, const GLECMA_Allocator * allocator,
-    uint32_t internal, GLECMA_Failure * failure, GLECMA_Tree ** out_tree) {
-  if (failure != NULL && failure->size < GLECMA_FAILURE_HEADER_SIZE) {
-    return GLECMA_ERR_INVALID;
-  }
-  if (source == NULL || out_tree == NULL) {
-    return refuse(failure, GLECMA_ERR_INVALID, "source or out_tree is NULL");
-  }
-  GLECMA_Limits limits;
-  const GLECMA_FeatureSet * features = NULL;
-  if (!glecma_parse_options_resolve(options, &limits, &features)) {
-    return refuse(failure, GLECMA_ERR_INVALID,
-        "options or limits has a size below the header");
-  }
-  uint32_t goal = 0;
-  uint32_t context = 0;
-  if (glecma_parse_options_goal(options, &goal, &context) != GLECMA_OK) {
-    return refuse(failure, GLECMA_ERR_INVALID,
-        "the goal or the context of the options is not defined");
-  }
-  // Before any work: a feature the build lacks is refused, never ignored.
-  const char * unbuilt = glecma_feature_set_first_unbuilt(features);
-  if (unbuilt != NULL) {
-    glecma_failure_set(failure, GLECMA_ERR_UNSUPPORTED,
-        "the feature set names a feature this build lacks", NULL, NULL, 0,
-        unbuilt);
-    return GLECMA_ERR_UNSUPPORTED;
-  }
-  const bool builtin = (internal & GLECMA_PARSE_INTERNAL_BUILTIN) != 0;
-  const bool module_rules = goal == GLECMA_PARSE_MODULE;
-  const uint32_t mode = (internal & GLECMA_PARSE_INTERNAL_CHECKING) != 0
-      ? GLECMA_BUILDER_CHECKING : GLECMA_BUILDER_TREE;
-
-  GLECMA_Tree * tree = NULL;
-  GLECMA_Result opened = glecma_tree_open(mode, source, allocator, &tree);
-  if (opened != GLECMA_OK) {
-    return refuse(failure, opened,
-        opened == GLECMA_ERR_OOM ? "allocation failed"
-                                 : "the allocator has a NULL function");
-  }
-
-  Parser parser;
-  memset(&parser, 0, sizeof(parser));
-  Parser * p = &parser;
-  p->source = source;
-  p->builder = glecma_tree_builder(tree);
-  p->allocator = allocator != NULL ? allocator : glecma_allocator_default();
-  glecma_lex_text_init(&p->text, source);
-  p->max_nesting = limits.nesting;
-  p->max_nodes = limits.nodes;
-  p->native_stack_bytes = limits.native_stack_bytes;
-  p->pending = NO_PENDING;
-  p->pending_rule = GLECMA_RULE_COVER_INITIALIZED_NAME;
-  p->body_simple = true; // a Script has no parameters
-  p->params_simple = true;
-  const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0;
-  // A Module is strict, reserves `await` everywhere, and its top level may
-  // use it as an operator (top-level await, clause 16.2.1.6.1.3).
-  p->flags = (strict_context || builtin || module_rules ? PF_STRICT : 0u) |
-      (builtin ? PF_BUILTIN : 0u) |
-      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE | PF_AWAIT) : 0u);
-  GLECMA_Result lexed = builtin
-      ? glecma_lexer_open_builtin(&p->lex, source, options, failure)
-      : glecma_lexer_open(&p->lex, source, options,
-            module_rules ? GLECMA_LEXF_MODULE
-                         : strict_context ? GLECMA_LEXF_STRICT : 0u, failure);
-  if (lexed != GLECMA_OK) {
-    glecma_tree_destroy(tree);
-    return lexed;
-  }
-  p->stack_base = PARSER_STACK_POSITION();
-
-  bool strict = false;
-  if (setjmp(p->jump) == 0) {
-    run_parse(p, tree, goal, &strict);
-  }
-
-  if (p->kids != NULL) {
-    p->allocator->free_fn(p->allocator->ctx, p->kids);
-  }
-  if (p->memo != NULL) {
-    p->allocator->free_fn(p->allocator->ctx, p->memo);
-  }
-  early_free(p);
-  module_free(p);
-  if (p->result != GLECMA_OK) {
-    GLECMA_Result result = p->result;
-    glecma_failure_set(failure, result, p->message,
-        result == GLECMA_ERR_OOM ? NULL : &p->where, p->limit,
-        result == GLECMA_ERR_SYNTAX ? p->rule : 0u, NULL);
-    glecma_tree_destroy(tree);
-    return result;
-  }
-  glecma_failure_set(failure, GLECMA_OK, NULL, NULL, NULL, 0, NULL);
-  *out_tree = tree;
-  return GLECMA_OK;
-}
-
-GLECMA_Result glecma_parse(GLECMA_Source * source,
-    const GLECMA_ParseOptions * options, const GLECMA_Allocator * allocator,
-    GLECMA_Failure * failure, GLECMA_Tree ** out_tree) {
-  return glecma_parse_internal(source, options, allocator, 0, failure,
-      out_tree);
 }

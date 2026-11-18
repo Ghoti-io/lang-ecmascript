@@ -44,6 +44,8 @@ extern "C" {
 #define GLECMA_LIMITS_HEADER_SIZE 8u
 #define GLECMA_FAILURE_HEADER_SIZE 8u
 #define GLECMA_PARSE_OPTIONS_HEADER_SIZE 8u
+#define GLECMA_EVAL_CONTEXT_HEADER_SIZE 8u
+#define GLECMA_FUNCTION_CONTEXT_HEADER_SIZE 8u
 
 /**
  * @brief Converts a runtime-core result into this library's.
@@ -100,6 +102,48 @@ GLECMA_INTERNAL_API bool glecma_parse_options_resolve(
 GLECMA_INTERNAL_API GLECMA_Result glecma_parse_options_goal(
     const GLECMA_ParseOptions * options, uint32_t * out_goal,
     uint32_t * out_context);
+
+/**
+ * @brief Reads the goal, the context flags and the eval context of a caller's
+ *   parse options as given, without checking them.
+ *
+ * For the entries that serve a goal of their own and decide what a goal or a
+ * context means for them. A member beyond the caller's declared size is its
+ * default.
+ */
+GLECMA_INTERNAL_API void glecma_parse_options_raw(
+    const GLECMA_ParseOptions * options, uint32_t * out_goal,
+    uint32_t * out_context, const GLECMA_EvalContext ** out_eval);
+
+/**
+ * @brief Reads and validates the eval context of a caller's parse options.
+ *
+ * @param options The caller's options, or NULL.
+ * @param goal The goal, already read.
+ * @param out_context Receives a context with every member filled (the caller's
+ *   where its `size` covers them, the global context elsewhere), `size` set to
+ *   the library's struct; its names point into the caller's array.
+ * @return ::GLECMA_OK (also when the options carry no context); the
+ *   ::GLECMA_ERR_INVALID of a context a goal other than direct eval was given,
+ *   of a `size` below the header, a flag that is not defined, a flag without
+ *   the flag it implies, or a name that is empty or has no units.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_parse_options_eval(
+    const GLECMA_ParseOptions * options, uint32_t goal,
+    GLECMA_EvalContext * out_context);
+
+/**
+ * @brief Whether context flags are consistent: only bits of @p mask, and each
+ *   flag with the flag it implies.
+ */
+GLECMA_INTERNAL_API bool glecma_context_flags_valid(uint32_t flags,
+    uint32_t mask);
+
+/**
+ * @brief Whether private names are usable: units present and a length.
+ */
+GLECMA_INTERNAL_API bool glecma_private_names_valid(
+    const GLECMA_PrivateName * names, uint32_t count);
 
 /**
  * @brief Whether this build defines a feature.

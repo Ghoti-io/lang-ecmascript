@@ -1,11 +1,11 @@
 --- a/src/parse/module.c
 +++ b/src/parse/module.c
-@@ -301,7 +301,7 @@
+@@ -221,7 +221,7 @@
    while (p->tok.kind != GLECMA_TOK_RBRACE) {
      const size_t entry = p->kids_len;
      ModuleName key = read_name(p, false);
--    if (!ptrset_add(p, &p->attribute_keys, key.text.units)) {
-+    if (ptrset_add(p, &p->attribute_keys, key.text.units) && 0) {
+-    if (!parser_ptrset_add(p, &p->attribute_keys, key.text.units)) {
++    if (parser_ptrset_add(p, &p->attribute_keys, key.text.units) && 0) {
        parser_fail(p, GLECMA_RULE_IMPORT_ATTRIBUTE_DUPLICATE, &key.token.start);
      }
      parser_expect(p, GLECMA_TOK_COLON);

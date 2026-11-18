@@ -243,6 +243,14 @@ GLECMA_INTERNAL_API GLECMA_TreeBuilder * glecma_tree_builder(GLECMA_Tree * tree)
 GLECMA_INTERNAL_API void glecma_tree_finish(GLECMA_Tree * tree,
     GLECMA_BNode root, uint32_t goal, bool strict);
 
+/**
+ * @brief Gives the tree its own copy of the context its code was parsed in.
+ *
+ * @return ::GLECMA_OK or ::GLECMA_ERR_OOM.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_tree_set_eval_context(
+    GLECMA_Tree * tree, const GLECMA_EvalContext * context);
+
 /** @brief The number of events the builder recorded. */
 GLECMA_INTERNAL_API size_t glecma_tree_event_count(const GLECMA_Tree * tree);
 

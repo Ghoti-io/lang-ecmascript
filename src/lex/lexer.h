@@ -231,6 +231,8 @@ typedef struct GLECMA_Lexer {
   uint64_t max_tokens;      ///< ::GLECMA_Limits::tokens.
   uint64_t max_literal;     ///< ::GLECMA_Limits::literal_length.
   uint32_t mode;            ///< ::GLECMA_LEXF_STRICT and the others.
+  bool bounded;             ///< The text ends at `limit`, not at the source's end.
+  size_t limit;             ///< The offset the text ends at, when `bounded`.
   bool line_start;          ///< Only white space and comments lie between the
                             ///< last line terminator, or the start of the
                             ///< source, and here: what `-->` needs.
@@ -291,6 +293,20 @@ GLECMA_INTERNAL_API void glecma_lexer_set_strict(GLECMA_Lexer * lexer,
  */
 GLECMA_INTERNAL_API void glecma_lexer_reset(GLECMA_Lexer * lexer,
     const GLECMA_Location * where);
+
+/**
+ * @brief Makes the tokenizer read only [start, end) of its source.
+ *
+ * Moves it to @p start, and what lies at or after @p end is the end of the
+ * text: the token after the last one of the range is the end of input, and
+ * nothing past the range is read, so a token that only the code around would
+ * have read differently (a `/` after a function declaration) cannot fail here.
+ *
+ * @return ::GLECMA_OK; ::GLECMA_ERR_INVALID for an empty or backwards range, one
+ *   past the source, or an offset that is inside a code point.
+ */
+GLECMA_INTERNAL_API GLECMA_Result glecma_lexer_set_range(GLECMA_Lexer * lexer,
+    size_t start, size_t end);
 
 /**
  * @brief Reads the next token under an input element goal.

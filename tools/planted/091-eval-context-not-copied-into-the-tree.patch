@@ -1,0 +1,11 @@
+--- a/src/parse/tree.c
++++ b/src/parse/tree.c
+@@ -494,7 +494,7 @@
+       names[i].length = (uint32_t)text.length;
+       names[i].reserved = 0;
+     }
+-    copy.private_names = names;
++    copy.private_names = context->private_names;
+   }
+   tree->eval_context = copy;
+   tree->has_eval_context = true;

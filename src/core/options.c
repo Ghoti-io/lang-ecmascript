@@ -150,6 +150,29 @@ const char * glecma_feature_set_first_unbuilt(
   return NULL;
 }
 
+#define EVAL_WITHIN(size, member)                                              \
+  ((size_t)(size) >= offsetof(GLECMA_EvalContext, member) +                    \
+          sizeof(((GLECMA_EvalContext *)0)->member))
+
+GLECMA_Result glecma_eval_context_default(GLECMA_EvalContext * context) {
+  if (context == NULL || context->size < GLECMA_EVAL_CONTEXT_HEADER_SIZE) {
+    return GLECMA_ERR_INVALID;
+  }
+  if (EVAL_WITHIN(context->size, flags)) {
+    context->flags = 0;
+  }
+  if (EVAL_WITHIN(context->size, private_name_count)) {
+    context->private_name_count = 0;
+  }
+  if (EVAL_WITHIN(context->size, reserved)) {
+    context->reserved = 0;
+  }
+  if (EVAL_WITHIN(context->size, private_names)) {
+    context->private_names = NULL;
+  }
+  return GLECMA_OK;
+}
+
 GLECMA_Result glecma_parse_options_default(GLECMA_ParseOptions * options) {
   if (options == NULL || options->size < GLECMA_PARSE_OPTIONS_HEADER_SIZE) {
     return GLECMA_ERR_INVALID;
@@ -166,6 +189,9 @@ GLECMA_Result glecma_parse_options_default(GLECMA_ParseOptions * options) {
   }
   if (OPTIONS_WITHIN(options->size, context)) {
     options->context = 0;
+  }
+  if (OPTIONS_WITHIN(options->size, eval_context)) {
+    options->eval_context = NULL;
   }
   return GLECMA_OK;
 }
@@ -192,6 +218,26 @@ bool glecma_parse_options_resolve(const GLECMA_ParseOptions * options,
   return true;
 }
 
+void glecma_parse_options_raw(const GLECMA_ParseOptions * options,
+    uint32_t * out_goal, uint32_t * out_context,
+    const GLECMA_EvalContext ** out_eval) {
+  *out_goal = GLECMA_PARSE_SCRIPT;
+  *out_context = 0;
+  *out_eval = NULL;
+  if (options == NULL || options->size < GLECMA_PARSE_OPTIONS_HEADER_SIZE) {
+    return;
+  }
+  if (OPTIONS_WITHIN(options->size, goal)) {
+    *out_goal = options->goal;
+  }
+  if (OPTIONS_WITHIN(options->size, context)) {
+    *out_context = options->context;
+  }
+  if (OPTIONS_WITHIN(options->size, eval_context)) {
+    *out_eval = options->eval_context;
+  }
+}
+
 GLECMA_Result glecma_parse_options_goal(const GLECMA_ParseOptions * options,
     uint32_t * out_goal, uint32_t * out_context) {
   uint32_t goal = GLECMA_PARSE_SCRIPT;
@@ -207,13 +253,95 @@ GLECMA_Result glecma_parse_options_goal(const GLECMA_ParseOptions * options,
       context = options->context;
     }
   }
-  if (goal != GLECMA_PARSE_SCRIPT && goal != GLECMA_PARSE_MODULE) {
+  // The first four goals are ::glecma_parse's; the others have entries of
+  // their own, which take more than a source.
+  if (goal > GLECMA_PARSE_INDIRECT_EVAL) {
     return GLECMA_ERR_INVALID;
   }
   if ((context & ~GLECMA_CONTEXT_MASK) != 0) {
     return GLECMA_ERR_INVALID;
   }
+  // Indirect eval code has no caller: nothing it could inherit strictness from.
+  if (goal == GLECMA_PARSE_INDIRECT_EVAL && context != 0) {
+    return GLECMA_ERR_INVALID;
+  }
   *out_goal = goal;
   *out_context = context;
+  return GLECMA_OK;
+}
+
+bool glecma_context_flags_valid(uint32_t flags, uint32_t mask) {
+  if ((flags & ~mask) != 0) {
+    return false;
+  }
+  // Each flag with the one it implies: a derived constructor is a method, a
+  // method, a field initializer and a static block are inside a function.
+  const uint32_t super_property = GLECMA_CONTEXT_SUPER_CALL |
+      GLECMA_CONTEXT_FIELD_INITIALIZER | GLECMA_CONTEXT_STATIC_BLOCK;
+  if ((flags & GLECMA_CONTEXT_SUPER_CALL) != 0 &&
+      (flags & GLECMA_CONTEXT_SUPER_PROPERTY) == 0) {
+    return false;
+  }
+  if ((flags & super_property) != 0 &&
+      (flags & GLECMA_CONTEXT_SUPER_PROPERTY) == 0) {
+    return false;
+  }
+  if ((flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 &&
+      (flags & GLECMA_CONTEXT_NEW_TARGET) == 0) {
+    return false;
+  }
+  // Module code is strict.
+  if ((flags & GLECMA_CONTEXT_MODULE) != 0 && (flags & GLECMA_CONTEXT_STRICT) == 0) {
+    return false;
+  }
+  return true;
+}
+
+bool glecma_private_names_valid(const GLECMA_PrivateName * names,
+    uint32_t count) {
+  if (count != 0 && names == NULL) {
+    return false;
+  }
+  for (uint32_t i = 0; i < count; i++) {
+    if (names[i].units == NULL || names[i].length == 0 || names[i].reserved != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+GLECMA_Result glecma_parse_options_eval(const GLECMA_ParseOptions * options,
+    uint32_t goal, GLECMA_EvalContext * out) {
+  memset(out, 0, sizeof(*out));
+  out->size = (uint32_t)sizeof(*out);
+  const GLECMA_EvalContext * given = NULL;
+  if (options != NULL && OPTIONS_WITHIN(options->size, eval_context)) {
+    given = options->eval_context;
+  }
+  if (given == NULL) {
+    return GLECMA_OK;
+  }
+  // Only direct eval code has a context to inherit.
+  if (goal != GLECMA_PARSE_DIRECT_EVAL ||
+      given->size < GLECMA_EVAL_CONTEXT_HEADER_SIZE) {
+    return GLECMA_ERR_INVALID;
+  }
+  if (EVAL_WITHIN(given->size, reserved) && given->reserved != 0) {
+    return GLECMA_ERR_INVALID;
+  }
+  if (EVAL_WITHIN(given->size, flags)) {
+    out->flags = given->flags;
+  }
+  if (!glecma_context_flags_valid(out->flags, GLECMA_CONTEXT_EVAL_MASK)) {
+    return GLECMA_ERR_INVALID;
+  }
+  if (EVAL_WITHIN(given->size, private_name_count) &&
+      EVAL_WITHIN(given->size, private_names)) {
+    out->private_name_count = given->private_name_count;
+    out->private_names = given->private_names;
+  }
+  if (!glecma_private_names_valid(out->private_names, out->private_name_count)) {
+    return GLECMA_ERR_INVALID;
+  }
   return GLECMA_OK;
 }

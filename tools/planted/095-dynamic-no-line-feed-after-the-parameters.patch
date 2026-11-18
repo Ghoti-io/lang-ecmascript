@@ -1,0 +1,11 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -295,7 +295,7 @@
+     }
+   }
+   if (result == GLECMA_OK) {
+-    result = units_ascii(allocator, &whole_units, "\n) {");
++    result = units_ascii(allocator, &whole_units, ") {");
+   }
+   if (result == GLECMA_OK) {
+     result = units_reserve(allocator, &whole_units, body_units.length);

@@ -1,0 +1,11 @@
+--- a/src/parse/func.c
++++ b/src/parse/func.c
+@@ -348,7 +348,7 @@
+   const GLECMA_Lexer after_key = p->lex;
+   const GLECMA_Token token = p->tok;
+   const size_t end_of_key = p->prev_end;
+-  parser_restore(p, &snap);
++  (void)snap;
+   p->lex = after_key;
+   p->tok = token;
+   p->prev_end = end_of_key;

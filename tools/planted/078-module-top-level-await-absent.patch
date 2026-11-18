@@ -1,11 +1,11 @@
---- a/src/parse/parser.c
-+++ b/src/parse/parser.c
-@@ -658,7 +658,7 @@
+--- a/src/parse/entry.c
++++ b/src/parse/entry.c
+@@ -246,7 +246,7 @@
    // use it as an operator (top-level await, clause 16.2.1.6.1.3).
-   p->flags = (strict_context || builtin || module_rules ? PF_STRICT : 0u) |
+   job.flags = (strict_context || builtin || module ? PF_STRICT : 0u) |
        (builtin ? PF_BUILTIN : 0u) |
--      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE | PF_AWAIT) : 0u);
-+      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE) : 0u);
-   GLECMA_Result lexed = builtin
-       ? glecma_lexer_open_builtin(&p->lex, source, options, failure)
-       : glecma_lexer_open(&p->lex, source, options,
+-      (module ? (PF_AWAIT_RESERVED | PF_MODULE | PF_AWAIT) : 0u) |
++      (module ? (PF_AWAIT_RESERVED | PF_MODULE) : 0u) |
+       // What the code that called `eval` allows (clause 19.2.1.1).
+       ((eval.flags & GLECMA_CONTEXT_NEW_TARGET) != 0 ? PF_NEW_TARGET : 0u) |
+       ((eval.flags & GLECMA_CONTEXT_SUPER_PROPERTY) != 0 ? PF_SUPER_PROP : 0u) |

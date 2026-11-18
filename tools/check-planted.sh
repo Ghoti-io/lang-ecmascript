@@ -4,7 +4,7 @@
 # gate it runs that gate on the unmodified copy and requires it to pass, so a
 # gate that fails for some other reason proves nothing.
 #
-# Usage: check-planted.sh [--only ID] ; PREFIX and PKG_CONFIG_PATH as for make.
+# Usage: check-planted.sh [--only ID[,ID...]] ; PREFIX and PKG_CONFIG_PATH as for make.
 set -u
 only=
 if [ "${1:-}" = "--only" ]; then only=$2; fi
@@ -34,7 +34,10 @@ controlled=" "
 total=0
 while IFS='|' read -r id name defect patch gate; do
   case $id in ''|\#*) continue ;; esac
-  [ -z "$only" ] || [ "$only" = "$id" ] || continue
+  case ",$only," in
+    ",,"|*",$id,"*) ;;
+    *) continue ;;
+  esac
   total=$((total + 1))
   fresh_copy
   case $controlled in

@@ -33,6 +33,7 @@
 #include <ghoti.io/lang-ecmascript/allocator.h>
 #include <ghoti.io/lang-ecmascript/core.h>
 #include <ghoti.io/lang-ecmascript/engine.h>
+#include <ghoti.io/lang-ecmascript/goals.h>
 #include <ghoti.io/lang-ecmascript/limits.h>
 #include <ghoti.io/lang-ecmascript/options.h>
 #include <ghoti.io/lang-ecmascript/source.h>

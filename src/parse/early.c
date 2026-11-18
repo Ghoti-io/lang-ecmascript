@@ -61,6 +61,7 @@ static void * stack_room(Parser * p, void * array, size_t length, size_t * capac
 }
 
 void early_free(Parser * p) {
+  parser_ptrset_release(p, &p->outer_names);
   void * stacks[] = {p->labels, p->priv_decls, p->priv_refs, p->classes,
       p->recs, p->frames};
   for (size_t i = 0; i < sizeof stacks / sizeof stacks[0]; i++) {
@@ -264,6 +265,17 @@ static void table_open(Parser * p, NameTable * table, size_t count) {
   }
 }
 
+// The references from `first` on are what no class of the code itself declares:
+// each must be a private name of the code around, or it is an error.
+static void early_outer_answer(Parser * p, size_t first) {
+  for (size_t i = first; i < p->priv_ref_len; i++) {
+    if (!parser_ptrset_has(&p->outer_names, p->priv_refs[i].name)) {
+      parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED, &p->priv_refs[i].at);
+    }
+  }
+  p->priv_ref_len = first;
+}
+
 // The class's declarations are checked for duplicates, and its references are
 // matched to them; what no declaration answers belongs to the class around,
 // and to no class at all when this is the outermost.
@@ -329,8 +341,9 @@ void early_class_leave(Parser * p) {
     parser_fail(p, GLECMA_RULE_PRIVATE_NAME_DUPLICATE, &duplicate_at);
   }
   if (p->class_len == 0 && kept > frame.ref_first) {
-    parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED,
-        &p->priv_refs[frame.ref_first].at);
+    // The outermost class of the code: what none of its classes declares is
+    // answered by the names of the code around it, if it has any (direct eval).
+    early_outer_answer(p, frame.ref_first);
   }
 }
 
@@ -645,7 +658,5 @@ void early_declare(Parser * p, uint32_t what, const GLECMA_BText * name,
 // used outside every class, or in a class heritage, which sees only the names
 // of the classes around the class.
 void early_finish(Parser * p) {
-  if (p->priv_ref_len > 0) {
-    parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED, &p->priv_refs[0].at);
-  }
+  early_outer_answer(p, 0);
 }
