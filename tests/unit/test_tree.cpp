@@ -169,15 +169,9 @@ TEST(Tree, TheWalkerAnswersForNullAndForAKindItDoesNotKnow) {
   const GLECMA_Node * unknown = glecma_node_child(glecma_tree_root(b.tree), 0);
   EXPECT_EQ(glecma_node_kind(unknown), 9999u);
   EXPECT_EQ(glecma_node_child_count(unknown), 1u);
-  std::string dump;
-  char * buffer = nullptr;
-  size_t size = 0;
-  FILE * out = open_memstream(&buffer, &size);
-  ASSERT_NE(out, nullptr);
-  ASSERT_EQ(glecma_tree_dump(b.tree, out), GLECMA_OK);
-  std::fclose(out);
-  dump.assign(buffer, size);
-  std::free(buffer);
+  GLECMA_Result dumped;
+  std::string dump = glecma_test::Capture([&](FILE * out) { return glecma_tree_dump(b.tree, out); }, &dumped);
+  ASSERT_EQ(dumped, GLECMA_OK);
   EXPECT_EQ(dump, "Script [0,1)\n  Unknown(9999) [0,1)\n    Identifier \"x\" [0,1)\n");
 }
 
@@ -273,13 +267,9 @@ TEST(Tree, TheCheckingBuilderBuildsNoBodyAndMakesTheReservedKindInPlaceOfOne) {
   EXPECT_EQ(glecma_node_start(walked), 15u);
   EXPECT_EQ(glecma_node_end(walked), 25u);
   EXPECT_STREQ(glecma_node_kind_name(GLECMA_NODE_UNMATERIALIZED_BODY), "UnmaterializedBody");
-  char * buffer = nullptr;
-  size_t size = 0;
-  FILE * out = open_memstream(&buffer, &size);
-  ASSERT_EQ(glecma_tree_dump(b.tree, out), GLECMA_OK);
-  std::fclose(out);
-  std::string dump(buffer, size);
-  std::free(buffer);
+  GLECMA_Result dumped;
+  std::string dump = glecma_test::Capture([&](FILE * out) { return glecma_tree_dump(b.tree, out); }, &dumped);
+  ASSERT_EQ(dumped, GLECMA_OK);
   EXPECT_NE(dump.find("UnmaterializedBody [15,25)"), std::string::npos) << dump;
   EXPECT_EQ(b.builder->ops->body_end(b.builder, &spec, &body), GLECMA_ERR_INTERNAL);
 }

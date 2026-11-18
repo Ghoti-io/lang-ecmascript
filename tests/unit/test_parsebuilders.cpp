@@ -27,6 +27,7 @@
 #include <thread>
 
 #include "../parse_test_support.h"
+#include "../test_helpers.h"
 #include "parse/builder.h"
 
 using glecma_test::Narrow;
@@ -100,13 +101,9 @@ std::string Events(const Parsed & p) {
 }
 
 std::string Dump(const Parsed & p) {
-  char * buffer = nullptr;
-  size_t size = 0;
-  FILE * out = open_memstream(&buffer, &size);
-  EXPECT_EQ(glecma_tree_dump(p.tree, out), GLECMA_OK);
-  std::fclose(out);
-  std::string text(buffer, size);
-  std::free(buffer);
+  GLECMA_Result r;
+  std::string text = glecma_test::Capture([&](FILE * out) { return glecma_tree_dump(p.tree, out); }, &r);
+  EXPECT_EQ(r, GLECMA_OK);
   return text;
 }
 

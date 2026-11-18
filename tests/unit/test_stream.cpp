@@ -25,7 +25,9 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <unistd.h>
 #include <cstring>
 #include <deque>
@@ -157,10 +159,10 @@ TEST(Stream, ArgumentsAreChecked) {
 }
 
 TEST(Stream, FileStreamSeeksAndReadsWhatWasWritten) {
-  char path[] = "/tmp/glecma-stream-XXXXXX";
-  int fd = mkstemp(path);
-  ASSERT_GE(fd, 0);
-  FILE * f = fdopen(fd, "wb");
+  const std::string path_text = (std::filesystem::temp_directory_path() /
+      ("glecma-stream-" + std::to_string(reinterpret_cast<uintptr_t>(&path_text)))).string();
+  const char * path = path_text.c_str();
+  FILE * f = std::fopen(path, "wb");
   ASSERT_NE(f, nullptr);
   std::fputs("0123456789", f);
   std::fclose(f);

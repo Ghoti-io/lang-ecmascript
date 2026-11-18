@@ -12,7 +12,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
+#include <string>
 
 namespace glecma_test {
 
@@ -102,6 +104,29 @@ class CountingAllocator {
   size_t live_ = 0;
   size_t fail_at_ = SIZE_MAX;
 };
+
+// What `write` writes to a stream, as text, and what it returned: through a
+// temporary file, because open_memstream is POSIX and a Windows C runtime has
+// none.
+template <typename F>
+std::string Capture(F write, GLECMA_Result * result) {
+  std::FILE * file = std::tmpfile();
+  if (file == nullptr) {
+    *result = GLECMA_ERR_IO;
+    return std::string();
+  }
+  *result = write(file);
+  std::fflush(file);
+  std::rewind(file);
+  std::string text;
+  char chunk[4096];
+  size_t got;
+  while ((got = std::fread(chunk, 1, sizeof chunk, file)) > 0) {
+    text.append(chunk, got);
+  }
+  std::fclose(file);
+  return text;
+}
 
 // An allocator that meters what is live: the most bytes ever held at once
 // (peak_bytes), the requests made (calls) and the bytes held now (live_bytes).
