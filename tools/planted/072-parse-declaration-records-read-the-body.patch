@@ -1,0 +1,12 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -611,6 +611,9 @@
+ 
+ void early_declare(Parser * p, uint32_t what, const GLECMA_BText * name,
+     size_t offset) {
++  if (!parser_materializing(p)) {
++    return;
++  }
+   uint8_t kind;
+   switch (what) {
+     case GLECMA_BDECL_VAR: kind = SR_VAR; break;
