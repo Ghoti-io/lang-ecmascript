@@ -640,6 +640,10 @@ TEST(EarlyErrors, RedeclarationInBlocksAndScripts) {
     // Many plain blocks around many vars: nothing to check, and the var still conflicts at the top.
     {"{{{{{{{{ var a; var b; }}}}}}}} let a;", scr, kBoth},
     {"{{{{{{{{ var a; var b; }}}}}}}} let c; { { let a; } }", 0, kBoth},
+    // A var written in a scope that declares a name of its own is still seen by the scopes around.
+    {"let a; { let b; var a; }", scr, kBoth},
+    {"{ let a; { let b; { var a; } } }", blk, kBoth},
+    {"function f() { let a; { let b; var a; } }", fun, kBoth},
     {"let z; { let y; { { var q; } { let q2; } } }", 0, kBoth},
     {"{ let y; { { var y; } } }", blk, kBoth},
     // A name the code uses many times is checked in time that does not grow with the count.

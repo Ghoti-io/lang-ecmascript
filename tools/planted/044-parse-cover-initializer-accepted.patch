@@ -1,11 +1,11 @@
 --- a/src/parse/expr.c
 +++ b/src/parse/expr.c
-@@ -1500,7 +1500,7 @@
+@@ -1621,7 +1621,7 @@
    if (p->pending != NO_PENDING) {
      const bool bare = !lhs.paren &&
          (lhs.shape == SH_ARRAY || lhs.shape == SH_OBJECT);
 -    if (!(bare && (ef & EF_COVER) != 0)) {
 +    if (0 && !(bare && (ef & EF_COVER) != 0)) {
-       parser_fail(p, GLECMA_RULE_COVER_INITIALIZED_NAME, &p->pending_at);
+       parser_fail(p, p->pending_rule, &p->pending_at);
      }
    }

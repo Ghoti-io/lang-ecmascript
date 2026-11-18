@@ -134,11 +134,7 @@ static void encode(Parser * p, size_t from, size_t to, unsigned mode, uint8_t * 
       size_t width = 0;
       if (escaping) {
         escaping = false;
-        if (out != NULL) {
-          length--; // the backslash, which the escape written next replaces
-        } else {
-          length -= 1;
-        }
+        length--; // the backslash, which the escape written next replaces
       }
       if (cp >= 0x10000u) {
         put_unit_escape(scratch, &width, 0xD800u + ((cp - 0x10000u) >> 10));

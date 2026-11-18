@@ -1,11 +1,11 @@
 --- a/src/parse/expr.c
 +++ b/src/parse/expr.c
-@@ -678,8 +678,6 @@
+@@ -732,8 +732,6 @@
      e.paren = 1;
      // The node keeps the inner range; whatever holds it takes the
      // parentheses with it.
 -    e.start = open;
 -    e.end = close_end;
-     e.aux = (uint8_t)(e.aux & PA_EVAL);
-     if (e.shape == SH_ARROW) {
-       // A parenthesized arrow function is an ordinary operand.
+     // What the parentheses leave visible: the names a target check reads and
+     // the private member `delete` refuses.
+     e.aux = (uint8_t)(e.aux & (PA_EVAL | PA_ARGUMENTS | PA_PRIVATE));

@@ -5,6 +5,6 @@
  # The ledger is empty when the parser is complete.
  # selector	mode	reason	cleared by
 -test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
- test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
- test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
- test/built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_Invalid-negated.js	*	a regular expression literal is not validated yet: the pattern or flags are accepted unchecked	M1 story 5
+ test/language/comments/hashbang/module.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
+ test/language/eval-code/direct/export.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
+ test/language/eval-code/direct/import.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6

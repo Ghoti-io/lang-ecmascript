@@ -1,11 +1,11 @@
 --- a/src/parse/parser.c
 +++ b/src/parse/parser.c
-@@ -220,7 +220,7 @@
-   uintptr_t here = (uintptr_t)&marker;
+@@ -254,7 +254,7 @@
+   uintptr_t here = PARSER_STACK_POSITION();
    uintptr_t used = p->stack_base > here ? p->stack_base - here
                                          : here - p->stack_base;
--  if ((uint64_t)used + PARSER_STACK_RESERVE > p->native_stack_bytes) {
-+  if (0 && (uint64_t)used + PARSER_STACK_RESERVE > p->native_stack_bytes) {
+-  if ((uint64_t)used + PARSER_STACK_RESERVE + extra > p->native_stack_bytes) {
++  if (0 && (uint64_t)used + PARSER_STACK_RESERVE + extra > p->native_stack_bytes) {
      parser_fail_limit(p, "native_stack_bytes");
    }
-   (void)marker;
+ }

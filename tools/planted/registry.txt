@@ -64,7 +64,7 @@
 059|parse-use-strict-non-simple-accepted|A "use strict" directive in a function with non-simple parameters is accepted|059-parse-use-strict-non-simple-accepted.patch|check-test262
 061|parse-strict-block-duplicate-function-accepted|Two plain functions of one name in a strict block are accepted, as in sloppy code|061-parse-strict-block-duplicate-function-accepted.patch|test
 062|parse-catch-simple-parameter-var-refused|A var may not redeclare a simple catch parameter (Annex B.3.4)|062-parse-catch-simple-parameter-var-refused.patch|test
-063|parse-var-stops-at-the-block|A var declaration is not seen by the scopes around the block it is written in|063-parse-var-stops-at-the-block.patch|check-test262
+063|parse-var-stops-at-the-block|A var declaration is not seen by the scopes around the block it is written in|063-parse-var-stops-at-the-block.patch|test
 064|parse-strict-duplicate-parameters-accepted|A strict function may repeat a parameter name|064-parse-strict-duplicate-parameters-accepted.patch|test
 065|parse-parameter-lexical-conflict-missed|A let in a function body may redeclare a parameter|065-parse-parameter-lexical-conflict-missed.patch|test
 066|parse-regexp-never-validated|A regular expression literal is accepted without being validated|066-parse-regexp-never-validated.patch|check-test262
