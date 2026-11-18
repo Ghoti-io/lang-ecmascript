@@ -135,3 +135,66 @@ top-level code with small bodies; its saving is what bodies cost, and no seed
 holds enough of them to show it. Destroying a tree is 2% of the cost of
 making one. A budget, peak memory and the corpus cases come with the corpus.
 
+Story 5 (early errors, Annex B syntax and regular expression literals) added a
+check to the parser's every declaration, label, class and function, and a call
+into `regex` for every regular expression literal. **The workload changed:** a
+seed repeated 256 KiB over now repeats inside a block each (`{`, the seed,
+`}`), because repeating a seed otherwise declares its `let`, `const` and
+classes again in every copy, which is an early error. The decoder and
+tokenizer rows read the same text as the parser's, so every row below is on the
+new workload (about 0.7% more bytes than the earlier rows' and two more
+tokens per copy); the "before" rows are the library as it was at the end of
+story 4, built with the new harness and run on the same machine class in the
+same session, alternating with the "after" runs, which is why they differ from
+the story 4 rows. Machine class as above, a quiet machine this time (the
+calibration spread is 0.9% to 2.6%), the best of nine repeats, one run of the
+"before" and two of the "after".
+
+| Story | Case | Best | Median | Spread | Throughput | Calibration (best) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 before | `calibration-xorshift` | 1.33 ns/step | 1.34 ns/step | 2.6% | | 1.33 ns/step |
+| 5 before | `source-decode-utf8` | 2.46 ms | 2.46 ms | 0.6% | 305 MiB/s | 1.33 ns/step |
+| 5 before | `source-decode-utf16` | 1.53 ms | 1.53 ms | 2.4% | 922 MiB/s | 1.33 ns/step |
+| 5 before | `tokenize-utf8` | 9.41 ms | 9.45 ms | 1.7% | 133 MiB/s, 42.5 Mtokens/s | 1.33 ns/step |
+| 5 before | `tokenize-utf16` | 9.75 ms | 9.76 ms | 0.5% | 247 MiB/s, 41.1 Mtokens/s | 1.33 ns/step |
+| 5 before | `parse-utf8` | 25.6 ms | 25.7 ms | 0.8% | 48.8 MiB/s, 15.6 Mtokens/s | 1.33 ns/step |
+| 5 before | `parse-utf16` | 26.1 ms | 26.2 ms | 1.4% | 92.3 MiB/s, 15.3 Mtokens/s | 1.33 ns/step |
+| 5 before | `parse-checking-utf8` | 25.3 ms | 25.3 ms | 0.5% | 49.5 MiB/s, 15.9 Mtokens/s | 1.33 ns/step |
+| 5 before | `tree-destroy` | 0.413 ms | 0.423 ms | 4.9% | 3,029 MiB/s | 1.33 ns/step |
+| 5 after (1) | `calibration-xorshift` | 1.30 ns/step | 1.30 ns/step | 0.9% | | 1.30 ns/step |
+| 5 after (1) | `source-decode-utf8` | 2.37 ms | 2.38 ms | 0.9% | 317 MiB/s | 1.30 ns/step |
+| 5 after (1) | `source-decode-utf16` | 1.48 ms | 1.48 ms | 0.6% | 951 MiB/s | 1.30 ns/step |
+| 5 after (1) | `tokenize-utf8` | 9.24 ms | 9.28 ms | 0.9% | 135 MiB/s, 43.3 Mtokens/s | 1.30 ns/step |
+| 5 after (1) | `tokenize-utf16` | 9.56 ms | 9.60 ms | 1.3% | 252 MiB/s, 41.9 Mtokens/s | 1.30 ns/step |
+| 5 after (1) | `parse-utf8` | 27.1 ms | 27.2 ms | 2.0% | 46.1 MiB/s, 14.8 Mtokens/s | 1.30 ns/step |
+| 5 after (1) | `parse-utf16` | 27.6 ms | 27.6 ms | 0.7% | 87.3 MiB/s, 14.5 Mtokens/s | 1.30 ns/step |
+| 5 after (1) | `parse-checking-utf8` | 26.6 ms | 26.7 ms | 2.3% | 47.1 MiB/s, 15.1 Mtokens/s | 1.30 ns/step |
+| 5 after (1) | `tree-destroy` | 0.471 ms | 0.488 ms | 7.0% | 2,656 MiB/s | 1.30 ns/step |
+| 5 after (2) | `calibration-xorshift` | 1.33 ns/step | 1.33 ns/step | 2.0% | | 1.33 ns/step |
+| 5 after (2) | `source-decode-utf8` | 2.46 ms | 2.47 ms | 0.7% | 305 MiB/s | 1.33 ns/step |
+| 5 after (2) | `source-decode-utf16` | 1.52 ms | 1.53 ms | 1.2% | 924 MiB/s | 1.33 ns/step |
+| 5 after (2) | `tokenize-utf8` | 9.32 ms | 9.36 ms | 0.7% | 134 MiB/s, 42.9 Mtokens/s | 1.33 ns/step |
+| 5 after (2) | `tokenize-utf16` | 9.63 ms | 9.64 ms | 0.6% | 250 MiB/s, 41.6 Mtokens/s | 1.33 ns/step |
+| 5 after (2) | `parse-utf8` | 27.0 ms | 27.1 ms | 1.6% | 46.3 MiB/s, 14.8 Mtokens/s | 1.33 ns/step |
+| 5 after (2) | `parse-utf16` | 27.3 ms | 27.6 ms | 1.6% | 88.1 MiB/s, 14.6 Mtokens/s | 1.33 ns/step |
+| 5 after (2) | `parse-checking-utf8` | 26.3 ms | 26.4 ms | 2.7% | 47.5 MiB/s, 15.2 Mtokens/s | 1.33 ns/step |
+| 5 after (2) | `tree-destroy` | 0.460 ms | 0.468 ms | 5.1% | 2,717 MiB/s | 1.33 ns/step |
+
+The decoder and tokenizer rows did not change beyond the noise (the story
+touched neither). The parser rows cost 5% to 6% more: 25.6 to 27.0-27.1 ms for
+`parse-utf8`, 26.1 to 27.3-27.6 ms for `parse-utf16`, 25.3 to 26.3-26.6 ms for the checking
+builder, which is what the checks and the validation of the two regular
+expression literals in each copy of `tokens.js` cost over these seeds (a
+declaration record per declared name, a check when each scope that declares
+one ends, a label or private-name stack operation per use). The cost is
+the same for both builders, as the design requires. `tree-destroy` is 11%
+slower in both "after" runs, which the story did not touch (the trees it
+releases are the same shape): a difference of about 50 microseconds in a
+0.4 ms case that is the noise of that case's own spread across sessions, and
+is recorded and not explained. No budget is asserted.
+
+The cost of one var declaration under many enclosing scopes, measured by
+parsing a generated file (`{ let a0; { let a1; ... { var v0; var v1; ... } } }`)
+through the test262 driver, once: 100,000 vars in the innermost of 250 nested
+blocks that each declare a name take 0.16 s, 0.04 s when no block declares one
+and 0.05 s for the same vars in a single block (`design.md`, "Early errors").
