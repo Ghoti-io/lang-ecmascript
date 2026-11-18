@@ -99,7 +99,7 @@ std::string Observe(const GLECMA_Source * s) {
 
 const char * const kCorpus[] = {
   "", "x", "a\nb\r\nc\rd", "caf\xC3\xA9 \xE2\x80\xA8 \xF0\x9F\x98\x80 end",
-  "\xEF\xBB\xBF" "bom", "line1\xE2\x80\xA9line2",
+  ("\xEF\xBB\xBF" "bom"), "line1\xE2\x80\xA9line2",
 };
 
 }  // namespace

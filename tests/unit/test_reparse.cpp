@@ -113,7 +113,6 @@ constexpr uint32_t kNT = GLECMA_CONTEXT_NEW_TARGET;
 constexpr uint32_t kSP = kNT | GLECMA_CONTEXT_SUPER_PROPERTY;
 constexpr uint32_t kSC = kSP | GLECMA_CONTEXT_SUPER_CALL;
 constexpr uint32_t kFI = kSP | GLECMA_CONTEXT_FIELD_INITIALIZER;
-constexpr uint32_t kSB = kSP | GLECMA_CONTEXT_STATIC_BLOCK;
 constexpr uint32_t kY = GLECMA_CONTEXT_YIELD;
 constexpr uint32_t kA = GLECMA_CONTEXT_AWAIT;
 constexpr uint32_t kM = GLECMA_CONTEXT_MODULE | GLECMA_CONTEXT_STRICT;
