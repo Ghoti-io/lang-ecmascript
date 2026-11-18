@@ -603,7 +603,10 @@ static const char * const kind_names[GLECMA_NODE_KIND_COUNT] = {
   "ConditionalExpression", "CallExpression", "NewExpression",
   "MemberExpression", "OptionalChain", "SequenceExpression",
   "YieldExpression", "AwaitExpression", "MetaProperty", "ImportCall",
-  "IntrinsicName",
+  "IntrinsicName", "Module", "ImportDeclaration", "ImportSpecifier",
+  "ImportDefaultSpecifier", "ImportNamespaceSpecifier", "ImportAttributes",
+  "ImportAttribute", "ExportDeclaration", "ExportDefault", "ExportNamed",
+  "ExportAll", "ExportSpecifier",
 };
 
 const char * glecma_node_kind_name(uint32_t kind) {

@@ -332,8 +332,7 @@ takes its default, so a caller built before a member was added keeps working,
 and a test is built against a header-only struct. The goal and its context
 are the last two members: `GLECMA_PARSE_SCRIPT` or `GLECMA_PARSE_MODULE`, and
 the context flags (`GLECMA_CONTEXT_STRICT`, which can add strictness and never
-remove it). A goal that is not one is `GLECMA_ERR_INVALID`; the Module goal is
-refused with `GLECMA_ERR_UNSUPPORTED` until it is built. Every parse entry
+remove it). A goal that is not one is `GLECMA_ERR_INVALID`. Every parse entry
 takes the options, and the options are the only way to ask for anything: no
 member selects the internal built-in entry.
 
@@ -613,10 +612,9 @@ strictness, and none reads a node. The checks live in the parser's own
 records (`src/parse/early.c` and the context flags of `parser.h`), so a body
 the checking builder did not build is checked exactly as a built one is; the
 two builders must give the same result for the same input at the same place,
-and `make check-differential` runs both over every test262 pair in scope (a
-module pair as a Script with the Module goal's settings, which the goal not
-being served would otherwise reduce to nothing) and fails on any difference in
-result, rule or place. It was seen to fail on two plants that make a check
+and `make check-differential` runs both over every test262 pair in scope, a
+module pair under the Module goal, and fails on any difference in result, rule
+or place. It was seen to fail on two plants that make a check
 depend on whether the nodes it concerns were built, which is the only way a
 check can differ between the two. The real-world corpus is run through it
 when that corpus is pinned.
@@ -665,9 +663,9 @@ and needs nothing else.
 
 The checks that hold under the Module goal (strict code, `await` reserved, a
 top level that declares its functions as lexical names, no HTML-like comments)
-are reached before that goal is served through an internal entry that parses a
-Script with those settings (`GLECMA_PARSE_INTERNAL_MODULE_RULES`), so that the
-same code is tested under both and the goal's own story adds only its syntax.
+are the Module goal's settings of these same checks, so one body of code is
+tested under both goals; the goal's own syntax and errors are "The Module
+goal", below.
 
 **Private names** are the same shape: a class's declarations and the
 references made inside it are two stacks, and when the class ends its
@@ -683,6 +681,77 @@ the labels, records and private names back to the mark with everything else.
 
 **Regular expression literals** are validated by `regex`'s ECMAScript front
 end (see "Regular expression literals").
+
+### The Module goal
+
+`GLECMA_PARSE_MODULE` reads a Module (clause 16.2): the Script grammar's
+statements plus import and export declarations, in strict code, with `await`
+an operator at the top level and a reserved word everywhere else, `import.meta`
+valid and no HTML-like comments. The tree's root is a `GLECMA_NODE_MODULE`,
+the node kinds 74 to 85 are the declarations (an import's source, attributes and
+specifiers; an export's declaration, default, named list or `export *`), and the
+tree records the goal. The decisions, each with what was rejected:
+
+**A Module is the Script's parser with different settings, and its own item
+loop.** The settings are parser flags (`PF_MODULE`, `PF_AWAIT_RESERVED` and, at
+the top level only, `PF_AWAIT`), so every check that holds in strict code, in
+a function, a class or a static block is the same code under both goals, and
+top-level `await` is the existing `await` operator parse with the flag on.
+Only the top level differs: `src/parse/module.c` reads module items, a loop
+that takes an import or export declaration where it sees one and otherwise a
+statement list item. An `import` or `export` anywhere else is an unexpected
+token because the statement parser never admits one. *Rejected:* a second
+statement parser for modules, which would have to be kept equal to the first.
+A Module has no directive prologue (clause 16.2.1: the items are statements),
+so a `"use strict"` string is an ordinary statement in the tree; it is strict
+already.
+
+**The module's names are scope records, checked once.** An import binds its
+local name as a lexical declaration (declaration kind `GLECMA_BDECL_IMPORT`,
+which the scope tracker treats as `let`), so "no lexical name twice, none also
+var-declared" (clause 16.2.1.1) is the module scope's check at its end, the one
+a block or a script has, with the top level's functions lexical as a module
+makes them. The scope kind is `GLECMA_BSCOPE_MODULE` and its redeclaration is
+its own rule code (`module-redeclaration`). **The exported names** are a hashed
+set of interned names (equal names are equal pointers), so a thousand exports
+cost a thousand insertions: `export var a, [b]`, `export function f`, `export
+class C` export what the declaration added to the module scope's records (a
+nested function's own names are gone when its scope ended, so they cannot be
+mistaken for the module's), `export { a as b }` and `export * as ns` export
+their written names, and `export default` exports `default`. A name already in
+the set is the `module-duplicate-export` error at the second. **The local names
+an `export { a }` refers to** are recorded as they are read and matched
+against the module scope's declarations when the whole module has been read,
+because the declaration may come after the export (`export { a }; var a;`); a
+`from` clause, which is read after the list, discards them, since those names
+are another module's. A string cannot name a local binding and a reserved word
+cannot either, which depends on the same `from`, so each name carries the rule
+it would break and the rule is applied once `from` is known. *Rejected:* a
+tree walk at the end of the module, which no check may do (the checking
+builder builds no body, and a differential holds the two builders to one
+answer); a scan of the declarations for each export (quadratic in the number of
+exports).
+
+**Import attributes** (`with { type: "json" }`, clause 16.2.2) are a list node
+of key and value pairs; two with one key are an error at the second
+(`import-attribute-duplicate`), the key written as a name and as a string
+being one key. The syntax is `with`, as the pinned edition has it, and not the
+earlier `assert`.
+
+**`export default`** takes a function, an `async` function or a class
+declaration, with the name optional (such a function or class binds no name,
+and the tree's declaration has an empty id), or an assignment expression
+followed by a semicolon. The lookahead the grammar states (`function`, `async
+function` on one line, `class`) decides which, so `export default async () =>
+1` and `export default async` followed by a new line and a function are an
+expression and an expression and a declaration.
+
+**Module string names must be well formed** (clause 16.2.1.1, the value of a
+string used as an import or export name holds no lone surrogate); a module
+specifier and an attribute's key and value are not export names and are not
+checked. The test262 gate covers all 869 module pairs the ledger held, and
+`tests/unit/test_module.cpp` states each rule with the control that is
+accepted.
 
 ### Regular expression literals
 
@@ -933,8 +1002,8 @@ refused everything would score nothing.
 
 The gate runs `tests/t262/t262_driver.c` once over every pair (one process,
 one line in and one result out per pair). It is the only place the gate calls
-the library; today it makes each pair's source and answers
-`GLECMA_ERR_UNSUPPORTED`, and the parser replaces that one call.
+the library. The ledger is empty: the last 869 rows, all Module pairs, left it
+with the Module goal.
 
 ## The clause concordance
 

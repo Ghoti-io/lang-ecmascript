@@ -250,6 +250,20 @@ typedef struct JumpCtx {
   size_t label_base;
 } JumpCtx;
 
+/** @brief A set of interned names, which are equal when their pointers are (module.c). */
+typedef struct PtrSet {
+  const uint16_t ** keys;
+  size_t capacity;
+  size_t count;
+} PtrSet;
+
+/** @brief The local name an export refers to, to be found among the module's declarations. */
+typedef struct ModuleRef {
+  const uint16_t * name; ///< Interned.
+  size_t offset;
+  uint32_t rule;         ///< The rule the name breaks as a local binding's name, or none.
+} ModuleRef;
+
 typedef struct Parser {
   const GLECMA_Source * source;
   GLECMA_Lexer lex;
@@ -320,9 +334,14 @@ typedef struct Parser {
   Frame * frames;
   size_t frame_len, frame_cap;
   uint32_t decl_flags;   ///< DF_* for the declaration about to be made.
-  bool top_functions_lexical; ///< The top level declares functions as lexical names (a Module).
   ClassFrame * classes;
   size_t class_len, class_cap;
+
+  // What a Module's imports and exports need (module.c).
+  PtrSet export_names;   ///< Every name the module exports.
+  PtrSet attribute_keys; ///< The keys of the import attributes being read.
+  ModuleRef * export_refs;
+  size_t export_ref_len, export_ref_cap;
 
   // Offsets at which a parenthesized group was found to be arrow parameters.
   size_t * memo;
@@ -416,6 +435,15 @@ static inline bool token_is_kw(const GLECMA_Token * t, GLECMA_Keyword keyword) {
       (t->flags & GLECMA_TOKF_ESCAPED) == 0;
 }
 
+/* ---- module.c: the Module goal's items and their early errors -------------- */
+
+/** @brief Releases what the Module goal's records hold. */
+GLECMA_INTERNAL_API void module_free(Parser * p);
+/** @brief Reads the module items up to the end of the source. */
+GLECMA_INTERNAL_API void parse_module_items(Parser * p);
+/** @brief The end of a module: every exported local name is declared or imported. */
+GLECMA_INTERNAL_API void module_finish(Parser * p);
+
 /* ---- early.c: early errors that need what lies around the code ------------ */
 
 GLECMA_INTERNAL_API void early_free(Parser * p);
@@ -497,9 +525,10 @@ GLECMA_INTERNAL_API PExpr parse_binding_identifier(Parser * p, uint32_t decl);
 #define FN_DERIVED 0x40u
 
 GLECMA_INTERNAL_API PExpr parse_function_declaration(Parser * p, size_t start,
-    bool is_async, bool allow_generator);
+    bool is_async, bool allow_generator, bool allow_anonymous);
 GLECMA_INTERNAL_API PExpr parse_method(Parser * p, size_t start, uint32_t fn);
-GLECMA_INTERNAL_API PExpr parse_class_declaration(Parser * p);
+GLECMA_INTERNAL_API PExpr parse_class_declaration(Parser * p,
+    bool allow_anonymous);
 GLECMA_INTERNAL_API GLECMA_BNode parse_function_params(Parser * p,
     uint32_t decl_kind, uint32_t fn, size_t * out_end);
 GLECMA_INTERNAL_API GLECMA_BNode parse_function_body(Parser * p,

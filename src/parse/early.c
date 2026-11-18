@@ -370,8 +370,7 @@ typedef enum { OK_NO_CONFLICT, CONFLICT_REDECLARED, CONFLICT_PARAMETER } Conflic
 
 // Whether a declaration of kind `kind` clashes with what the scope already
 // holds under the same name (`have`), by the rules of the scope's kind.
-static Conflict conflict_in(const Parser * p, const Frame * f, uint32_t have,
-    uint8_t kind) {
+static Conflict conflict_in(const Frame * f, uint32_t have, uint8_t kind) {
   const uint32_t catches = B_CATCH_SIMPLE | B_CATCH_PATTERN;
   const bool plain = kind == SR_FUNC;
   switch (f->kind) {
@@ -422,8 +421,7 @@ static Conflict conflict_in(const Parser * p, const Frame * f, uint32_t have,
     default: {
       // A script, a function or a static block: its top-level functions are
       // var-like, unless the top level is a module's.
-      const bool functions_lexical = f->kind == GLECMA_BSCOPE_SCRIPT &&
-          p->top_functions_lexical;
+      const bool functions_lexical = f->kind == GLECMA_BSCOPE_MODULE;
       switch (kind) {
         case SR_LEX:
           return (have & (B_LEX | B_FUNC | B_VAR | B_PARAM)) != 0
@@ -451,6 +449,7 @@ static uint32_t redeclaration_rule(const Frame * f) {
     case GLECMA_BSCOPE_FOR: return GLECMA_RULE_FOR_REDECLARATION;
     case GLECMA_BSCOPE_STATIC_BLOCK: return GLECMA_RULE_STATIC_BLOCK_REDECLARATION;
     case GLECMA_BSCOPE_SCRIPT: return GLECMA_RULE_SCRIPT_REDECLARATION;
+    case GLECMA_BSCOPE_MODULE: return GLECMA_RULE_MODULE_REDECLARATION;
     default: return GLECMA_RULE_FUNCTION_REDECLARATION;
   }
 }
@@ -494,7 +493,7 @@ static void scope_check(Parser * p, const Frame * f) {
         }
       }
       if (have != 0) {
-        found = conflict_in(p, f, have, recs[i].kind);
+        found = conflict_in(f, have, recs[i].kind);
         at = i;
       }
     }
@@ -525,7 +524,7 @@ static void scope_check(Parser * p, const Frame * f) {
       if (names[slot] == NULL) {
         names[slot] = recs[i].name;
       } else {
-        found = conflict_in(p, f, seen[slot], recs[i].kind);
+        found = conflict_in(f, seen[slot], recs[i].kind);
         at = i;
       }
       seen[slot] |= record_bits(recs[i].kind);
@@ -616,6 +615,7 @@ void early_declare(Parser * p, uint32_t what, const GLECMA_BText * name,
     case GLECMA_BDECL_VAR: kind = SR_VAR; break;
     case GLECMA_BDECL_LET:
     case GLECMA_BDECL_CONST:
+    case GLECMA_BDECL_IMPORT:
     case GLECMA_BDECL_CLASS: kind = SR_LEX; break;
     case GLECMA_BDECL_FUNCTION:
       kind = (p->decl_flags & DF_PLAIN_FUNCTION) != 0 ? SR_FUNC : SR_FUNC_OTHER;

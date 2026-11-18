@@ -495,8 +495,10 @@ TEST(ParseOptions, GoalAndContextAreCheckedAndAShorterStructTakesTheDefaults) {
   EXPECT_EQ(options.goal, GLECMA_PARSE_SCRIPT);
   EXPECT_EQ(options.context, 0u);
   options.goal = GLECMA_PARSE_MODULE;
-  EXPECT_EQ(glecma_parse(source, &options, nullptr, &failure, &tree), GLECMA_ERR_UNSUPPORTED);
-  EXPECT_STREQ(failure.message, "the Module goal is not built");
+  ASSERT_EQ(glecma_parse(source, &options, nullptr, &failure, &tree), GLECMA_OK);
+  EXPECT_EQ(glecma_tree_goal(tree), GLECMA_PARSE_MODULE);
+  EXPECT_TRUE(glecma_tree_strict(tree));
+  glecma_tree_destroy(tree);
   options.goal = 7;
   EXPECT_EQ(glecma_parse(source, &options, nullptr, &failure, &tree), GLECMA_ERR_INVALID);
   options.goal = GLECMA_PARSE_SCRIPT;
@@ -559,16 +561,11 @@ TEST(ParseOptions, TheInternalBuiltInEntryAcceptsAnIntrinsicAndNoPublicGoalDoes)
     EXPECT_EQ(remainder.result, GLECMA_OK);
     EXPECT_EQ(remainder.Body(), "(Expression (Binary % (Identifier a) (Identifier b)))");
   }
-  // The Module goal and an explicit feature set do not reach the entry.
-  GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
-  options.goal = GLECMA_PARSE_MODULE;
-  GLECMA_Source * source = nullptr;
-  ASSERT_EQ(glecma_source_create_utf8(text.data(), text.size(), nullptr, nullptr,
-                nullptr, &source),
-      GLECMA_OK);
-  GLECMA_Tree * tree = nullptr;
-  EXPECT_EQ(glecma_parse(source, &options, nullptr, nullptr, &tree), GLECMA_ERR_UNSUPPORTED);
-  glecma_source_release(source);
+  // The Module goal refuses it too.
+  auto module = glecma_test::ParseModule(text);
+  EXPECT_EQ(module.result, GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(module.failure.rule, static_cast<uint32_t>(GLECMA_RULE_UNEXPECTED_TOKEN));
+  EXPECT_EQ(module.failure.location.offset, 0u);
 }
 
 int main(int argc, char * * argv) {

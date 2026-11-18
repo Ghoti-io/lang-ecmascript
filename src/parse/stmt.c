@@ -197,11 +197,11 @@ static GLECMA_BNode function_in_block(Parser * p, bool in_if) {
   }
   if (!in_if) {
     // A labelled function is the declaration itself.
-    return parse_function_declaration(p, start, false, false).node;
+    return parse_function_declaration(p, start, false, false, false).node;
   }
   block_scope(p, GLECMA_BEV_SCOPE_ENTER, start, start);
   size_t mark = p->kids_len;
-  PExpr function = parse_function_declaration(p, start, false, false);
+  PExpr function = parse_function_declaration(p, start, false, false, false);
   parser_kid(p, function.node);
   block_scope(p, GLECMA_BEV_SCOPE_LEAVE, start, function.end);
   return parser_make(p, GLECMA_NODE_BLOCK, 0, 0, start, function.end, mark);
@@ -741,14 +741,14 @@ GLECMA_BNode parse_statement_list_item(Parser * p) {
       case GLECMA_KW_FUNCTION: {
         p->prologue_item = false;
         parser_enter(p);
-        GLECMA_BNode node = parse_function_declaration(p, start, false, true).node;
+        GLECMA_BNode node = parse_function_declaration(p, start, false, true, false).node;
         parser_leave(p);
         return node;
       }
       case GLECMA_KW_CLASS: {
         p->prologue_item = false;
         parser_enter(p);
-        GLECMA_BNode node = parse_class_declaration(p).node;
+        GLECMA_BNode node = parse_class_declaration(p, false).node;
         parser_leave(p);
         return node;
       }
@@ -779,7 +779,7 @@ GLECMA_BNode parse_statement_list_item(Parser * p) {
           p->prologue_item = false;
           parser_enter(p);
           parser_next(p);
-          GLECMA_BNode node = parse_function_declaration(p, start, true, true).node;
+          GLECMA_BNode node = parse_function_declaration(p, start, true, true, false).node;
           parser_leave(p);
           return node;
         }

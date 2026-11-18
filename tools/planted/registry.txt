@@ -76,3 +76,13 @@
 073|parse-directive-flag-left-by-a-nested-body|A string statement that ends a nested function body is taken for a directive of the list around it|073-parse-directive-flag-left-by-a-nested-body.patch|test
 074|parse-heritage-ignores-the-pending-error|A class heritage that is an object literal with a CoverInitializedName is accepted|074-parse-heritage-ignores-the-pending-error.patch|test
 072|parse-declaration-records-read-the-body|A declaration is recorded only when the nodes around it are built, which is what a check that read a body node would do|072-parse-declaration-records-read-the-body.patch|check-differential
+# Story 6 (goals) registers 075 onward. Append only.
+075|module-export-undeclared-unchecked|An export of a name the module does not declare is accepted|075-module-export-undeclared-unchecked.patch|check-test262
+076|module-duplicate-export-unchecked|A name exported twice is accepted|076-module-duplicate-export-unchecked.patch|check-test262
+077|module-import-attribute-duplicate-unchecked|Two import attributes with one key are accepted|077-module-import-attribute-duplicate-unchecked.patch|check-test262
+078|module-top-level-await-absent|A Module's top level reads await as a reserved word and not as an operator|078-module-top-level-await-absent.patch|check-test262
+079|module-import-meta-in-script|import.meta is accepted outside a Module|079-module-import-meta-in-script.patch|check-test262
+080|module-name-ill-formed-accepted|A module export name that holds a lone surrogate is accepted|080-module-name-ill-formed-accepted.patch|check-test262
+081|module-import-binding-not-lexical|An import's local name is recorded as a var, so a var may redeclare it|081-module-import-binding-not-lexical.patch|check-test262
+082|module-exported-declarations-not-collected|The names an export declaration binds are not exported names, so export var a; export {a} is accepted|082-module-exported-declarations-not-collected.patch|test
+083|module-string-local-accepted|A string literal names the local binding of an export with no from clause|083-module-string-local-accepted.patch|check-test262

@@ -46,15 +46,6 @@ extern "C" {
 /** Build with the checking builder: no function body is materialized. */
 #define GLECMA_PARSE_INTERNAL_CHECKING 0x2u
 /**
- * Parse a Script with the Module goal's settings: strict, `await` reserved,
- * no HTML-like comments, and a top level that declares its functions as
- * lexical names. It is how the checks that hold in a Module are tested before
- * the goal itself is served; the goal's own syntax (imports, exports,
- * top-level `await`) is not part of it.
- */
-#define GLECMA_PARSE_INTERNAL_MODULE_RULES 0x4u
-
-/**
  * @brief Parses a source, with the internal flags.
  *
  * Takes what ::glecma_parse takes and returns what it returns.

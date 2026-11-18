@@ -1,0 +1,12 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -615,8 +615,8 @@
+     case GLECMA_BDECL_VAR: kind = SR_VAR; break;
+     case GLECMA_BDECL_LET:
+     case GLECMA_BDECL_CONST:
+-    case GLECMA_BDECL_IMPORT:
+     case GLECMA_BDECL_CLASS: kind = SR_LEX; break;
++    case GLECMA_BDECL_IMPORT: kind = SR_VAR; break;
+     case GLECMA_BDECL_FUNCTION:
+       kind = (p->decl_flags & DF_PLAIN_FUNCTION) != 0 ? SR_FUNC : SR_FUNC_OTHER;
+       break;

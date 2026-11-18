@@ -38,8 +38,8 @@
  * check reads a node, so the two must agree (tools/check-differential.py).
  *
  * It is the only place the gate calls the library: `parse_pair` is a call of
- * the public parse entry. Work not built (the Module goal) answers
- * ERR_UNSUPPORTED, which is never an acceptance and never a SyntaxError.
+ * the public parse entry. Work not built answers ERR_UNSUPPORTED, which is
+ * never an acceptance and never a SyntaxError.
  */
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
@@ -77,8 +77,7 @@ static int parse_mode(const char * name, Mode * mode) {
 }
 
 // The parse of one pair: the library's public parse entry, for the Script or
-// the Module goal. A Module is refused as unsupported until that goal is
-// built, which scores nothing.
+// the Module goal.
 static GLECMA_Result parse_pair(GLECMA_Source * source, Mode mode) {
   GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
   options.goal = mode == MODE_MODULE ? GLECMA_PARSE_MODULE : GLECMA_PARSE_SCRIPT;
@@ -92,13 +91,8 @@ static GLECMA_Result parse_pair(GLECMA_Source * source, Mode mode) {
 // the tree builder or the checking builder, as text.
 static void describe(GLECMA_Source * source, Mode mode, uint32_t internal,
     char * out, size_t size) {
-  // The Module goal is not served yet, which would answer both builders the
-  // same and compare nothing: a module pair is read as a Script with the Module
-  // goal's settings, so that the checks that hold in a Module are compared.
   GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
-  if (mode == MODE_MODULE) {
-    internal |= GLECMA_PARSE_INTERNAL_MODULE_RULES;
-  }
+  options.goal = mode == MODE_MODULE ? GLECMA_PARSE_MODULE : GLECMA_PARSE_SCRIPT;
   GLECMA_Tree * tree = NULL;
   GLECMA_Failure failure = GLECMA_FAILURE_INIT;
   GLECMA_Result result = glecma_parse_internal(source, &options, NULL, internal,

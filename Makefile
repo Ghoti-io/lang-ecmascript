@@ -401,6 +401,8 @@ check-rule-codes: ## Fail if the rule-code registry and GLECMA_Rule disagree, or
 T262_COMMIT := $(shell cat tools/test262/TEST262_COMMIT 2>/dev/null)
 T262_ROOT := third_party/test262/$(T262_COMMIT)
 T262_FEATURES ?=
+T262_PENDING ?= tests/data-test262-pending.tsv
+T262_ARGS ?=
 T262_DRIVER := $(APP_DIR)/t262/t262_driver$(EXE_EXTENSION)
 -include $(APP_DIR)/t262/t262_driver.d
 
@@ -419,8 +421,8 @@ check-test262: $(T262_DRIVER) ## The test262 parse score: pin, classification, p
 	@LD_LIBRARY_PATH="$(TEST_LD_PATH)" python3 tools/check-test262.py check \
 		--root $(T262_ROOT) --sums tools/test262/SHA256SUMS \
 		--classification tests/data-test262-classification.tsv \
-		--tags tests/data-test262-tags.tsv --pending tests/data-test262-pending.tsv \
-		--driver $(T262_DRIVER) --features "$(T262_FEATURES)"
+		--tags tests/data-test262-tags.tsv --pending $(T262_PENDING) \
+		--driver $(T262_DRIVER) --features "$(T262_FEATURES)" $(T262_ARGS)
 
 # The Unicode version `unicode`, `regex` and this library's pin report is one
 # string. Built from the static archive like every program that calls the library.

@@ -21,11 +21,10 @@ version and target edition, takes source text (UTF-8 or UTF-16, from a buffer
 or a stream, validated and copied, with exact line and column locations, under
 a size cap), reads it into tokens by the whole lexical grammar of the edition,
 Annex B included, with identifiers from `unicode` at one pinned Unicode
-version, and parses a Script into a read-only tree. The parser reports the
+version, and parses a Script or a Module into a read-only tree. The parser reports the
 grammar's errors, every early error of the edition (with Annex B's sloppy-mode
 relaxations) and the errors of regular expression literals, which `regex`
-validates; the Module goal is not built yet, and the conformance gate's ledger
-says exactly which test262 pairs wait for it. It does not yet run script: the bytecode
+validates, and every in-scope test262 pair passes. It does not yet run script: the bytecode
 compiler and interpreter come next. No interface is stable: every header is
 labelled `@stability free` until the suite's first release.
 

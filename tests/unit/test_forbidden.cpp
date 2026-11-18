@@ -33,12 +33,12 @@ using glecma_test::Parse;
 
 namespace {
 
-bool Accepts(const std::string & source, bool strict, uint32_t internal = 0) {
-  return Parse(source, strict, internal).result == GLECMA_OK;
+bool Accepts(const std::string & source, bool strict, uint32_t goal = GLECMA_PARSE_SCRIPT) {
+  return glecma_test::ParseAs(source, goal, strict).result == GLECMA_OK;
 }
 
-void ExpectRefused(const std::string & source, bool strict, uint32_t internal = 0) {
-  auto parsed = Parse(source, strict, internal);
+void ExpectRefused(const std::string & source, bool strict, uint32_t goal = GLECMA_PARSE_SCRIPT) {
+  auto parsed = glecma_test::ParseAs(source, goal, strict);
   EXPECT_EQ(parsed.result, GLECMA_ERR_SYNTAX)
       << source << (strict ? " [strict]" : " [sloppy]");
 }
@@ -155,11 +155,9 @@ TEST(ForbiddenExtensions, StrictCodeKeepsTheObjectInitializerErrors) {
 }
 
 // Item: the lexical grammar extensions of HTML-like comments must not be
-// supported when parsing for the Module goal. The Module goal itself is served by the
-// goals' story; its lexical and early-error settings are reached through the internal
-// entry that runs a Script with the Module goal's settings.
+// supported when parsing for the Module goal.
 TEST(ForbiddenExtensions, AModuleHasNoHtmlLikeComments) {
-  const uint32_t module = GLECMA_PARSE_INTERNAL_MODULE_RULES;
+  const uint32_t module = GLECMA_PARSE_MODULE;
   EXPECT_TRUE(Accepts("a;\n<!-- b\n--> c\nd\n", false));
   ExpectRefused("a;\n<!-- b\n", false, module);
   ExpectRefused("a\n--> b\n", false, module);

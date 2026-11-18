@@ -182,7 +182,7 @@ static PExpr function_rest(Parser * p, size_t start, uint32_t fn,
 }
 
 PExpr parse_function_declaration(Parser * p, size_t start, bool is_async,
-    bool allow_generator) {
+    bool allow_generator, bool allow_anonymous) {
   const Retro outer = parser_retro_enter(p);
   parser_next(p); // `function`
   uint32_t fn = is_async ? FN_ASYNC : 0u;
@@ -194,9 +194,15 @@ PExpr parse_function_declaration(Parser * p, size_t start, bool is_async,
     parser_next(p);
   }
   // The name is read in the code around the function, and declared there.
-  p->decl_flags = fn == 0 ? DF_PLAIN_FUNCTION : 0u;
-  PExpr id = parse_binding_identifier(p, GLECMA_BDECL_FUNCTION);
-  p->decl_flags = 0;
+  // `export default function () {}` (clause 16.2.3) has no name to bind.
+  PExpr id;
+  if (allow_anonymous && p->tok.kind == GLECMA_TOK_LPAREN) {
+    id.node = NULL;
+  } else {
+    p->decl_flags = fn == 0 ? DF_PLAIN_FUNCTION : 0u;
+    id = parse_binding_identifier(p, GLECMA_BDECL_FUNCTION);
+    p->decl_flags = 0;
+  }
   parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_FUNCTION, NULL, start,
       start);
   PExpr function = function_rest(p, start, fn, id.node,
@@ -399,7 +405,7 @@ static void parse_class_member(Parser * p, bool derived, bool * has_constructor)
   parser_kid(p, member);
 }
 
-static PExpr parse_class(Parser * p, bool is_declaration) {
+static PExpr parse_class(Parser * p, bool is_declaration, bool allow_anonymous) {
   const size_t start = p->tok.start.offset;
   const uint32_t saved = p->flags;
   const bool saved_strict = (saved & PF_STRICT) != 0;
@@ -423,7 +429,7 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
         is_declaration ? GLECMA_BDECL_CLASS : GLECMA_BDECL_CLASS_NAME);
     id = name.node;
     parser_text(p, &name_token, GLECMA_VALUE_COOKED, true, &class_name);
-  } else if (is_declaration) {
+  } else if (is_declaration && !allow_anonymous) {
     parser_unexpected(p);
   }
   if (is_declaration) {
@@ -502,10 +508,10 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
   return e;
 }
 
-PExpr parse_class_declaration(Parser * p) {
-  return parse_class(p, true);
+PExpr parse_class_declaration(Parser * p, bool allow_anonymous) {
+  return parse_class(p, true, allow_anonymous);
 }
 
 PExpr parse_class_expression(Parser * p) {
-  return parse_class(p, false);
+  return parse_class(p, false, false);
 }

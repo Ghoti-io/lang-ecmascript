@@ -1144,12 +1144,30 @@ static PExpr parse_super(Parser * p) {
   }
 }
 
+// `import.meta`, after `import` has been read: the token is the `.`. It is a
+// Module's (clause 13.3.12): a Script, eval code and a dynamic function have
+// no such expression.
+static PExpr parse_import_meta(Parser * p, size_t start) {
+  if ((p->flags & PF_MODULE) == 0) {
+    parser_fail_token(p, GLECMA_RULE_IMPORT_META_OUTSIDE_MODULE);
+  }
+  parser_next(p); // `.`
+  if (!parser_is_kw(p, GLECMA_KW_META)) {
+    parser_unexpected(p);
+  }
+  size_t end = p->tok.end.offset;
+  parser_next(p);
+  GLECMA_BNode node = parser_make(p, GLECMA_NODE_META_PROPERTY, 0,
+      GLECMA_OP_IMPORT_META, start, end, p->kids_len);
+  parser_event(p, GLECMA_BEV_USE, GLECMA_BUSE_IMPORT_META, NULL, start, end);
+  return expr_of(node, start, end, SH_OTHER);
+}
+
 static PExpr parse_import(Parser * p) {
   size_t start = p->tok.start.offset;
   parser_next(p);
   if (p->tok.kind == GLECMA_TOK_DOT) {
-    // `import.meta` is a Module's: a Script has no such expression.
-    parser_fail_token(p, GLECMA_RULE_IMPORT_META_OUTSIDE_MODULE);
+    return parse_import_meta(p, start);
   }
   if (p->tok.kind != GLECMA_TOK_LPAREN) {
     parser_unexpected(p);
@@ -1200,12 +1218,13 @@ static PExpr parse_member_no_call(Parser * p) {
     }
     e = parse_super(p);
   } else if (parser_is_kw(p, GLECMA_KW_IMPORT)) {
-    // Only `import.meta` is a MemberExpression, and a Script has none.
+    // Only `import.meta` is a MemberExpression: `new import(x)` is not.
+    const size_t import_start = p->tok.start.offset;
     parser_next(p);
-    if (p->tok.kind == GLECMA_TOK_DOT) {
-      parser_fail_token(p, GLECMA_RULE_IMPORT_META_OUTSIDE_MODULE);
+    if (p->tok.kind != GLECMA_TOK_DOT) {
+      parser_unexpected(p);
     }
-    parser_unexpected(p);
+    e = parse_import_meta(p, import_start);
   } else {
     e = parse_primary(p);
     if (e.shape == SH_ARROW) {

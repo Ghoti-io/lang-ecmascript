@@ -1,0 +1,11 @@
+--- a/src/parse/module.c
++++ b/src/parse/module.c
+@@ -253,7 +253,7 @@
+ }
+ 
+ void module_finish(Parser * p) {
+-  if (p->export_ref_len == 0) {
++  if (1) {
+     return;
+   }
+   // Every name the module scope declares: var, let, const, class, function

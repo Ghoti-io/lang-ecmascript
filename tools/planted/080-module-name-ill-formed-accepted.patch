@@ -1,0 +1,11 @@
+--- a/src/parse/module.c
++++ b/src/parse/module.c
+@@ -171,7 +171,7 @@
+   } else if (p->tok.kind == GLECMA_TOK_STRING) {
+     name.is_string = true;
+     parser_text(p, &p->tok, GLECMA_VALUE_COOKED, true, &name.text);
+-    if (export_name && !well_formed(&name.text)) {
++    if (export_name && !well_formed(&name.text) && 0) {
+       parser_fail_token(p, GLECMA_RULE_MODULE_NAME_ILL_FORMED);
+     }
+     name.node = parser_make_text(p, GLECMA_NODE_STRING_LITERAL, 0, start, end,

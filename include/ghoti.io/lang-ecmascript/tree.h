@@ -93,7 +93,7 @@ typedef struct GLECMA_Node GLECMA_Node;
 ///@{
 #define GLECMA_NODE_NONE 0u ///< Not a kind: the value of no node.
 
-#define GLECMA_NODE_SCRIPT 1u ///< Root: statements...
+#define GLECMA_NODE_SCRIPT 1u ///< Root of a Script and of eval code: statements...
 
 /* Statements. */
 #define GLECMA_NODE_BLOCK 2u ///< statements...
@@ -175,7 +175,21 @@ typedef struct GLECMA_Node GLECMA_Node;
 #define GLECMA_NODE_META_PROPERTY 71u ///< `new.target` or `import.meta`; operator is NEW_TARGET or IMPORT_META
 #define GLECMA_NODE_IMPORT_CALL 72u ///< specifier, options?
 #define GLECMA_NODE_INTRINSIC_NAME 73u ///< text 0: the name without the `%`; only under the internal built-in entry
-#define GLECMA_NODE_KIND_COUNT 74u ///< Not a kind; one past the last.
+
+/* Modules. */
+#define GLECMA_NODE_MODULE 74u ///< Root of a Module: module items (statements and the declarations below)...
+#define GLECMA_NODE_IMPORT_DECLARATION 75u ///< source (a STRING_LITERAL), attributes? (an IMPORT_ATTRIBUTES), specifiers (IMPORT_SPECIFIER, IMPORT_DEFAULT_SPECIFIER or IMPORT_NAMESPACE_SPECIFIER)...
+#define GLECMA_NODE_IMPORT_SPECIFIER 76u ///< imported (an IDENTIFIER or a STRING_LITERAL), local (an IDENTIFIER)
+#define GLECMA_NODE_IMPORT_DEFAULT_SPECIFIER 77u ///< local (an IDENTIFIER)
+#define GLECMA_NODE_IMPORT_NAMESPACE_SPECIFIER 78u ///< local (an IDENTIFIER)
+#define GLECMA_NODE_IMPORT_ATTRIBUTES 79u ///< IMPORT_ATTRIBUTE...
+#define GLECMA_NODE_IMPORT_ATTRIBUTE 80u ///< key (an IDENTIFIER or a STRING_LITERAL), value (a STRING_LITERAL)
+#define GLECMA_NODE_EXPORT_DECLARATION 81u ///< declaration (a VARIABLE_DECLARATION, FUNCTION_DECLARATION or CLASS_DECLARATION)
+#define GLECMA_NODE_EXPORT_DEFAULT 82u ///< a FUNCTION_DECLARATION or CLASS_DECLARATION (its id NULL when anonymous), or an expression
+#define GLECMA_NODE_EXPORT_NAMED 83u ///< source? (a STRING_LITERAL: the `from` clause), attributes?, EXPORT_SPECIFIER...
+#define GLECMA_NODE_EXPORT_ALL 84u ///< source, attributes?, exported? (an IDENTIFIER or a STRING_LITERAL: `as name`)
+#define GLECMA_NODE_EXPORT_SPECIFIER 85u ///< local (an IDENTIFIER or a STRING_LITERAL), exported (the same)
+#define GLECMA_NODE_KIND_COUNT 86u ///< Not a kind; one past the last.
 ///@}
 
 /**
@@ -280,7 +294,7 @@ typedef struct GLECMA_Node GLECMA_Node;
  * @return ::GLECMA_OK; ::GLECMA_ERR_INVALID for a NULL source or output, or
  *   options or limits whose `size` is below the header;
  *   ::GLECMA_ERR_UNSUPPORTED for a feature the build lacks (named in
- *   `failure->feature`) or a goal not built; ::GLECMA_ERR_SYNTAX;
+ *   `failure->feature`); ::GLECMA_ERR_SYNTAX;
  *   ::GLECMA_ERR_LIMIT naming `tokens`, `literal_length`, `nesting`, `nodes`
  *   or `native_stack_bytes`; ::GLECMA_ERR_OOM, with nothing leaked.
  */
@@ -291,13 +305,13 @@ GLECMA_API GLECMA_Result glecma_parse(GLECMA_Source * source,
 /** @brief Destroys a tree and releases its reference to the source. NULL does nothing. */
 GLECMA_API void glecma_tree_destroy(GLECMA_Tree * tree);
 
-/** @brief The tree's root: a ::GLECMA_NODE_SCRIPT. */
+/** @brief The tree's root: a ::GLECMA_NODE_SCRIPT for a Script, or a ::GLECMA_NODE_MODULE for a Module. */
 GLECMA_API const GLECMA_Node * glecma_tree_root(const GLECMA_Tree * tree);
 
 /** @brief The source the tree was parsed from, which the tree keeps alive. */
 GLECMA_API const GLECMA_Source * glecma_tree_source(const GLECMA_Tree * tree);
 
-/** @brief The goal the tree was parsed for: ::GLECMA_PARSE_SCRIPT. */
+/** @brief The goal the tree was parsed for: ::GLECMA_PARSE_SCRIPT or ::GLECMA_PARSE_MODULE. */
 GLECMA_API uint32_t glecma_tree_goal(const GLECMA_Tree * tree);
 
 /**

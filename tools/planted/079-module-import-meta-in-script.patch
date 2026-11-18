@@ -1,0 +1,11 @@
+--- a/src/parse/expr.c
++++ b/src/parse/expr.c
+@@ -1148,7 +1148,7 @@
+ // Module's (clause 13.3.12): a Script, eval code and a dynamic function have
+ // no such expression.
+ static PExpr parse_import_meta(Parser * p, size_t start) {
+-  if ((p->flags & PF_MODULE) == 0) {
++  if (0) {
+     parser_fail_token(p, GLECMA_RULE_IMPORT_META_OUTSIDE_MODULE);
+   }
+   parser_next(p); // `.`

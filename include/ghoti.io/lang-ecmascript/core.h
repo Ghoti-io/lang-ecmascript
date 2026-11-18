@@ -271,6 +271,12 @@ typedef enum {
   GLECMA_RULE_DUPLICATE_PARAMETER = 79, ///< A repeated parameter name in strict code, an arrow function, a method or a parameter list that is not simple (clause 15.1.1).
   GLECMA_RULE_REGEXP_PATTERN = 80, ///< A regular expression literal whose pattern is not valid for its flags (clause 22.2.1.1).
   GLECMA_RULE_REGEXP_FLAG_SET = 81, ///< A regular expression literal whose flags are not among dgimsuvy, repeat a flag or hold both u and v (clause 13.2.7.1).
+  GLECMA_RULE_MODULE_REDECLARATION = 82, ///< A name declared twice at the top level of a module, or both lexically and with var (clause 16.2.1.1).
+  GLECMA_RULE_MODULE_DUPLICATE_EXPORT = 83, ///< A name exported more than once, `export default` twice included (clause 16.2.1.1).
+  GLECMA_RULE_MODULE_EXPORT_UNDECLARED = 84, ///< An export of a local name the module neither declares nor imports (clause 16.2.1.1).
+  GLECMA_RULE_MODULE_EXPORT_STRING_LOCAL = 85, ///< A string literal as the local name of an export that has no `from` clause (clause 16.2.3.1).
+  GLECMA_RULE_MODULE_NAME_ILL_FORMED = 86, ///< A string literal used as a module export name that holds a lone surrogate (clause 16.2.1.1).
+  GLECMA_RULE_IMPORT_ATTRIBUTE_DUPLICATE = 87, ///< Two import attributes with the same key (clause 16.2.2.1).
 
   GLECMA_RULE_COUNT ///< Not a rule; closes the enum. Appended rules go before
                     ///< it.

@@ -1,0 +1,11 @@
+--- a/src/parse/module.c
++++ b/src/parse/module.c
+@@ -209,7 +209,7 @@
+ 
+ static void add_export(Parser * p, const uint16_t * name,
+     const GLECMA_Location * at) {
+-  if (!ptrset_add(p, &p->export_names, name)) {
++  if (ptrset_add(p, &p->export_names, name) && 0) {
+     parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, at);
+   }
+ }

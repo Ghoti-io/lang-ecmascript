@@ -123,13 +123,12 @@ GLECMA_API bool glecma_feature_set_has(const GLECMA_FeatureSet * set,
 /**
  * @name Goals
  *
- * Which grammar a source is parsed for. Only ::GLECMA_PARSE_SCRIPT is built in
- * this version; asking for another is ::GLECMA_ERR_UNSUPPORTED, and a value
- * that is no goal is ::GLECMA_ERR_INVALID.
+ * Which grammar a source is parsed for. A value that is no goal is
+ * ::GLECMA_ERR_INVALID.
  */
 ///@{
 #define GLECMA_PARSE_SCRIPT 0u ///< A Script, sloppy unless a directive or the context makes it strict.
-#define GLECMA_PARSE_MODULE 1u ///< A Module: always strict.
+#define GLECMA_PARSE_MODULE 1u ///< A Module (clause 16.2): always strict; `import` and `export` declarations, top-level `await` and `import.meta`.
 ///@}
 
 /**

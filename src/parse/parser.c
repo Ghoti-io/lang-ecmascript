@@ -573,14 +573,25 @@ static void run_parse(Parser * p, GLECMA_Tree * tree, uint32_t goal,
     bool * strict) {
   parser_next(p);
   size_t units = glecma_source_units(p->source);
-  parser_event(p, GLECMA_BEV_SCOPE_ENTER, GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
+  const bool module = goal == GLECMA_PARSE_MODULE;
+  parser_event(p, GLECMA_BEV_SCOPE_ENTER,
+      module ? GLECMA_BSCOPE_MODULE : GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
   size_t mark = p->kids_len;
-  size_t end = 0;
   bool is_strict = (p->flags & PF_STRICT) != 0;
-  parse_statement_list(p, GLECMA_TOK_EOF, true, &end, &is_strict);
+  if (module) {
+    // A Module has no directive prologue: it is strict, and its items are
+    // statements, imports and exports (clause 16.2.1).
+    parse_module_items(p);
+    module_finish(p);
+  } else {
+    size_t end = 0;
+    parse_statement_list(p, GLECMA_TOK_EOF, true, &end, &is_strict);
+  }
   early_finish(p);
-  parser_event(p, GLECMA_BEV_SCOPE_LEAVE, GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
-  GLECMA_BNode root = parser_make(p, GLECMA_NODE_SCRIPT,
+  parser_event(p, GLECMA_BEV_SCOPE_LEAVE,
+      module ? GLECMA_BSCOPE_MODULE : GLECMA_BSCOPE_SCRIPT, NULL, 0, units);
+  GLECMA_BNode root = parser_make(p,
+      module ? GLECMA_NODE_MODULE : GLECMA_NODE_SCRIPT,
       is_strict ? GLECMA_NODEF_STRICT : 0u, 0, 0, units, mark);
   *strict = is_strict;
   glecma_tree_finish(tree, root, goal, is_strict);
@@ -615,12 +626,8 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
         unbuilt);
     return GLECMA_ERR_UNSUPPORTED;
   }
-  if (goal != GLECMA_PARSE_SCRIPT) {
-    return refuse(failure, GLECMA_ERR_UNSUPPORTED,
-        "the Module goal is not built");
-  }
   const bool builtin = (internal & GLECMA_PARSE_INTERNAL_BUILTIN) != 0;
-  const bool module_rules = (internal & GLECMA_PARSE_INTERNAL_MODULE_RULES) != 0;
+  const bool module_rules = goal == GLECMA_PARSE_MODULE;
   const uint32_t mode = (internal & GLECMA_PARSE_INTERNAL_CHECKING) != 0
       ? GLECMA_BUILDER_CHECKING : GLECMA_BUILDER_TREE;
 
@@ -647,10 +654,11 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   p->body_simple = true; // a Script has no parameters
   p->params_simple = true;
   const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0;
+  // A Module is strict, reserves `await` everywhere, and its top level may
+  // use it as an operator (top-level await, clause 16.2.1.6.1.3).
   p->flags = (strict_context || builtin || module_rules ? PF_STRICT : 0u) |
       (builtin ? PF_BUILTIN : 0u) |
-      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE) : 0u);
-  p->top_functions_lexical = module_rules;
+      (module_rules ? (PF_AWAIT_RESERVED | PF_MODULE | PF_AWAIT) : 0u);
   GLECMA_Result lexed = builtin
       ? glecma_lexer_open_builtin(&p->lex, source, options, failure)
       : glecma_lexer_open(&p->lex, source, options,
@@ -674,6 +682,7 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
     p->allocator->free_fn(p->allocator->ctx, p->memo);
   }
   early_free(p);
+  module_free(p);
   if (p->result != GLECMA_OK) {
     GLECMA_Result result = p->result;
     glecma_failure_set(failure, result, p->message,

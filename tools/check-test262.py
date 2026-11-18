@@ -591,21 +591,22 @@ def check(args):
           % (passed, total, 100.0 * passed / total, pending, len(unledgered)))
     print("  features on: %s" % (", ".join(sorted(features_on)) or "none"))
 
+    shown = None if args.show_all else 8
     bad = False
     if unledgered:
         bad = True
         print("check-test262: %d failing pair(s) are not in the pending ledger, for example:" % len(unledgered), file=sys.stderr)
-        for name, mode, expect, answer in unledgered[:8]:
+        for name, mode, expect, answer in unledgered[:shown]:
             print("  %s [%s] expected %s, got %s" % (name, mode, expect, answer), file=sys.stderr)
     if now_passing:
         bad = True
         print("check-test262: %d pair(s) in the pending ledger now pass; remove them from it, for example:" % len(now_passing), file=sys.stderr)
-        for name, mode, row in now_passing[:8]:
+        for name, mode, row in now_passing[:shown]:
             print("  %s [%s] (ledger row %d)" % (name, mode, row), file=sys.stderr)
     if stale:
         bad = True
         print("check-test262: %d ledger row(s) match no pair:" % len(stale), file=sys.stderr)
-        for n, s, m in stale[:8]:
+        for n, s, m in stale[:shown]:
             print("  row %d: %s [%s]" % (n, s, m), file=sys.stderr)
     if bad:
         raise SystemExit(1)
@@ -623,6 +624,8 @@ def main():
     parser.add_argument("--concordance")
     parser.add_argument("--driver")
     parser.add_argument("--features", default="")
+    parser.add_argument("--show-all", action="store_true",
+                        help="list every failing pair, not the first eight")
     parser.add_argument("--unicode-version", default="17.0.0")
     args = parser.parse_args()
     if args.command == "sums":

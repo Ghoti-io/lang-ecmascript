@@ -255,6 +255,18 @@ static const RuleRow rules[] = {
       "Invalid regular expression pattern"},
   {GLECMA_RULE_REGEXP_FLAG_SET, "regexp-flag-set", "13.2.7.1",
       "Invalid regular expression flags"},
+  {GLECMA_RULE_MODULE_REDECLARATION, "module-redeclaration", "16.2.1.1",
+      "Duplicate declaration at the top level of a module"},
+  {GLECMA_RULE_MODULE_DUPLICATE_EXPORT, "module-duplicate-export", "16.2.1.1",
+      "Duplicate export name"},
+  {GLECMA_RULE_MODULE_EXPORT_UNDECLARED, "module-export-undeclared", "16.2.1.1",
+      "Export of a name the module does not declare"},
+  {GLECMA_RULE_MODULE_EXPORT_STRING_LOCAL, "module-export-string-local", "16.2.3.1",
+      "A string literal cannot name a local binding"},
+  {GLECMA_RULE_MODULE_NAME_ILL_FORMED, "module-name-ill-formed", "16.2.1.1",
+      "A module export name must be well-formed Unicode"},
+  {GLECMA_RULE_IMPORT_ATTRIBUTE_DUPLICATE, "import-attribute-duplicate", "16.2.2.1",
+      "Duplicate import attribute key"},
 };
 
 #define RULE_ROWS (sizeof(rules) / sizeof(rules[0]))

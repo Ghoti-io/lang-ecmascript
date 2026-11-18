@@ -120,6 +120,7 @@ typedef struct GLECMA_BSpec {
 #define GLECMA_BSCOPE_STATIC_BLOCK 8u ///< A class static block.
 #define GLECMA_BSCOPE_FIELD_INIT 9u   ///< A class field's initializer.
 #define GLECMA_BSCOPE_WITH 10u        ///< A `with` statement's object environment.
+#define GLECMA_BSCOPE_MODULE 11u      ///< The top level of a Module.
 ///@}
 
 /** @name Declaration kinds (`what` of a declare event) */
@@ -133,6 +134,7 @@ typedef struct GLECMA_BSpec {
 #define GLECMA_BDECL_CATCH_PARAM 7u
 #define GLECMA_BDECL_FUNCTION_NAME 8u ///< A function expression's own name, inside its scope.
 #define GLECMA_BDECL_CLASS_NAME 9u    ///< A class's inner name binding, inside its scope.
+#define GLECMA_BDECL_IMPORT 10u       ///< The local name an import declaration binds.
 ///@}
 
 /** @name Reference flags (`what` of a reference event) */
