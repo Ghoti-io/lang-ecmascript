@@ -162,8 +162,13 @@ Measure Run(const Family & family, size_t n, int repeats) {
       glecma_stream_destroy(stream);
     } else {
       EXPECT_EQ(glecma_source_create_utf8(text.data(), text.size(), nullptr, meter.get(), &failure, &source), GLECMA_OK);
+      // A sanitizer's frames are twice as large, and the families that nest at the cap would meet the
+      // default grant of stack before the cap; the grant here is what the main thread has to give.
+      GLECMA_Limits limits = GLECMA_LIMITS_INIT;
+      limits.native_stack_bytes = uint64_t{6} << 20;
       GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
       options.goal = family.goal;
+      options.limits = &limits;
       GLECMA_Tree * tree = nullptr;
       begin = Now();
       result = glecma_parse(source, &options, meter.get(), &failure, &tree);
