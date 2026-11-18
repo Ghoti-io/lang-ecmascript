@@ -231,7 +231,7 @@ LIBOBJECTS := $(patsubst src/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
 
-TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-rule-codes check-data-versions check-test262 check-differential check-reparse check-corpus check-node-selftest check-clauses check-gtest-full fuzz-replay
+TEST_GATES ?= check-symbols check-aliasing check-stamps check-fp-contract check-labels check-edges check-bench check-limit-names check-rule-codes check-data-versions check-test262 check-differential check-reparse check-corpus check-node-selftest check-unsupported check-clauses check-gtest-full fuzz-replay
 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=definite,indirect,possible --track-origins=yes --error-exitcode=1 --suppressions=tests/valgrind.supp
 
@@ -337,7 +337,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-stamps check-aliasing check-labels check-edges
 .PHONY: check-fp-contract check-gtest-full check-install examples bench check-bench
 .PHONY: check-limit-names check-rule-codes check-data-versions check-differential check-reparse check-planted check-test262 check-clauses fetch-test262 fetch-ecma262
-.PHONY: fetch-corpus check-corpus check-node-selftest check-node-differential fetch-node-oracle
+.PHONY: check-unsupported fetch-corpus check-corpus check-node-selftest check-node-differential fetch-node-oracle
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
 .PHONY: fuzz fuzz-campaign fuzz-clean fuzz-replay fuzz-replay-asan help
 
@@ -483,6 +483,9 @@ check-node-differential: $(T262_DRIVER) ## Compare accept/refuse with the pinned
 		--driver $(T262_DRIVER) --engine "$(NODE_ORACLE_ENGINE)" --generated $(NODE_GENERATED) \
 		--root $(T262_ROOT) --sums tools/test262/SHA256SUMS \
 		--classification tests/data-test262-classification.tsv --tags tests/data-test262-tags.tsv
+
+check-unsupported: ## Fail if GLECMA_ERR_UNSUPPORTED is returned for anything but a feature the build lacks or a stream operation
+	@tools/check-unsupported.sh .
 
 check-planted: ## Apply each planted defect to a scratch tree; its gate must fail (slow; run before closing a change that adds a check)
 	@tools/check-planted.sh

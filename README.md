@@ -209,10 +209,13 @@ consumer.
 The tokenizer and the builder interface are internal: `glecma_parse` is the
 public entry that reads source, and the tests, fuzzers and benchmarks reach
 the tokenizer and the checking builder directly. `make fuzz-replay` runs the seed corpus of the
-tokenizer, source, parser and goals fuzzers through their entry points; `make fuzz-tokenizer`,
-`make fuzz-source`, `make fuzz-parser` and `make fuzz-goals` build them for libFuzzer (clang), and `make bench`
-reports the throughput of the source decoder, the tokenizer, the parser (the Module goal included) and the
-function re-parse.
+tokenizer, source, parser, goals and allocation-failure fuzzers through their entry points;
+`make fuzz-tokenizer`, `make fuzz-source`, `make fuzz-parser`, `make fuzz-goals` and `make fuzz-alloc`
+build them for libFuzzer (clang), and `make fuzz-campaign-<harness>` runs one for a day (or
+`FUZZ_CAMPAIGN_SECONDS`) from a scratch copy of its seeds, slices of the real-world corpus and a
+dictionary. `make bench` reports the throughput of the source decoder, the tokenizer, the parser (the
+Module goal included) and the function re-parse over small seed files, and, over the real-world corpus,
+the decoder, tokenizer, parser and tree destruction with each case's peak memory.
 
 `make test` runs the unit tests and the gates: every exported symbol carries
 the version namespace (`check-symbols`), every public header carries a
@@ -221,8 +224,15 @@ its declared dependencies (`check-edges`), every compile flag set disables
 floating-point contraction (`check-fp-contract`), strict-aliasing warnings are
 armed (`check-aliasing`) and every compile rule records its flags
 (`check-stamps`), the limit names are an append-only registry
-(`check-limit-names`), the benchmark harness exists and runs (`check-bench`)
-and the fuzz seeds replay clean (`fuzz-replay`). `make check-planted` applies
+(`check-limit-names`), the benchmark harness exists and runs (`check-bench`),
+no path answers `GLECMA_ERR_UNSUPPORTED` for anything but a feature the build
+lacks or a stream operation (`check-unsupported`), the real-world corpus parses
+(`check-corpus`) and the fuzz seeds replay clean (`fuzz-replay`). The test262
+and the real-world corpora are fetched, never committed, and hash-checked
+(`make fetch-test262`, `make fetch-corpus`). `make check-node-differential`
+compares the accept and refuse decisions with a pinned Node in a container
+(`make fetch-node-oracle` pulls the image), each disagreement classified in
+`tests/data-node-differences.tsv`. `make check-planted` applies
 each planted defect in `tools/planted/` to a scratch copy and requires its
 gate to fail. `make test-asan`, `make test-tsan` and `make test-valgrind`
 run the same tests under the sanitizers. `make help` lists every target.

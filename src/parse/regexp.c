@@ -284,9 +284,12 @@ void parse_validate_regexp(Parser * p, const GLECMA_Token * literal) {
     case GRX_ERR_OOM:
       parser_fail_result(p, GLECMA_ERR_OOM);
     case GRX_ERR_UNSUPPORTED:
-      // A pattern regex does not yet read: a gap of its own, never a syntax
-      // error of the program.
-      parser_fail_result(p, GLECMA_ERR_UNSUPPORTED);
+      // regex's ECMAScript dialect reads every pattern of the edition and
+      // never answers this for a literal's pattern or flags (a pattern it
+      // could not read would be a defect of the two libraries together, and
+      // is neither a syntax error of the program nor "a feature the build does
+      // not define", which is all ERR_UNSUPPORTED means here).
+      parser_fail_result(p, GLECMA_ERR_INTERNAL);
     default:
       parser_fail_result(p, GLECMA_ERR_INTERNAL);
   }

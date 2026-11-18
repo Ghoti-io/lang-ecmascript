@@ -84,7 +84,11 @@ documentation and tested as a choice.
 | Source text | `source.h` | `GLECMA_Source`: UTF-8 or UTF-16 text copied, validated and checkpointed at creation; counts, the offset-to-location query, a dump, `glecma_source_retain` and `glecma_source_release` (the holders are counted atomically; the last release frees) |
 | Parser and tree | `tree.h`, `src/parse/` | `glecma_parse`: a Script, a Module, or direct or indirect eval code into a read-only tree (`GLECMA_Tree`) with a walker, source ranges, a dump and one counted reference to its source; the builder interface with the tree builder and the checking builder; declaration and reference events (see "The parser") |
 | Input stream | `stream.h` | `GLECMA_Stream` over memory, a file or a host's reader, and `glecma_source_create_stream` |
-| Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case and the source decoder's throughput; no budget until a case has a recorded first measurement |
+| Benchmark harness | `bench/`, `benchmarks.md` | `make bench`, a smoke run and an empty-`bench/` gate in `make test`, a calibration case, and the decoder, tokenizer, parser, tree destruction, module and function re-parse cases over small seed files and, in `bench_corpus.c`, over the real-world corpus with each case's peak memory; no budget is asserted, and the first figures are in the history |
+| Real-world corpus | `tools/corpus/`, `tools/check-corpus.py`, `bench/bench_corpus.c` | Eighteen files of twelve packages fetched by hash and never committed; `check-corpus` parses each as its goal, in both encodings and with both builders, and reads every function again (see "The real-world corpus") |
+| Node differential | `tools/check-node-differential.py`, `tools/node-oracle/`, `tools/gen-programs.py`, `tests/data-node-differences.tsv` | The accept/refuse decision compared with a pinned Node over test262, the corpus, the fuzz seeds and generated programs, every disagreement classified (see "The Node differential") |
+| Hostile-input tests | `tests/unit/test_hostile.cpp`, `tests/fuzz/` | The doubling, depth, limit, allocation-failure and thread sweeps, and five fuzz harnesses with a dictionary and a campaign target (see "Hostile input" and "Fuzzing") |
+| Planted defects | `tools/planted/`, `tools/check-planted.sh` | The registry of defects each gate must be seen to fail on, and the target that applies each to a scratch tree |
 | test262 gate | `tools/check-test262.py`, `tests/t262/`, `tools/test262/` | The pinned corpus, fetched and checked against a list of checksums; the classification and tag tables; the parse score in `make test` with a pending ledger (see "test262") |
 | Clause concordance | `documentation/clause-concordance.tsv`, `tools/ecma262/`, `tools/check-clauses.py` | The 16th-to-17th clause numbers, built from the editions' text, and a gate that fails a cited clause the 17th lacks |
 
@@ -223,7 +227,9 @@ bundles, and small application scripts) and over two synthetic extremes.
   admits it with a margin of 1.6 times. The synthetic extreme is source of
   one-unit tokens (`a+a+a+...`, 1.0 token per unit), which no author writes
   and which the default refuses at 48 Mi tokens, three quarters of the source
-  cap. The cap exists for a host that raises `source_units` far above the
+  cap. The pinned corpus's densest file is 0.536 tokens per byte (core-js's
+  minified bundle), so a 64 MiB source of it holds 36 million tokens and the
+  default admits it with a margin of 1.33. The cap exists for a host that raises `source_units` far above the
   default, or one that wants fewer tokens than bytes. A source that reaches
   the cap costs the tokenizer about 0.65 seconds per 32 Mi tokens.
 - *Literal length.* The longest string, template or regular expression
@@ -236,18 +242,20 @@ bundles, and small application scripts) and over two synthetic extremes.
   literal costs 22 ms to scan and, when its value is asked for, 22 ms and
   32 MiB (two bytes per code point) to decode, so the cap bounds what one
   hostile literal can make the library spend. These figures come from a
-  small, local sample, not from a corpus chosen for the purpose; the
-  defaults are re-measured when the real-world corpus is pinned.
+  small, local sample; the pinned real-world corpus (see "The real-world
+  corpus") was measured the same way afterwards and changes none of them: its
+  longest literal is 22,288 code points, and no file inlines binary data.
 - *Nodes.* Real source builds 0.08 nodes per byte (commented, formatted code)
   to 0.32 (minified code, the densest measured), and one node, with its share
   of the tree's names, texts and events, takes 85 to 110 bytes. The default
   of 16 Mi nodes is therefore about 1.7 GB of tree at its largest, and admits
   a 50 MB minified file or a 200 MB formatted one. A source of the default
   `source_units` cap is not guaranteed to fit: a minified 64 MiB file builds
-  about 21 million nodes. That is a deliberate bound on memory, stated rather
+  about 21 million nodes (on the pinned corpus's densest file, 0.401 nodes per
+  byte, about 27 million). That is a deliberate bound on memory, stated rather
   than hidden, and a host that parses larger source raises the cap. The
   measurement is of the library's own tree on four real files and on the
-  seeds; it is re-measured on the real-world corpus.
+  seeds, and then on the pinned real-world corpus.
 
 ## The failure record
 
@@ -559,10 +567,10 @@ and not a read; `a += 1` and `a++` are both), the operand of `typeof` or of
 accessor; a public accessor is the compiler's story.
 
 **The goals built.** The Script goal, sloppy or strict (by the context flag, or
-by a directive). A Module is `GLECMA_ERR_UNSUPPORTED`, with the message that
-says so, until it is built, as are `import` and `export` declarations;
-`import(...)` and the refusal of `import.meta` in a Script are built.
-Early errors are under "Early errors", below. What the grammar itself decides is built: every statement
+by a directive), the Module goal with its `import` and `export` declarations
+(see "The Module goal"), direct and indirect eval, the dynamic function and one
+function read again (below). `import(...)` is built, and so is the refusal of
+`import.meta` in a Script. Early errors are under "Early errors", below. What the grammar itself decides is built: every statement
 and expression form of the edition; classes with fields, accessors, private
 names, static blocks and `#x in o`; destructuring; arrow and async arrow
 functions; generators and `async`/`await` as the grammar parameters `[Yield]`
@@ -1005,7 +1013,8 @@ limits on a thread whose entire stack is 1 MiB. 256 levels is almost five times 
 deepest real source measured (of 1,187 real files, the packages of a Node.js
 installation, minified and not, the deepest nests 53 levels, and every one
 that is a Script parses: the 631 that are refused are ES modules, which the
-Script goal refuses at their first `import` or `export`) and below the
+Script goal refuses at their first `import` or `export`; the pinned corpus's
+deepest, TypeScript's compiler, nests 54) and below the
 depth at which a chain of `else if` or conditionals in generated code begins to
 appear; it is the figure to raise first if a corpus says otherwise (a host that
 does raises `nesting` and `native_stack_bytes` together, and the table says how
@@ -1029,12 +1038,12 @@ figure and no claim is made for the others.
 
 ## Fuzzing
 
-Two harnesses, `tests/fuzz/fuzz_tokenizer.c` and `fuzz_source.c`, are
-libFuzzer targets (`make fuzz-tokenizer`) and, with a replay driver, plain
-programs (`make fuzz-replay`) that run every file of the seed corpus through
-the same entry point. The replay needs no libFuzzer, is part of `make test`,
-and runs again under ASan and UBSan in `make test-asan`, so an input a
-campaign once found is a failing test. The first byte of an input chooses the
+Five harnesses, `tests/fuzz/fuzz_tokenizer.c`, `fuzz_source.c`, `fuzz_parser.c`,
+`fuzz_goals.c` and `fuzz_alloc.c`, are libFuzzer targets (`make fuzz-tokenizer`
+and so on) and, with a replay driver, plain programs (`make fuzz-replay`) that
+run every file of the seed corpus through the same entry point. The replay
+needs no libFuzzer, is part of `make test`, and runs again under ASan and UBSan
+in `make test-asan`, so an input a campaign once found is a failing test. The first byte of an input chooses the
 encoding (UTF-8 or UTF-16), strictness, the goal, the built-in entry, the
 limits and how goals are chosen; the rest is the source. The tokenizer
 harness checks that the result is one a tokenizer may return, that a failure
@@ -1055,6 +1064,267 @@ Script, a Module, direct eval with a context it builds from the second byte,
 indirect eval, a dynamic function of each kind with the input split into its
 parameters and its body) and, for direct eval, knows which contexts are
 inconsistent and requires `GLECMA_ERR_INVALID` for exactly those.
+
+The allocation-failure harness (`fuzz_alloc.c`) runs an input twice through an
+allocator that counts: once with nothing failing, to learn how many allocations
+the work makes (the source's and the tree's), and once with the allocation the
+input picks refused. It requires `GLECMA_ERR_OOM` and nothing else (not the
+syntax error a later allocation would have found), no tree, and every block
+freed, and, for the allocation one past the last, the answer the first run
+gave. Its first byte chooses the goal (a Script, a Module, direct eval with a
+context, indirect eval, a dynamic function), the encoding, the builder, the
+strictness, whether the source is made from the stream constructor and whether
+every function of an accepted program is read again through the failing
+allocator; its seeds fail every allocation, in turn, of thirty small programs,
+because a handful of picks over large seeds do not reach the allocation of each
+construct. The unit sweep that does the same for fixed programs is
+`Hostile.EveryAllocationOfEveryGoal...` (see "Hostile input").
+
+*A campaign.* `make fuzz-campaign-<harness>` runs one harness under libFuzzer for
+`FUZZ_CAMPAIGN_SECONDS` (a day by default) from a scratch copy of its committed
+seeds, slices cut from the real-world corpus (`tests/fuzz/corpus-seeds.py`:
+windows of each file, with the header bytes the harness reads, so a campaign
+starts from real token sequences and from every error that cutting a real
+program where it was not meant to be cut gives) and a dictionary of the words,
+punctuators, escapes and cover-grammar forms of the language
+(`tests/fuzz/ecmascript.dict`), with value profiling, inputs of up to 64 KiB, a
+thirty-second limit on one input (a slow unit is a finding, measured on the
+host first) and 2 GiB of resident memory. The corpus it grows, every input that
+crashed or timed out, and the log (the executions, the seconds, the coverage at
+its end) are under the build directory and never the committed seeds; an
+input that crashed is a regression test once it is copied to
+`tests/fuzz/corpus/<harness>/` with its fix, and the campaign of a changed
+parser is run again from the start, because a campaign over a changed parser is
+not a campaign over the final one. `make -j5 fuzz-campaign` runs all five side by
+side. The closing campaign's floor is 24 hours per harness (owner question Q-2
+asks whether that is the suite's floor).
+
+## Hostile input
+
+Source from outside the process is untrusted. The claims about what it can do
+to the parser, and what states each:
+
+| Claim | What states it | Where |
+| --- | --- | --- |
+| No input crashes it, leaks, or takes it past a limit | Five libFuzzer harnesses over every entry, run for a day each at the close; their seeds replayed in `make test` and under ASan and UBSan | "Fuzzing" |
+| Failing any allocation of any parse is `GLECMA_ERR_OOM` with nothing left held | `Hostile.EveryAllocationOf...` (every goal, both builders, three ways to make a source, a dynamic function), and the `fuzz_alloc` harness over the inputs a fuzzer finds | below |
+| Time and memory grow linearly with the size of the input, within a stated factor | `Hostile.DoublingTheInputKeepsTimeAndMemoryLinear`, sixty-eight families of input at six sizes each | below |
+| A nest costs a constant per level, except where the grammar must read it twice | `Hostile.DoublingTheDepthWithinTheCapKeepsTheCostPerLevelFlatOrLinearForTheCoverGrammars` | below |
+| A parse that is refused for a limit holds memory in proportion to the limit, not to the input | `Hostile.AParseRefusedForALimitHoldsMemory...` | below |
+| The deepest input the default limits admit parses on a thread with 1 MiB of stack, and a smaller grant is refused and never faults | `ParseLimits.TheDeepestInputTheDefaultNestingAcceptsParsesOnADefaultStack`, `AParseOnAThreadWithASmallStackNeverFaults` | "Recursive descent and the stack" |
+| Parses on separate threads are independent | `Hostile.ParsesOfEveryGoal...OnSeparateThreads...` and the older threaded tests, under `make test-tsan` | below |
+| Every one of these checks is seen to fail | planted defects 134 to 138, among the rest of the registry (`make check-planted`) | "Planted defects" |
+
+**The factor.** `Hostile.DoublingTheInputKeepsTimeAndMemoryLinear` makes sixty-eight
+families of input, each a size doubled five times (so the largest is thirty-two
+times the smallest, between 0.2 and 10 MB), and parses each with the metering
+allocator of `tests/test_helpers.h`, which counts every byte the library holds
+at its peak. The families are the shapes a hostile input is made of: many
+statements, many distinct and many repeated names (as `var`, as `let`, as
+references), many functions, long and duplicated parameter lists, labels, long
+chains of binary operators, members, calls and optional chains, arrays with and
+without holes, objects with distinct and with repeated keys, spreads, long
+parenthesized lists that are and are not arrow parameters, sequences of arrow
+candidates and of pattern candidates, long patterns, long templates and
+templates in templates, long strings, comments and identifiers, escapes, regular
+expressions (long, alternated, grouped), lines (LF and CRLF), the decoders
+(UTF-8, UTF-16, and a stream read one byte at a time), classes with thousands
+of members and private names, modules with thousands of exports and imports,
+and ten kinds of nest repeated at 240 levels, which is the cap. The cost per
+byte at each of the three largest sizes, over the least cost per byte of the
+three smallest, is the factor: 1.0 is exactly linear, and a cost that is
+quadratic in the size gives 32 here, so a factor of three is an order of
+magnitude from the failure it exists to see.
+
+Measured (GCC 16.2 `-O2`, a 12-thread x86-64 laptop shared with other work):
+the worst time factor over the sixty-eight families is 1.8 (the least, 1.0),
+and the worst memory factor 1.05. The memory is counted, not sampled, so it is
+the same on every machine of a word size; the time is the least of three to
+five runs of each size, which is why a loaded machine moves it by a few
+tenths and not by a factor. The tests assert time within **3.0** and memory
+within **2.5** (`kTimeFactor`, `kMemoryFactor` in `test_hostile.cpp`). The
+memory bound is wider than what is measured because the library's arenas double
+as they grow: a table that has just doubled holds up to twice what it needs.
+Under Valgrind and a sanitizer the sweep takes smaller sizes (the cost per byte
+is a ratio, so it says the same).
+
+**The depth.** Every nest costs the same per byte at any depth except those
+the grammar cannot classify until their end: a parenthesis that turns out to
+be arrow parameters, and an array or object literal that turns out to be a
+pattern. Such a nest is parsed as one and, when the `=>` or the `=` is seen,
+read again as the other (`parse_paren`, `finish_assignment`: the builder's
+rewind, which is how the cover grammars are resolved without rewriting nodes),
+with a memo of the decisions made so that the reading again does not itself
+read nests again. A nest that is read again inside the reading again
+(`(a = (a = (a = x) => 0) => 0) => 0`) is read again at each level: its cost
+is quadratic in its depth and not in the size of the input, and the nesting
+cap bounds the depth. `Hostile.DoublingTheDepth...` holds the total number of
+levels fixed and varies how they are divided into nests, from 6 levels deep
+to the deepest the default limits admit (127 to 254), and measures the cost
+per byte at each. Measured: `(a, b = (...) ...) => 0` costs 14 to 16 times
+as much per byte at 127 levels as at 6, an async arrow's candidate 17 to 22,
+`[[[...]]] = y` 33 to 58 at 254, and `[{a: [{a: ...}]}] = y` 14 to 20 at 127;
+every other shape (a plain parenthesis, an array literal, a call, a template,
+a function, a class, a block, arrow bodies) costs 0.8 to 1.7 times as much. So
+the per-byte cost of a cover-grammar nest is proportional to its depth, with a
+constant below one, and the cap of 256 makes the worst case a factor of about
+sixty on the cost of the same bytes at shallow depth: a megabyte of the worst
+nest costs a few seconds and not a minute. The test requires each such nest to
+grow no faster than its depth (within the factor above) and every other nest not
+to grow at all. *Rejected:* making the reading again linear by converting the
+nodes of the first reading into the second (the builder interface forbids a
+check, or the builder, to read a node it has made: it is what keeps the
+checking builder's bodies out of memory); lowering the nesting cap (it is the
+figure a real corpus sets: the deepest real file nests 54 levels).
+
+**Limits hold memory.** A parse is refused for the first limit it passes, and the
+check comes before the allocation it bounds, so the memory a refused parse
+holds depends on the cap and not on the size of the input: the test refuses an
+input four times and two hundred and fifty-six times over the cap of `nodes`,
+`tokens`, `nesting` and `literal_length` and requires the same peak memory
+(within the slack of one table that has doubled).
+
+**Allocation failure.** Every allocation of a parse goes through the caller's
+allocator, so each can be refused. `Hostile.EveryAllocationOfEveryGoalMayFail...`
+runs each goal (a Script, a Module, direct eval with a context and a private
+name, indirect eval), each valid and each refused, with both builders and each of
+the three ways to make a source (UTF-8, UTF-16, a stream read a byte at a time),
+once with nothing failing to count the allocations and then once for each, and
+requires `GLECMA_ERR_OOM`, no tree and no source, and every block freed; one
+more than the last allocation fails nothing and gives the answer the first run
+gave. The dynamic function does the same through its two sources. The
+`fuzz_alloc` harness (below) does it for the inputs a fuzzer finds.
+
+**Threads.** `Hostile.ParsesOfEveryGoal...` parses a Script and a Module on
+eight threads from two shared sources with shared options, limits and builders'
+choices, two hundred times each; under `make test-tsan` it is the library's
+claim that a parse touches nothing it does not own and a source is read-only.
+
+## The real-world corpus
+
+Conformance tests are small and written to be read. Real JavaScript is the
+other population: minified bundles that put a hundred thousand tokens on one
+line, a compiler of nine megabytes, an ES-module package. `tools/corpus/CORPUS.tsv`
+names eighteen files of twelve npm packages: TypeScript 5.9.3's compiler,
+Babel standalone 7.29.0 (minified), React DOM 18.3.1 (development and
+minified), lodash 4.17.21, jQuery 3.7.1, moment 2.30.1, d3 7.9.0, core-js
+3.51.0's minified bundle and RxJS 7.8.2 (Scripts), and three.js 0.187.0, Vue
+3.5.45 (development and minified) and acorn 8.19.0 (Modules): 20.4 MiB, thirteen
+Scripts and five Modules, seven minified. Each row has the exact package
+version, the SHA-256 of the registry's tarball of it, of the member read and of
+the license file, the goal the file is read under, whether it is minified, and
+its license as the package declares it.
+
+*Which files are admitted* is owner question Q-59. The rule applied here, which
+the table's tool enforces and the owner is asked to confirm, is that a file is
+admitted only when its license is plainly one that allows redistribution and
+the package is public on the registry: MIT, ISC, Apache-2.0, BSD-2-Clause or
+BSD-3-Clause. Fourteen files are MIT, two ISC (d3) and two Apache-2.0
+(TypeScript, RxJS). A row under any other license is refused by
+`tools/corpus/corpus.py` (planted defect 131 puts one in). Nothing is copied
+into a repository of ours: `tools/corpus/fetch.sh` (`make fetch-corpus`) downloads
+each tarball, checks all three hashes and writes the members under
+`third_party/corpus/`, which is ignored, and every gate that reads the files
+checks every hash first and fails, naming the script, on a missing, changed or
+extra file (planted defect 130).
+
+*What it is for.* `make check-corpus`, in `make test`, parses each file as its
+goal from UTF-8 and again from UTF-16 and requires the same answer, parses it
+with the tree builder and the checking builder and requires the same answer,
+and reads every function of every tree again from its range in the context the
+tree says it had and requires the first parse's tree: 47,992 functions of
+eleven kinds (async generators and field initializers do not occur in the
+corpus; test262's gate has them). The benchmark cases over the corpus
+(`bench/bench_corpus.c`) and the seeds of a fuzz campaign (`tests/fuzz/corpus-seeds.py`)
+read it, and so does the Node differential. `tools/measure-corpus.c` measures
+what the corpus asks of the limits' defaults, by bisecting each field through
+the public parse entry:
+
+| Per byte of source, the most | Value | At | Default |
+| --- | --- | --- | --- |
+| Tokens | 0.536 | core-js's minified bundle | 48 Mi, which admits a 64 MiB source of it with a margin of 1.33 |
+| Nodes | 0.401 | lodash, minified | 16 Mi, which a minified 64 MiB file passes at about 27 million |
+| Peak memory of a tree-builder parse | 41 bytes | lodash, minified (9 for the formatted ones) | |
+| Longest literal | 22,288 code points | three.js, a data string | 16 Mi |
+| Deepest nesting | 54 levels | TypeScript | 256, which is 4.7 times it |
+
+The defaults stand. The token margin is narrower than the 1.6 times the first
+sample gave (that sample's densest file was 0.470; this corpus's is 0.536) and
+is still above one; a source of the default `source_units` cap that is entirely
+that dense is refused for `tokens` before `source_units`, which is stated and
+deliberate. The literal default is still chosen from cost and not from a
+maximum (the corpus has no file that inlines binary data). The nesting default
+needs no raising for any file here (owner question Q-s4-2 asks for the
+owner's confirmation of the figures).
+
+*Rejected:* committing the files (their licenses want attribution that a
+fetch keeps beside the file, and they are twenty megabytes); a gate that
+fetches (it would pass with a network and fail without); the registry's
+newest version of each package (a corpus that moves is not one whose first
+figures can be compared); the files of the Node.js installation the first
+sample used (they are whatever was installed).
+
+## The Node differential
+
+test262 says what the language requires, and the two builders check each other.
+Neither is a second implementation reading the same text, so a decision nobody
+wrote a test for, and a program nobody wrote, could be wrong in both.
+`make check-node-differential` asks one: V8, through a pinned Node, whose source
+is never read (Node is a reference for behavior only).
+
+*The oracle.* The image `tools/node-oracle/PIN` names by digest,
+`docker.io/library/node:24-slim@sha256:0e0ff4...`, which reports Node v24.21.0,
+V8 13.6.233.17-node.53 and Unicode 17.0 (the data version this library is pinned
+to), started with `--regexp-interpret-all`, `--experimental-vm-modules` and
+`--no-warnings`. It is the pin the regular-expression library uses for its
+ECMAScript oracle, for the same reason: V8's regular-expression interpreter and
+compiler disagreed in an earlier version and the flag keeps the answer one
+whatever replaces it. A newer V8 would be a new pin with its own triage (it
+ships more of the 17th edition and answers some rows below differently) and a
+written reason; none is justified here. The oracle prints its version and
+flags and the gate requires them to equal the pin and prints them beside the
+result.
+
+*What it asks.* A script is compiled with `vm.Script` and a module parsed with
+`vm.SourceTextModule`, and neither is run or linked, so what is compared is
+the accept or refuse decision, early errors included. The inputs are the 81,624
+in-scope test262 pairs (each in its mode: sloppy, strict, module, raw), the
+corpus (each Script file also in strict mode), the fuzz seeds (decoded as the
+harnesses read them; the eval and dynamic-function inputs, the built-in mode and
+ill-formed text are not comparable and are counted), and 20,000 generated
+programs (`tools/gen-programs.py`: a grammar of the statements and expressions
+with the contextual keywords, a slash that may be division, a line break where a
+semicolon may be inserted, arrow and pattern candidates, classes and templates,
+damaged by one token edit in half of them) in sloppy, strict and module mode:
+142,415 inputs.
+
+*What it finds.* Every disagreement is a row of `tests/data-node-differences.tsv`
+or the gate fails; a row that explains no disagreement fails it too, and a row
+of a class that blames this library is refused, because a defect of ours is
+fixed with a test. Two classes exist: `edition`, a syntax V8 and the pinned
+edition decide differently, and `v8-defect`, citing the clause. There are
+fourteen rows, all of one kind: **a call as an assignment target in strict
+code.** Clause B.3.9 makes it a runtime ReferenceError only in code that is not
+strict, and an early error in strict code; V8 accepts it in both. test262 says so
+(eight of its tests, which V8 fails), and so do six generated programs, in strict
+and module mode. The first run over 150,000 generated programs found two more
+shapes of disagreement and no defect of ours: `using` declarations, which the
+pinned V8 implements and the 17th edition does not have (so the generator does
+not write one: every program that had one disagreed, which said nothing else),
+and `a<!--b` in a Module, where V8 refuses with "HTML comments are not allowed in
+modules" a program the Module grammar reads as `a < !(--b)`: a V8 defect against
+the grammar's tokens, two programs in 150,000 (it needs the rows `gen:086877` and
+`gen:094244` if the generator's count is raised; at 20,000 there is none).
+
+*Checked offline.* `make check-node-selftest`, in `make test`, runs the
+comparison on canned answers (an unclassified disagreement in either direction
+fails, a row for the other direction or mode does not cover it, an unused row
+fails, a short answer fails), parses the pin, loads the table, and requires the
+generator to be deterministic, because the table names generated programs by
+index. The oracle itself needs a container engine and the pinned image
+(`make fetch-node-oracle`), so it is not part of `make test`. Planted defects
+132 (`delete x` accepted in strict code) and 133 (a disagreement without a row)
+are seen to fail it.
 
 ## test262
 
@@ -1146,15 +1416,18 @@ pairs over the in-scope pairs, printed with the skips by reason.
 
 ### The pending ledger
 
-Until the parser exists, a pair cannot pass, and every commit passes
-`make test`. `tests/data-test262-pending.tsv` lists the pairs that cannot
+While the parser was being built a pair could not pass, and every commit
+passed `make test`. `tests/data-test262-pending.tsv` lists the pairs that cannot
 pass yet (a row names a file, or a directory with a trailing `/`, and a mode
 or `*`): a failing pair the ledger does not list fails the gate, a listed pair
 that now passes fails it too, so the ledger stays exact, and pairs only leave
-it. They are printed as their own count, never as passes or skips. Until the
-parser is complete, a construct or a check not yet built answers
-`GLECMA_ERR_UNSUPPORTED`, which never passes a negative test, so a parser that
-refused everything would score nothing.
+it. They are printed as their own count, never as passes or skips. A
+construct or a check not yet built answered `GLECMA_ERR_UNSUPPORTED`, which
+never passes a negative test, so that a parser that refused everything would
+score nothing. No such path remains (the last was the Module goal; the one arm
+that could still say it, regex's own "a pattern I do not read", is
+`GLECMA_ERR_INTERNAL`, because the ECMAScript dialect never answers it), and
+the ledger is empty.
 
 The gate runs `tests/t262/t262_driver.c` once over every pair (one process,
 one line in and one result out per pair). It is the only place the gate calls
@@ -1308,10 +1581,15 @@ from the specification.
 - **Unit tests** that cite the clause they test, so that a test states a
   requirement rather than the code's current behavior.
 - **Fuzzing** of the tokenizer, the parser and the compiler with libFuzzer,
-  each harness with a seed corpus that `make test` replays.
+  each harness with a seed corpus that `make test` replays, and a campaign of a
+  day per harness at the close of each milestone.
 - **A differential against another engine's behavior**: the outputs of an
   independent engine for the same program, used as an oracle. Its source is
-  never read; only its answers are compared.
+  never read; only its answers are compared. For the front end it is a pinned
+  Node, over test262, a real-world corpus, the fuzz seeds and generated
+  programs (see "The Node differential").
+- **Planted defects**: every gate is shown to fail on a defect put where it
+  looks, by a registry that `make check-planted` applies (`tools/planted/`).
 - **GC torture and a moving stack**: every suite also runs with a collection
   at every allocation and a guest stack that moves on every push, so that a
   missing root fails a test instead of corrupting memory later.
@@ -1336,6 +1614,7 @@ Another engine's behavior may be used as a test oracle, as above.
 | `GLECMA_ERR_CORRUPT` | The text is not well-formed UTF-8; the failure record locates the first ill-formed byte |
 | `GLECMA_ERR_OOM` | The allocator returned NULL. Source creation takes an allocator, not a context, so a runtime-core context's counting allocator refusing for the context's memory budget is reported here too; a host that passed one tells the two apart through the context |
 | `GLECMA_ERR_INTERNAL` | The library's own invariant failed, including a runtime-core result this library has no counterpart for |
-| `GLECMA_ERR_SYNTAX` | Appended after the shared nine: well-formed source text that is not valid ECMAScript for its goal. Nothing returns it until the parser exists |
+| `GLECMA_ERR_SYNTAX` | Appended after the shared nine: well-formed source text that is not valid ECMAScript for its goal, a grammar error or an early error. It departs from the suite's section 5 vocabulary, which calls a front end's compile error `ERR_FORMAT`, and its value is nine, as `GRCORE_ERR_GUEST`'s is, so a `GLECMA_Result` and a `GRCORE_Result` are never held in one variable (`core.h` says so) |
+| `GLECMA_ERR_UNSUPPORTED` | A feature the build does not define: a name in a feature set that the build lacks (every non-empty set, today), which the failure record names; and an operation a kind of stream cannot do (a seek or a size on a callback stream). It never means work not yet built: no such path remains |
 
 Outputs are written only on success, and a refusal changes nothing.

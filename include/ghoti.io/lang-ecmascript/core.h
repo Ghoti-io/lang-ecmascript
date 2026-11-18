@@ -93,13 +93,29 @@ extern "C" {
  * is not source text at all) and from ::GLECMA_ERR_INVALID (the caller's
  * arguments are wrong), so that a host can tell a script's author's mistake
  * from its own.
+ *
+ * ::GLECMA_ERR_UNSUPPORTED means a feature the build does not define: a
+ * name in a ::GLECMA_FeatureSet that the build lacks (the failure record
+ * names it), or an operation a kind of stream cannot do (a seek or a size on
+ * a callback stream). It never means work that is not built yet.
+ *
+ * **A ::GLECMA_Result and a `GRCORE_Result` are never held in one variable.**
+ * ::GLECMA_ERR_SYNTAX has the value nine, as runtime-core's `GRCORE_ERR_GUEST`
+ * has, so the two enums share the numbers zero to nine and mean different
+ * things at nine. A function returns the enum it is declared to return and
+ * no other, a value of one is never stored in a variable of the other, and the
+ * library's own conversion of a runtime-core result (`glecma_result_from_grcore`)
+ * is by name, so that `GRCORE_ERR_GUEST` becomes ::GLECMA_ERR_INTERNAL and never
+ * ::GLECMA_ERR_SYNTAX.
  */
 typedef enum {
   GLECMA_OK = 0,          ///< The operation succeeded.
   GLECMA_ERR_IO,          ///< A read, write, or seek failed.
   GLECMA_ERR_FORMAT,      ///< Well-formed input, but not a format handled
                           ///< here.
-  GLECMA_ERR_UNSUPPORTED, ///< A feature this library does not implement.
+  GLECMA_ERR_UNSUPPORTED, ///< A feature the build does not define (a name in
+                          ///< a feature set the build lacks, or an operation
+                          ///< a kind of stream cannot do).
   GLECMA_ERR_LIMIT,       ///< A stated cap or budget was exceeded.
   GLECMA_ERR_CORRUPT,     ///< The input is not a valid encoding.
   GLECMA_ERR_OOM,         ///< The allocator returned NULL.

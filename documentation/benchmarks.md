@@ -272,3 +272,45 @@ source's seek and the tokenizer's bounded range stopped looking up a line and
 column for the range's end, was about 12 microseconds each (a single run of
 the whole set, 65 ms, on the same machine). No budget is asserted (X-M1-s6-2).
 
+
+Story 7 (the closing story) added the cases over the real-world corpus
+(`bench/bench_corpus.c`; `make bench` runs it after `bench`), the first figures
+of those cases, and changed no code on a hot path (the one source change is the
+result of an error arm that the ECMAScript dialect of `regex` never reaches), so
+the seed-set rows are the same measurement as story 6's and are repeated only
+to show the machine: this run, and the story 6 "after (2)" rows above, agree
+within the noise. **The machine was not quiet** (other work was running; the
+calibration spread is 23% to 33%, and several rows spread over 30%), so a
+difference under about 10% is not a finding and the best of two runs is given
+for the corpus cases. Compiler and machine class as above; the corpus is the
+eighteen files of `tools/corpus/CORPUS.tsv` (20.38 MiB of UTF-8, 40.8 MiB as
+UTF-16, thirteen Scripts and five Modules); one unit is every file once. The best of
+five repeats; two runs.
+
+| Story | Case | Best (run 1 / run 2) | Spread (run 1 / run 2) | Throughput (best run) | Calibration (best) |
+| --- | --- | --- | --- | --- | --- |
+| 7 | `corpus-decode-utf8` | 68.6 ms / 69.7 ms | 1.3% / 30.1% | 297 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-decode-utf16` | 49.1 ms / 49.1 ms | 11.9% / 9.2% | 831 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-tokenize-utf8` | 132.6 ms / 139.8 ms | 2.5% / 17.2% | 154 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-parse-utf8` | 325 ms / 546 ms | 15.5% / 2.4% | 62.7 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-parse-utf16` | 337 ms / 475 ms | 10.8% / 17.6% | 121 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-parse-checking-utf8` | 267 ms / 321 ms | 11.1% / 2.9% | 76.2 MiB/s | 1.36 / 1.54 ns/step |
+| 7 | `corpus-tree-destroy` | 3.6 ms / 3.2 ms | 37.3% / 37.1% | 6.4 GiB/s | 1.36 / 1.54 ns/step |
+
+The two parse runs differ by 40% on a spread of 2% in the second, which is the
+machine (the first run's parse figure is the one to read; a quiet run is to be
+taken before a budget is derived). A parse of the corpus takes about 15 ns per
+byte, five times the 3 ns the decoder takes and about twice the tokenizer's 6;
+the checking builder saves 18%, which is what bodies cost over real code
+(minified files have the most of them). **Peak memory**, which is what the
+numbers above cannot show and is exact: through the metering allocator, the
+most bytes held at once while one file is processed, at the largest file
+(TypeScript's compiler, 9,112,572 bytes): the decoder 9.3 MB (1.0 byte per
+source byte; 18.4 MB from UTF-16), the tokenizer the same (its source only), a
+tree-builder parse 81.1 MB (8.9 bytes per source byte there; the worst ratio is
+41.0, in lodash's minified build, where one node of a dense program is a
+larger share of its few bytes; 90.2 MB from UTF-16), the checking builder 34.0
+MB (12.4 per byte at worst). The process's resident-size high-water mark above
+the text of that file, in a fresh process per case: decode 9.0 MiB (17.9 from
+UTF-16), tokenize 9.2, parse 75.8 (84.1 from UTF-16), checking 28.5. No budget
+is asserted.
