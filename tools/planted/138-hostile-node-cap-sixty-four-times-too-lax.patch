@@ -1,0 +1,13 @@
+diff --git a/src/parse/parser.c b/src/parse/parser.c
+index ce6f9b9..12c5f9b 100644
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -457,7 +457,7 @@ void parser_kid(Parser * p, GLECMA_BNode node) {
+ }
+ 
+ static void count_node(Parser * p) {
+-  if (++p->nodes > p->max_nodes) {
++  if (++p->nodes > p->max_nodes * 64) {
+     parser_fail_limit(p, "nodes");
+   }
+ }

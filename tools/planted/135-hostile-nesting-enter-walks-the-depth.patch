@@ -1,0 +1,13 @@
+diff --git a/src/parse/parser.c b/src/parse/parser.c
+index ce6f9b9..1d6f251 100644
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -235,6 +235,8 @@ void parser_enter(Parser * p) {
+   if (++p->depth > p->max_nesting) {
+     parser_fail_limit(p, "nesting");
+   }
++  for (volatile size_t i = 0; i < p->depth * 8; i++) {
++  }
+   parser_check_stack(p);
+ }
+ 

@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 
 namespace glecma_test {
 
@@ -100,6 +101,107 @@ class CountingAllocator {
   size_t calls_ = 0;
   size_t live_ = 0;
   size_t fail_at_ = SIZE_MAX;
+};
+
+// An allocator that meters what is live: the most bytes ever held at once
+// (peak_bytes), the requests made (calls) and the bytes held now (live_bytes).
+// Every block carries a header that says its size, so a realloc and a free
+// are accounted exactly. It is how a sweep sees memory grow, deterministically,
+// where a process's resident size would be a measurement of the allocator and
+// the machine.
+class MeteringAllocator {
+ public:
+  MeteringAllocator() { Reset(); }
+  MeteringAllocator(const MeteringAllocator &) = delete;
+  MeteringAllocator & operator=(const MeteringAllocator &) = delete;
+
+  const GLECMA_Allocator * get() const { return &allocator_; }
+  size_t peak_bytes() const { return peak_; }
+  size_t live_bytes() const { return live_; }
+  size_t calls() const { return calls_; }
+  void Reset() {
+    allocator_.ctx = this;
+    allocator_.malloc_fn = &MeteringAllocator::Malloc;
+    allocator_.calloc_fn = &MeteringAllocator::Calloc;
+    allocator_.realloc_fn = &MeteringAllocator::Realloc;
+    allocator_.free_fn = &MeteringAllocator::Free;
+    peak_ = live_ = calls_ = 0;
+  }
+
+ private:
+  // 16 bytes keeps the block the allocator returns aligned as malloc's is.
+  struct alignas(16) Header {
+    size_t size;
+  };
+
+  void Add(size_t bytes) {
+    live_ += bytes;
+    if (live_ > peak_) {
+      peak_ = live_;
+    }
+  }
+
+  static void * Malloc(void * ctx, size_t size) {
+    auto * self = static_cast<MeteringAllocator *>(ctx);
+    self->calls_++;
+    if (size > SIZE_MAX - sizeof(Header)) {
+      return nullptr;
+    }
+    auto * h = static_cast<Header *>(std::malloc(sizeof(Header) + size));
+    if (h == nullptr) {
+      return nullptr;
+    }
+    h->size = size;
+    self->Add(size);
+    return h + 1;
+  }
+
+  static void * Calloc(void * ctx, size_t count, size_t size) {
+    if (size != 0 && count > SIZE_MAX / size) {
+      return nullptr;
+    }
+    void * p = Malloc(ctx, count * size);
+    if (p != nullptr) {
+      std::memset(p, 0, count * size);
+    }
+    return p;
+  }
+
+  static void * Realloc(void * ctx, void * old, size_t size) {
+    auto * self = static_cast<MeteringAllocator *>(ctx);
+    if (old == nullptr) {
+      return Malloc(ctx, size);
+    }
+    self->calls_++;
+    if (size > SIZE_MAX - sizeof(Header)) {
+      return nullptr;
+    }
+    Header * h = static_cast<Header *>(old) - 1;
+    const size_t before = h->size;
+    auto * grown = static_cast<Header *>(std::realloc(h, sizeof(Header) + size));
+    if (grown == nullptr) {
+      return nullptr;
+    }
+    grown->size = size;
+    self->live_ -= before;
+    self->Add(size);
+    return grown + 1;
+  }
+
+  static void Free(void * ctx, void * p) {
+    auto * self = static_cast<MeteringAllocator *>(ctx);
+    if (p == nullptr) {
+      return;
+    }
+    Header * h = static_cast<Header *>(p) - 1;
+    self->live_ -= h->size;
+    std::free(h);
+  }
+
+  GLECMA_Allocator allocator_{};
+  size_t peak_ = 0;
+  size_t live_ = 0;
+  size_t calls_ = 0;
 };
 
 }  // namespace glecma_test

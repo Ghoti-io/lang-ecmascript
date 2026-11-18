@@ -120,6 +120,38 @@ GOAL_OPTIONS = [
     ("indirect", 0x03, 0x00), ("indirect-checking", 0x03, 0x80), ("indirect-utf16", 0x0B, 0x00),
 ]
 
+# The allocation-failure harness's first byte (fuzz_alloc.c): bits 0-2 the goal (0 Script, 1 Module,
+# 2 direct eval, 3 indirect eval, 4-7 a dynamic function), 3 UTF-16, 4 the checking builder, 5 strict,
+# 6 the stream constructor, 7 the function re-parse; and the allocations picked (a number taken modulo
+# one more than the allocations the whole work makes).
+ALLOC_OPTIONS = [
+    ("script", 0x00), ("strict", 0x20), ("module", 0x01), ("eval", 0x02), ("indirect", 0x03),
+    ("utf16", 0x08), ("stream", 0x40), ("checking", 0x10), ("reparse", 0x80), ("module-stream-reparse", 0xC1),
+]
+ALLOC_PICKS = [0x0003, 0x00F0, 0xFFFF]
+
+# Small programs, each of which a harness run makes fewer than twenty allocations for, so that every
+# allocation of each can be the one that fails (a number below the count is the allocation it picks):
+# the replay then reaches the error arm of each construct's own allocation, which a few picks over
+# large seeds do not. (name, first byte, text)
+ALLOC_SWEEP = [
+    ("arrow", 0x00, "x = (a) => a;"), ("arrow-default", 0x00, "x = (a = (b) => 1) => a;"),
+    ("async-arrow", 0x00, "x = async (a) => await a;"), ("pattern", 0x00, "[a, b] = c;"),
+    ("object-pattern", 0x00, "({a = 1, b: [c]} = d);"), ("binding-pattern", 0x00, "let {a, ...b} = c;"),
+    ("class", 0x00, "class A { #p; m() { return this.#p; } }"), ("class-static", 0x00, "class A { static { var s; } static f = 1; }"),
+    ("template", 0x00, "x = `a${b}c`;"), ("tagged", 0x00, "f`a${b}`;"), ("regexp", 0x00, "x = /a(?<n>b)\\k<n>/u;"),
+    ("regexp-error", 0x00, "x = /(/;"), ("label", 0x00, "l: for (var a of b) { let c; continue l; }"),
+    ("function", 0x00, "function f(a, a2) { 'use strict'; return a; }"), ("generator", 0x00, "function* g() { yield* [1]; }"),
+    ("try", 0x00, "try { a } catch ({ e }) { var f } finally { g }"), ("switch", 0x00, "switch (a) { case 1: let b; default: }"),
+    ("strict", 0x20, "var a = 1; a = a + 1;"), ("syntax-error", 0x00, "let a; let a;"), ("number", 0x00, "x = 0x1F + 1_0n;"),
+    ("module-import", 0x01, "import a, {b as c} from 'm'; export {c};"), ("module-export", 0x01, "export const x = 1; export default class {}"),
+    ("module-error", 0x01, "export {nothing};"), ("module-await", 0x01, "await x; export * as ns from 'n';"),
+    ("eval", 0x02, "new.target; this.#p;"), ("indirect", 0x03, "var a = function () {};"),
+    ("checking", 0x10, "x = (a) => { return [a]; };"), ("utf16", 0x08, "x = 'a' + b;"), ("stream", 0x40, "x = (a, b) => a + b;"),
+    ("reparse", 0x80, "function f(a) { return () => a; }"), ("dynamic", 0x04, "a, b"),
+]
+ALLOC_SWEEP_PICKS = 20
+
 def write(path, option, text, wide, second=None):
     data = text.encode("utf-16-le" if wide else "utf-8", "surrogatepass")
     header = bytes([option]) + (bytes([second]) if second is not None else b"")
@@ -128,7 +160,7 @@ def write(path, option, text, wide, second=None):
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus")
-    for sub in ("tokenizer", "source", "parser", "goals"):
+    for sub in ("tokenizer", "source", "parser", "goals", "alloc"):
         os.makedirs(os.path.join(root, sub), exist_ok=True)
     for name, text in SNIPPETS.items():
         for label, option in OPTIONS:
@@ -157,6 +189,27 @@ def main():
                 split = len(parameters.encode("utf-16-le" if wide else "utf-8", "surrogatepass"))
                 with open(os.path.join(root, "goals", "dynamic-%d-kind%d-%s.bin" % (index, kind, label)), "wb") as f:
                     f.write(bytes([0x04 + kind + extra, split % 256]) + pieces)
+    # The allocation-failure harness (fuzz_alloc.c): the first byte chooses the goal and how, the next two
+    # the allocation that fails.
+    for name, text in list(GOAL_SNIPPETS.items()) + list(PARSER_SNIPPETS.items()):
+        for label, first in ALLOC_OPTIONS:
+            for pick in ALLOC_PICKS:
+                data = text.encode("utf-16-le" if first & 8 else "utf-8", "surrogatepass")
+                with open(os.path.join(root, "alloc", "%s-%s-%d.bin" % (name, label, pick)), "wb") as f:
+                    f.write(bytes([first, pick & 255, pick >> 8]) + data)
+    for index, (parameters, body) in enumerate(DYNAMIC_PIECES):
+        for kind in range(4):
+            for pick in ALLOC_PICKS:
+                split = len(parameters.encode("utf-8"))
+                with open(os.path.join(root, "alloc", "dynamic-%d-kind%d-%d.bin" % (index, kind, pick)), "wb") as f:
+                    f.write(bytes([0x04 + kind, pick & 255, pick >> 8, split % 256]) + (parameters + body).encode("utf-8"))
+    for name, first, text in ALLOC_SWEEP:
+        for pick in range(ALLOC_SWEEP_PICKS):
+            data = text.encode("utf-16-le" if first & 8 else "utf-8", "surrogatepass")
+            if first & 7 >= 4:
+                data = bytes([2]) + data  # a dynamic function's split
+            with open(os.path.join(root, "alloc", "sweep-%s-%02d.bin" % (name, pick)), "wb") as f:
+                f.write(bytes([first, pick, 0]) + data)
     write(os.path.join(root, "source", "program-cap.bin"), 0x02, SNIPPETS["program"], False)
     for label, raw in (("overlong", b"a\xc0\x80b"), ("surrogate", b"\xed\xa0\x80"), ("truncated", b"x\xf0\x9f"), ("high", b"\xf5\x80\x80\x80")):
         with open(os.path.join(root, "source", "bad-%s.bin" % label), "wb") as f:

@@ -1,0 +1,1 @@
+@ÿÿclass A { constructor() {} static m() {} get g() {} set g(v) {} async *a() {} static #p = 1; #q; [k]() {} static { x } y = 1; static z; 'str'() {} 1() {} } class B extends A { m() { super.m(); } constructor() { super(); new.target; #q in this } }

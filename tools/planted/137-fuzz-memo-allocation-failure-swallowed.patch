@@ -1,0 +1,13 @@
+diff --git a/src/parse/parser.c b/src/parse/parser.c
+index ce6f9b9..88e3f58 100644
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -307,7 +307,7 @@ void parser_memo_add(Parser * p, size_t key) {
+     size_t * table = (size_t *)p->allocator->calloc_fn(p->allocator->ctx,
+         capacity, sizeof(size_t));
+     if (table == NULL) {
+-      parser_fail_result(p, GLECMA_ERR_OOM);
++      return;
+     }
+     for (size_t i = 0; i < p->memo_cap; i++) {
+       if (p->memo[i] != 0) {

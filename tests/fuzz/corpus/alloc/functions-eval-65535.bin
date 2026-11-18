@@ -1,0 +1,1 @@
+ÿÿfunction f(a, b = 1, ...c) { return a } function* g() { yield 1; yield* x } async function h() { await y } async function* i() { for await (const a of b) yield a } x = function () {}; y = async function* () {}; z = { get a() {}, set a(v) {}, async b() {}, *c() {}, [d]() {} };

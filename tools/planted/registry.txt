@@ -138,3 +138,8 @@
 131|corpus-license-not-admitted|A corpus file is listed under a license that is not an admitted one|131-corpus-license-not-admitted.patch|check-corpus
 132|node-delete-identifier-accepted-in-strict-code|`delete x` of a plain name is accepted in strict code, which every other engine refuses|132-node-delete-identifier-accepted-in-strict-code.patch|check-node-differential
 133|node-disagreement-not-classified|A disagreement with the pinned Node has no row in the classification table|133-node-disagreement-not-classified.patch|check-node-differential
+134|hostile-name-set-hash-collides|Every name set hashes every key to one slot, so the exports of a module cost time quadratic in their number|134-hostile-name-set-hash-collides.patch|test
+135|hostile-nesting-enter-walks-the-depth|Entering a nesting level walks the levels already entered, so a deep nest costs time quadratic in its depth|135-hostile-nesting-enter-walks-the-depth.patch|test
+136|hostile-memo-allocation-failure-swallowed|The cover grammar's memo drops an allocation failure and goes on, so that failing the allocation is not an out-of-memory result|136-hostile-memo-allocation-failure-swallowed.patch|test
+137|fuzz-memo-allocation-failure-swallowed|The same swallowed allocation failure, which the allocation-failure fuzz harness must see over its seeds without a unit test|137-fuzz-memo-allocation-failure-swallowed.patch|fuzz-replay
+138|hostile-node-cap-sixty-four-times-too-lax|The node cap is checked at sixty-four times its value, so a refused parse holds memory in proportion to its input|138-hostile-node-cap-sixty-four-times-too-lax.patch|test

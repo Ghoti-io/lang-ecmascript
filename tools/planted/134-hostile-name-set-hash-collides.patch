@@ -1,0 +1,15 @@
+diff --git a/src/parse/parser.c b/src/parse/parser.c
+index ce6f9b9..4e36e04 100644
+--- a/src/parse/parser.c
++++ b/src/parse/parser.c
+@@ -358,7 +358,9 @@ static size_t ptr_slot(const uint16_t * key, size_t mask) {
+   // multiplier and leave 12 bits of index, whatever the table's size.
+   uint64_t h = (uint64_t)(uintptr_t)key >> 4;
+   h *= UINT64_C(0x9E3779B97F4A7C15);
+-  return (size_t)(h >> 32) & mask;
++  (void)h;
++  (void)mask;
++  return 0;
+ }
+ 
+ // Adds a key; false when it was already there.

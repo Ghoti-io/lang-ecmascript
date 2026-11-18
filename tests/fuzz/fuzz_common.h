@@ -48,7 +48,7 @@ typedef struct {
   size_t piece;
 } FuzzReader;
 
-static GLECMA_Result fuzz_reader_read(void * context, void * buffer,
+static inline GLECMA_Result fuzz_reader_read(void * context, void * buffer,
     size_t capacity, size_t * out_read) {
   FuzzReader * reader = (FuzzReader *)context;
   size_t left = reader->size - reader->position;
@@ -65,23 +65,27 @@ static GLECMA_Result fuzz_reader_read(void * context, void * buffer,
 /**
  * Makes a source from @p data: UTF-16 when @p wide (a trailing odd byte is
  * left off, as the buffer path does), UTF-8 otherwise; by the stream
- * constructor when @p stream. The result is what the chosen constructor
- * returned.
+ * constructor when @p stream; with @p allocator (NULL for the default). The
+ * result is what the chosen constructor returned.
  */
-static GLECMA_Result fuzz_make_source(int wide, int stream,
+static inline GLECMA_Result fuzz_make_source_with(int wide, int stream,
     const uint8_t * data, size_t size, const GLECMA_Limits * limits,
-    GLECMA_Failure * failure, GLECMA_Source ** out_source) {
+    const GLECMA_Allocator * allocator, GLECMA_Failure * failure,
+    GLECMA_Source ** out_source) {
   if (stream) {
     size_t bytes = wide ? size - (size & 1u) : size;
     FuzzReader reader = {data, bytes, 0, 1 + (size % 13u)};
     GLECMA_Stream * s = NULL;
     GLECMA_Result made = glecma_stream_create_callback(&fuzz_reader_read, NULL,
-        &reader, NULL, &s);
+        &reader, allocator, &s);
+    if (made == GLECMA_ERR_OOM) {
+      return made;
+    }
     if (made != GLECMA_OK) {
       abort();
     }
     GLECMA_Result r = glecma_source_create_stream(s,
-        wide ? GLECMA_ENCODING_UTF16 : GLECMA_ENCODING_UTF8, limits, NULL,
+        wide ? GLECMA_ENCODING_UTF16 : GLECMA_ENCODING_UTF8, limits, allocator,
         failure, out_source);
     glecma_stream_destroy(s);
     return r;
@@ -93,13 +97,91 @@ static GLECMA_Result fuzz_make_source(int wide, int stream,
       abort();
     }
     memcpy(units, data, count * sizeof(uint16_t));
-    GLECMA_Result r = glecma_source_create_utf16(units, count, limits, NULL,
-        failure, out_source);
+    GLECMA_Result r = glecma_source_create_utf16(units, count, limits,
+        allocator, failure, out_source);
     free(units);
     return r;
   }
-  return glecma_source_create_utf8((const char *)data, size, limits, NULL,
+  return glecma_source_create_utf8((const char *)data, size, limits, allocator,
       failure, out_source);
+}
+
+static inline GLECMA_Result fuzz_make_source(int wide, int stream,
+    const uint8_t * data, size_t size, const GLECMA_Limits * limits,
+    GLECMA_Failure * failure, GLECMA_Source ** out_source) {
+  return fuzz_make_source_with(wide, stream, data, size, limits, NULL, failure,
+      out_source);
+}
+
+/**
+ * An allocator that counts its requests and live blocks and refuses the
+ * request whose zero-based index is `fail_at` (SIZE_MAX refuses none): how a
+ * harness fails each allocation of an operation in turn, and sees that
+ * nothing it allocated is left.
+ */
+typedef struct {
+  GLECMA_Allocator allocator;
+  size_t calls;
+  size_t live;
+  size_t fail_at;
+} FuzzAlloc;
+
+static inline void * fuzz_alloc_malloc(void * ctx, size_t size) {
+  FuzzAlloc * a = (FuzzAlloc *)ctx;
+  if (a->calls++ == a->fail_at) {
+    return NULL;
+  }
+  void * p = malloc(size == 0 ? 1 : size);
+  if (p != NULL) {
+    a->live++;
+  }
+  return p;
+}
+
+static inline void * fuzz_alloc_calloc(void * ctx, size_t count, size_t size) {
+  FuzzAlloc * a = (FuzzAlloc *)ctx;
+  if (a->calls++ == a->fail_at) {
+    return NULL;
+  }
+  if (size != 0 && count > SIZE_MAX / size) {
+    return NULL;
+  }
+  void * p = calloc(count == 0 ? 1 : count, size == 0 ? 1 : size);
+  if (p != NULL) {
+    a->live++;
+  }
+  return p;
+}
+
+static inline void * fuzz_alloc_realloc(void * ctx, void * old, size_t size) {
+  FuzzAlloc * a = (FuzzAlloc *)ctx;
+  if (a->calls++ == a->fail_at) {
+    return NULL;
+  }
+  void * p = realloc(old, size == 0 ? 1 : size);
+  if (p != NULL && old == NULL) {
+    a->live++;
+  }
+  return p;
+}
+
+static inline void fuzz_alloc_free(void * ctx, void * p) {
+  FuzzAlloc * a = (FuzzAlloc *)ctx;
+  if (p != NULL) {
+    a->live--;
+    free(p);
+  }
+}
+
+static inline void fuzz_alloc_init(FuzzAlloc * a, size_t fail_at) {
+  a->allocator.ctx = a;
+  a->allocator.malloc_fn = fuzz_alloc_malloc;
+  a->allocator.calloc_fn = fuzz_alloc_calloc;
+  a->allocator.realloc_fn = fuzz_alloc_realloc;
+  a->allocator.free_fn = fuzz_alloc_free;
+  a->calls = 0;
+  a->live = 0;
+  a->fail_at = fail_at;
 }
 
 /* ---- Checks the parser harnesses share: what a tree and a failure must hold ---- */

@@ -339,7 +339,7 @@ $(APP_DIR)/examples/%$(EXE_EXTENSION): examples/%.c $(APP_DIR)/$(STATIC_TARGET) 
 .PHONY: check-limit-names check-rule-codes check-data-versions check-differential check-reparse check-planted check-test262 check-clauses fetch-test262 fetch-ecma262
 .PHONY: fetch-corpus check-corpus check-node-selftest check-node-differential fetch-node-oracle
 .PHONY: all install test test-quiet test-asan test-tsan test-valgrind uninstall
-.PHONY: fuzz fuzz-clean fuzz-replay fuzz-replay-asan help
+.PHONY: fuzz fuzz-campaign fuzz-clean fuzz-replay fuzz-replay-asan help
 
 check-aliasing: ## Fail if -Wstrict-aliasing is not armed at level 1
 	@mkdir -p $(BUILD_DIR)
@@ -511,7 +511,7 @@ test-valgrind: $(APP_DIR)/$(TARGET) $(TEST_EXECUTABLES) ## Run the tests under V
 ifeq ($(OS_NAME), Linux)
 	@for test_exe in $(TEST_EXECUTABLES); do \
 		printf '\n### Valgrind %s ###\n\n' "$$(basename $$test_exe)"; \
-		LD_LIBRARY_PATH="$(TEST_LD_PATH)" tools/run-gtest-full.sh valgrind $(VALGRIND_FLAGS) $$test_exe || exit 1; \
+		GLECMA_TEST_SLOW=1 LD_LIBRARY_PATH="$(TEST_LD_PATH)" tools/run-gtest-full.sh valgrind $(VALGRIND_FLAGS) $$test_exe || exit 1; \
 	done
 else
 	@printf 'Valgrind is only available on Linux\n' >&2; exit 1
@@ -667,7 +667,7 @@ $(foreach pair,$(TEST_PAIRS),\
 	$(eval $(call tsan-test-executable-rule,$(word 1,$(subst |, ,$(pair))),$(word 2,$(subst |, ,$(pair))))))
 
 TSAN_TEST_EXECUTABLES := $(addprefix $(TSAN_APP_DIR)/,$(addsuffix $(EXE_EXTENSION),$(TEST_NAMES)))
-TSAN_RUN_ENV := LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
+TSAN_RUN_ENV := GLECMA_TEST_SLOW=1 LD_PRELOAD= LD_LIBRARY_PATH="$(TSAN_APP_DIR):$(RCORE_LIBDIR):$(UNICODE_LIBDIR):$(REGEX_LIBDIR):$(CUTIL_LIBDIR):$(LIB_INSTALL_PATH)/$(SUITE)" \
 	TSAN_OPTIONS="halt_on_error=1:history_size=7:second_deadlock_stack=1"
 
 test-tsan: $(TSAN_TEST_EXECUTABLES) ## Build with TSan and run the tests (Linux only)
@@ -769,6 +769,44 @@ fuzz: $(addprefix fuzz-run-,$(FUZZERS)) ## Build and run every fuzzer briefly
 ifeq ($(strip $(FUZZERS)),)
 	@printf 'fuzz: no fuzzers in tests/fuzz\n' >&2; exit 1
 endif
+
+# A campaign: one harness under libFuzzer for FUZZ_CAMPAIGN_SECONDS (a day by
+# default), from a scratch copy of its committed seeds, slices of the
+# real-world corpus (tests/fuzz/corpus-seeds.py; `make fetch-corpus` first) and
+# the dictionary of tokens. The corpus it grows, every input that crashed or
+# timed out and the log (the figures at its end: the executions, the seconds,
+# the coverage) are under $(FUZZ_CAMPAIGN_DIR)/<harness>/, never the committed
+# seeds. An input that crashed is a regression test once it is copied to
+# tests/fuzz/corpus/<harness>/ with its fix. The inputs may be large (a real
+# file's slice), so -max_len is large, and a unit that runs for FUZZ_UNIT_TIMEOUT
+# seconds is a finding.
+FUZZ_CAMPAIGN_SECONDS ?= 86400
+FUZZ_CAMPAIGN_DIR ?= $(BUILD_DIR)/fuzz-campaign
+FUZZ_CAMPAIGN_SEEDS ?= 900
+FUZZ_MAX_LEN ?= 65536
+FUZZ_UNIT_TIMEOUT ?= 30
+FUZZ_RSS_MB ?= 2048
+FUZZ_DICT := tests/fuzz/ecmascript.dict
+
+define fuzz-campaign-rule
+fuzz-campaign-$2: $$(FUZZ_APP_DIR)/fuzz_$2 ## Run the $2 fuzzer for FUZZ_CAMPAIGN_SECONDS from the seeds and the corpus's slices
+	@rm -rf $$(FUZZ_CAMPAIGN_DIR)/$2
+	@mkdir -p $$(FUZZ_CAMPAIGN_DIR)/$2/corpus $$(FUZZ_CAMPAIGN_DIR)/$2/crashes
+	@cp $$(FUZZ_CORPUS)/$2/* $$(FUZZ_CAMPAIGN_DIR)/$2/corpus/
+	@python3 tests/fuzz/corpus-seeds.py $2 $$(FUZZ_CAMPAIGN_DIR)/$2/corpus --count $$(FUZZ_CAMPAIGN_SEEDS)
+	@printf 'started %s, %s seconds, harness $2\n' "$$$$(date -u +%FT%TZ)" "$$(FUZZ_CAMPAIGN_SECONDS)" > $$(FUZZ_CAMPAIGN_DIR)/$2/log
+	@LD_LIBRARY_PATH="$(TEST_LD_PATH)" $$(FUZZ_APP_DIR)/fuzz_$2 $$(FUZZ_CAMPAIGN_DIR)/$2/corpus \
+		-dict=$$(FUZZ_DICT) -max_len=$$(FUZZ_MAX_LEN) -timeout=$$(FUZZ_UNIT_TIMEOUT) -rss_limit_mb=$$(FUZZ_RSS_MB) \
+		-max_total_time=$$(FUZZ_CAMPAIGN_SECONDS) -use_value_profile=1 -print_final_stats=1 \
+		-artifact_prefix=$$(FUZZ_CAMPAIGN_DIR)/$2/crashes/ >> $$(FUZZ_CAMPAIGN_DIR)/$2/log 2>&1; \
+	status=$$$$?; printf 'finished %s, exit status %s\n' "$$$$(date -u +%FT%TZ)" "$$$$status" >> $$(FUZZ_CAMPAIGN_DIR)/$2/log; \
+	grep -E '^(Done|stat::number_of_executed_units|stat::average_exec_per_sec|started|finished)' $$(FUZZ_CAMPAIGN_DIR)/$2/log; \
+	exit $$$$status
+endef
+
+$(foreach f,$(FUZZERS),$(eval $(call fuzz-campaign-rule,$(f),$(f))))
+
+fuzz-campaign: $(addprefix fuzz-campaign-,$(FUZZERS)) ## Every harness's campaign; `make -j<harnesses> fuzz-campaign` runs them side by side
 
 fuzz-clean: ## Remove the fuzz build
 	-@rm -rf $(FUZZ_DIR)

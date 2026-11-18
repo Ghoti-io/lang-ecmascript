@@ -1,0 +1,1 @@
+ÿÿvar a = 1, b; let c; const d = 2; if (a) b; else c; for (;;) break; for (var i = 0; i < 1; i++) continue; for (a in b); for (a of b); while (a) b; do a; while (b) switch (a) { case 1: default: } try { a } catch (e) { b } finally { c } l: for (;;) break l; with (a) b; throw a; debugger;
