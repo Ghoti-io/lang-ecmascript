@@ -37,6 +37,7 @@ struct Case {
   const char * source;
   uint32_t rule;     // 0 for accepted
   size_t offset;     // where the failure is, when it is a refusal
+  size_t offset_to = 0;  // when not 0, the failure may be anywhere from `offset` to here
 };
 
 void Check(const Case & c, uint32_t internal) {
@@ -50,7 +51,12 @@ void Check(const Case & c, uint32_t internal) {
     ASSERT_EQ(parsed.result, GLECMA_ERR_SYNTAX) << c.source;
     EXPECT_EQ(parsed.failure.rule, c.rule)
         << c.source << ": " << glecma_rule_name(parsed.failure.rule);
-    EXPECT_EQ(parsed.failure.location.offset, c.offset) << c.source;
+    if (c.offset_to == 0) {
+      EXPECT_EQ(parsed.failure.location.offset, c.offset) << c.source;
+    } else {
+      EXPECT_GE(parsed.failure.location.offset, c.offset) << c.source;
+      EXPECT_LE(parsed.failure.location.offset, c.offset_to) << c.source;
+    }
   }
 }
 
@@ -90,7 +96,9 @@ TEST(RegexpLiterals, APatternTheGrammarRefusesIsAnEarlyError) {
     {"x = /\\u{110000}/u;", r, 5},
     {"x = /(?=a)*/u;", r, 10},
     {"x = /(?i-i:a)/;", r, 5},
-    {"x = /[a&&&b]/v;", r, 10},
+    // The offset is regex's, and regex reports the third `&` (9) on some targets and the character after it
+    // (10) on others, both inside the class: the location is a point inside the offending construct.
+    {"x = /[a&&&b]/v;", r, 9, 10},
     {"x = /(?<=a)+/u;", r, 11},
     // In a function body the checking builder never builds, and the pattern is still read.
     {"function f() { return /(/; }", r, 23},
