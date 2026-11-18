@@ -1088,7 +1088,7 @@ construct. The unit sweep that does the same for fixed programs is
 `Hostile.EveryAllocationOfEveryGoal...` (see "Hostile input").
 
 *A campaign.* `make fuzz-campaign-<harness>` runs one harness under libFuzzer for
-`FUZZ_CAMPAIGN_SECONDS` (a day by default) from a scratch copy of its committed
+`FUZZ_CAMPAIGN_SECONDS` (a day by default; the milestone close ran eight hours) from a scratch copy of its committed
 seeds, slices cut from the real-world corpus (`tests/fuzz/corpus-seeds.py`:
 windows of each file, with the header bytes the harness reads, so a campaign
 starts from real token sequences and from every error that cutting a real
@@ -1103,8 +1103,9 @@ input that crashed is a regression test once it is copied to
 `tests/fuzz/corpus/<harness>/` with its fix, and the campaign of a changed
 parser is run again from the start, because a campaign over a changed parser is
 not a campaign over the final one. `make -j5 fuzz-campaign` runs all five side by
-side. The closing campaign's floor is 24 hours per harness (owner question Q-2
-asks whether that is the suite's floor).
+side. The floor for a milestone's close is eight hours per harness; a campaign of a day per
+harness, on the final commit, is a condition for the suite's first release to be
+decided, necessary and never sufficient, because the parser changes in later milestones.
 
 ## Hostile input
 
@@ -1113,7 +1114,7 @@ to the parser, and what states each:
 
 | Claim | What states it | Where |
 | --- | --- | --- |
-| No input crashes it, leaks, or takes it past a limit | Five libFuzzer harnesses over every entry, run for a day each at the close; their seeds replayed in `make test` and under ASan and UBSan | "Fuzzing" |
+| No input crashes it, leaks, or takes it past a limit | Five libFuzzer harnesses over every entry, run for hours each at the close; their seeds replayed in `make test` and under ASan and UBSan | "Fuzzing" |
 | Failing any allocation of any parse is `GLECMA_ERR_OOM` with nothing left held | `Hostile.EveryAllocationOf...` (every goal, both builders, three ways to make a source, a dynamic function), and the `fuzz_alloc` harness over the inputs a fuzzer finds | below |
 | Time and memory grow linearly with the size of the input, within a stated factor | `Hostile.DoublingTheInputKeepsTimeAndMemoryLinear`, sixty-eight families of input at six sizes each | below |
 | A nest costs a constant per level, except where the grammar must read it twice | `Hostile.DoublingTheDepthWithinTheCapKeepsTheCostPerLevelFlatOrLinearForTheCoverGrammars` | below |
