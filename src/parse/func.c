@@ -443,7 +443,19 @@ static PExpr parse_class(Parser * p, bool is_declaration) {
     // A level of nesting: `class A extends class extends ...` recurses
     // through here and through no other counted function.
     parser_enter(p);
+    // The heritage is a LeftHandSideExpression read on its own, so a pending
+    // cover-grammar error in it (`extends { a = 1 }`) is its to rule on.
+    const size_t outer_pending = p->pending;
+    const GLECMA_Location outer_at = p->pending_at;
+    const uint32_t outer_rule = p->pending_rule;
+    p->pending = NO_PENDING;
     heritage = parse_lhs(p).node;
+    if (p->pending != NO_PENDING) {
+      parser_fail(p, p->pending_rule, &p->pending_at);
+    }
+    p->pending = outer_pending;
+    p->pending_at = outer_at;
+    p->pending_rule = outer_rule;
     parser_leave(p);
   }
   if (p->tok.kind != GLECMA_TOK_LBRACE) {

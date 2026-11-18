@@ -873,4 +873,8 @@ void parse_statement_list(Parser * p, GLECMA_TokenKind end, bool prologue,
   }
   *out_end = p->tok.end.offset;
   *out_strict = (p->flags & PF_STRICT) != 0;
+  // A list that ended says nothing of the statement it was inside: its last
+  // statement may have been a directive, and a function body is a statement
+  // list nested in the outer list's statement.
+  p->directive_hit = false;
 }

@@ -318,6 +318,26 @@ TEST(EarlyErrors, DuplicateProto) {
 }
 
 // Clause 14.3.1.1.
+// Found by a review: a directive-prologue flag that a nested function body left set, and a
+// class heritage that never ruled on a pending cover-grammar error.
+TEST(EarlyErrors, ADirectiveInANestedBodyIsNotTheOuterListsAndAHeritageRulesOnItsLiteral) {
+  RunCases({
+    // Not directives: the first statement is an expression, and the prologue ended.
+    {"'use strict' + function () { 'x' }; with (a) {}", 0, kSloppy},
+    {"function f() { 'x' } 'use strict'; with (a) {}", 0, kSloppy},
+    {"var f = function () { 'use strict' }; 'use strict'; with (a) {}", 0, kSloppy},
+    {"function f() { 'x' } 'use strict'; 010;", 0, kSloppy},
+    // Directives.
+    {"'x'; 'use strict'; with (a) {}", GLECMA_RULE_WITH_STRICT, kSloppy},
+    {"function f() { 'x' } function g() { 'use strict'; with (a) {} }", GLECMA_RULE_WITH_STRICT, kSloppy},
+    {"class A extends { a = 1 } {}", GLECMA_RULE_COVER_INITIALIZED_NAME, kBoth},
+    {"class A extends ({ a = 1 }) {}", GLECMA_RULE_COVER_INITIALIZED_NAME, kBoth},
+    {"class A extends { __proto__: 1, __proto__: 2 } {}", GLECMA_RULE_DUPLICATE_PROTO, kBoth},
+    {"x = class extends { a = 1 } {};", GLECMA_RULE_COVER_INITIALIZED_NAME, kBoth},
+    {"class A extends { a: 1 } {}", 0, kBoth},
+  });
+}
+
 TEST(EarlyErrors, ConstAndLetDeclarations) {
   RunCases({
     {"const x;", GLECMA_RULE_CONST_WITHOUT_INITIALIZER, kBoth},

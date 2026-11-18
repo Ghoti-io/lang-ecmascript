@@ -1,0 +1,12 @@
+--- a/src/parse/func.c
++++ b/src/parse/func.c
+@@ -450,9 +450,6 @@
+     const uint32_t outer_rule = p->pending_rule;
+     p->pending = NO_PENDING;
+     heritage = parse_lhs(p).node;
+-    if (p->pending != NO_PENDING) {
+-      parser_fail(p, p->pending_rule, &p->pending_at);
+-    }
+     p->pending = outer_pending;
+     p->pending_at = outer_at;
+     p->pending_rule = outer_rule;

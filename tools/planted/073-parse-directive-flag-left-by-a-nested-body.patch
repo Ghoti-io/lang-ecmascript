@@ -1,0 +1,9 @@
+--- a/src/parse/stmt.c
++++ b/src/parse/stmt.c
+@@ -876,5 +876,4 @@
+   // A list that ended says nothing of the statement it was inside: its last
+   // statement may have been a directive, and a function body is a statement
+   // list nested in the outer list's statement.
+-  p->directive_hit = false;
+-}
++}
