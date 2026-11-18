@@ -115,11 +115,16 @@ def load_table(path):
 # ---- comparing -----------------------------------------------------------------------------
 
 def ours_verdict(answer):
+    """accept, refuse, or other: only a limit (the inputs are well-formed text) leaves an input
+    incomparable; any other result (an internal error, out of memory, unsupported) is a defect
+    of ours and `unexpected`."""
     if answer == "OK":
         return "accept"
     if answer == "ERR_SYNTAX":
         return "refuse"
-    return "other"
+    if answer in ("ERR_LIMIT", "ERR_CORRUPT"):
+        return "other"
+    return "unexpected"
 
 
 def node_verdict(answer):
@@ -139,6 +144,10 @@ def compare(inputs, ours, node, rows, show=12):
     unclassified = []
     for item, a, b in zip(inputs, ours, node):
         va, vb = ours_verdict(a), node_verdict(b)
+        if va == "unexpected":
+            problems.append("%s [%s]: the library answered %s, which no input of this gate may be answered with"
+                            % (item.ident, item.mode, a))
+            continue
         if va == "other" or vb == "other":
             counts[(item.group, "incomparable")] += 1
             continue
@@ -310,6 +319,9 @@ def selftest():
     # A row for one mode does not cover another.
     _, problems = compare([mk("gen:1", "strict")], ["OK"], ["REFUSE\tm"], [Row("gen:1", "sloppy", "node-refuses", "v8-defect", "c", 1)])
     assert any("unclassified" in p for p in problems), problems
+    # A result that is a defect of ours is never incomparable.
+    _, problems = compare([mk("gen:1")], ["ERR_INTERNAL"], ["ACCEPT"], [])
+    assert len(problems) == 1 and "ERR_INTERNAL" in problems[0], problems
     # A short answer is a problem, not a pass.
     _, problems = compare([mk("gen:1")], [], ["ACCEPT"], [])
     assert problems and "answered" in problems[0], problems

@@ -54,7 +54,7 @@ namespace {
 // The cost per unit of input, at the largest size of a sweep divided by the
 // cost per unit at its smallest, must not pass these. 1.0 would be exactly
 // linear; a quadratic cost grows by the ratio of the largest size to the
-// smallest (64 here), so these are two orders of magnitude from the failure
+// smallest (32 here), so these are two orders of magnitude from the failure
 // they are there to see, and one order from what a quiet machine measures
 // (documentation/design.md, "Hostile input", gives the figures taken). Time
 // is the least of several runs, and is measured with a deadline over the
@@ -528,8 +528,8 @@ TEST(Hostile, AParseRefusedForALimitHoldsMemoryInProportionToTheLimitAndNotTheIn
       (factor == 4 ? smallest_peak : largest_peak) = meter.peak_bytes();
       glecma_source_release(source);
     }
-    // A parse stops where the cap is: the input 64 times larger holds the same memory (within the
-    // slack of a table that has doubled).
+    // A parse stops where the cap is: the input 64 times larger holds about the same memory (within the
+    // slack of a table that has doubled, and four KiB).
     EXPECT_LE(largest_peak, smallest_peak * 2 + 4096) << c.name << ": " << smallest_peak << " then " << largest_peak;
   }
 }
@@ -544,6 +544,7 @@ struct Goal {
   uint32_t goal;
   uint32_t context;
   bool eval_context;
+  bool valid;  // the program is valid for its goal: the unfailed run must be OK, and otherwise a syntax error
 };
 
 // Parses `text` for each way a source is made (UTF-8, UTF-16, a stream read in
@@ -611,16 +612,16 @@ TEST(Hostile, EveryAllocationOfEveryGoalMayFailWithNothingLeaked) {
       "export {b as f, e as 'g h'};\nexport * as w from 'o';\nexport default class Z extends d { #p = 1; static { this.s = 1; } }\nexport function fn(x) { return x + b; }\n";
   const std::string valid_eval = "new.target; super.x; this.#p; var y = () => new.target; function g() { return arguments; }\n";
   const Goal goals[] = {
-    {"script", valid_script, GLECMA_PARSE_SCRIPT, 0, false},
-    {"script-refused", valid_script + "let a;\n", GLECMA_PARSE_SCRIPT, 0, false},
-    {"strict-script", "function f(a) { return a + 1; } var x = f(2);\n", GLECMA_PARSE_SCRIPT, GLECMA_CONTEXT_STRICT, false},
-    {"strict-script-refused", "var x = 010; with (x) {}\n", GLECMA_PARSE_SCRIPT, GLECMA_CONTEXT_STRICT, false},
-    {"module", valid_module, GLECMA_PARSE_MODULE, 0, false},
-    {"module-refused", valid_module + "export {nothing};\n", GLECMA_PARSE_MODULE, 0, false},
-    {"direct-eval", valid_eval, GLECMA_PARSE_DIRECT_EVAL, 0, true},
-    {"direct-eval-refused", valid_eval + "super();\n", GLECMA_PARSE_DIRECT_EVAL, 0, true},
-    {"indirect-eval", "var a = 1; function f() { return a; }\n", GLECMA_PARSE_INDIRECT_EVAL, 0, false},
-    {"indirect-eval-refused", "new.target;\n", GLECMA_PARSE_INDIRECT_EVAL, 0, false},
+    {"script", valid_script, GLECMA_PARSE_SCRIPT, 0, false, true},
+    {"script-refused", valid_script + "let a;\n", GLECMA_PARSE_SCRIPT, 0, false, false},
+    {"strict-script", "function f(a) { return a + 1; } var x = f(2);\n", GLECMA_PARSE_SCRIPT, GLECMA_CONTEXT_STRICT, false, true},
+    {"strict-script-refused", "var x = 010; with (x) {}\n", GLECMA_PARSE_SCRIPT, GLECMA_CONTEXT_STRICT, false, false},
+    {"module", valid_module, GLECMA_PARSE_MODULE, 0, false, true},
+    {"module-refused", valid_module + "export {nothing};\n", GLECMA_PARSE_MODULE, 0, false, false},
+    {"direct-eval", valid_eval, GLECMA_PARSE_DIRECT_EVAL, 0, true, true},
+    {"direct-eval-refused", valid_eval + "super();\n", GLECMA_PARSE_DIRECT_EVAL, 0, true, false},
+    {"indirect-eval", "var a = 1; function f() { return a; }\n", GLECMA_PARSE_INDIRECT_EVAL, 0, false, true},
+    {"indirect-eval-refused", "new.target;\n", GLECMA_PARSE_INDIRECT_EVAL, 0, false, false},
   };
   for (const Goal & g : goals) {
     for (uint32_t internal : {0u, static_cast<uint32_t>(GLECMA_PARSE_INTERNAL_CHECKING)}) {
@@ -633,7 +634,7 @@ TEST(Hostile, EveryAllocationOfEveryGoalMayFailWithNothingLeaked) {
           expected = ParseWith(g, how, internal, &counting, &failure);
           total = counting.calls();
           EXPECT_EQ(counting.live(), 0u) << g.name;
-          EXPECT_TRUE(expected == GLECMA_OK || expected == GLECMA_ERR_SYNTAX) << g.name << " " << failure.message;
+          EXPECT_EQ(expected, g.valid ? GLECMA_OK : GLECMA_ERR_SYNTAX) << g.name << " " << (failure.message ? failure.message : "");
         }
         ASSERT_GT(total, 4u) << g.name;
         for (size_t i = 0; i < total; i++) {
@@ -662,13 +663,16 @@ TEST(Hostile, EveryAllocationOfADynamicFunctionMayFailWithNothingLeaked) {
     const char * parameters;
     const char * body;
   } cases[] = {
-    {GLECMA_FNKIND_FUNCTION, "a, b = 1, ...c", "return a + b + c.length;"},
-    {GLECMA_FNKIND_GENERATOR, "a", "yield a; yield* [1, 2];"},
-    {GLECMA_FNKIND_ASYNC_FUNCTION, "{a}, [b]", "await a; return b;"},
-    {GLECMA_FNKIND_ASYNC_GENERATOR, "", "for await (const x of y) yield x;"},
-    {GLECMA_FNKIND_FUNCTION, "a, a", "'use strict';"},  // refused
+    {GLECMA_DYNFN_FUNCTION, "a, b = 1, ...c", "return a + b + c.length;"},
+    {GLECMA_DYNFN_GENERATOR, "a", "yield a; yield* [1, 2];"},
+    {GLECMA_DYNFN_ASYNC, "{a}, [b]", "await a; return b;"},
+    {GLECMA_DYNFN_ASYNC_GENERATOR, "", "for await (const x of y) yield x;"},
+    {GLECMA_DYNFN_FUNCTION, "a, a", "'use strict';"},  // refused
   };
+  const GLECMA_Result expected_results[] = {GLECMA_OK, GLECMA_OK, GLECMA_OK, GLECMA_OK, GLECMA_ERR_SYNTAX};
+  size_t case_index = 0;
   for (const auto & c : cases) {
+    const GLECMA_Result want = expected_results[case_index++];
     auto run = [&](glecma_test::CountingAllocator * counting, GLECMA_Failure * failure) {
       GLECMA_Source * parameters = nullptr;
       GLECMA_Source * body = nullptr;
@@ -696,6 +700,7 @@ TEST(Hostile, EveryAllocationOfADynamicFunctionMayFailWithNothingLeaked) {
       glecma_test::CountingAllocator counting;
       GLECMA_Failure failure = GLECMA_FAILURE_INIT;
       expected = run(&counting, &failure);
+      EXPECT_EQ(expected, want) << c.parameters << " | " << c.body;
       total = counting.calls();
       EXPECT_EQ(counting.live(), 0u);
     }

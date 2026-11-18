@@ -49,8 +49,8 @@
  * that the answer is the one the other encoding gives (tools/check-corpus.py).
  *
  * It is the only place the gate calls the library: `parse_pair` is a call of
- * the public parse entry. Work not built answers ERR_UNSUPPORTED, which is
- * never an acceptance and never a SyntaxError.
+ * the public parse entry. No path answers ERR_UNSUPPORTED for work not built (a feature
+ * set the build lacks does, and these inputs name none); it is never an acceptance and never a SyntaxError.
  */
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>

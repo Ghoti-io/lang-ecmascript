@@ -160,7 +160,8 @@ TEST(Stream, ArgumentsAreChecked) {
 
 TEST(Stream, FileStreamSeeksAndReadsWhatWasWritten) {
   const std::string path_text = (std::filesystem::temp_directory_path() /
-      ("glecma-stream-" + std::to_string(reinterpret_cast<uintptr_t>(&path_text)))).string();
+      ("glecma-stream-" + std::to_string(static_cast<long>(getpid())) + "-" +
+          std::to_string(reinterpret_cast<uintptr_t>(&path_text)))).string();
   const char * path = path_text.c_str();
   FILE * f = std::fopen(path, "wb");
   ASSERT_NE(f, nullptr);

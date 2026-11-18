@@ -1030,10 +1030,17 @@ state machine and give up the correspondence with the specification's
 productions that makes it reviewable); measuring a frame count (it counts
 frames, not bytes, and the bytes are what a stack holds).
 
-The bytes per level are measured here on x86-64 only. The arm64, 32-bit,
-big-endian and Win64 figures are taken when the cross gates run at the
-milestone's close, with the same tool; until then the default is the x86-64
-figure and no claim is made for the others.
+The same tool, run under emulation at the milestone's close, gives the worst
+shape per level on the other targets: **32-bit x86 1,232 bytes** (the
+parenthesized group again), **AArch64 2,368**, **s390x (big-endian) 2,824**, against
+x86-64's 2,144. At 256 levels the worst is then 316 KB, 606 KB and 723 KB: the
+deepest input the default nesting admits fits under the default 1 MiB grant on
+every one of them, with the reserve to spare, and the unit test that parses the
+deepest input of nineteen shapes on a 1 MiB thread ran on each. The figures
+are of emulated code of one compiler (GCC 14 for the cross targets) and say how
+the frames lay out, not how fast. The Win64 figure was not taken (the gates ran
+under wine, which is not a Windows stack); a real Windows machine is the place
+for it.
 
 
 ## Fuzzing
@@ -1130,7 +1137,7 @@ templates in templates, long strings, comments and identifiers, escapes, regular
 expressions (long, alternated, grouped), lines (LF and CRLF), the decoders
 (UTF-8, UTF-16, and a stream read one byte at a time), classes with thousands
 of members and private names, modules with thousands of exports and imports,
-and ten kinds of nest repeated at 240 levels, which is the cap. The cost per
+and ten kinds of nest repeated at 100 to 240 levels (the cap is 256). The cost per
 byte at each of the three largest sizes, over the least cost per byte of the
 three smallest, is the factor: 1.0 is exactly linear, and a cost that is
 quadratic in the size gives 32 here, so a factor of three is an order of
@@ -1181,8 +1188,8 @@ figure a real corpus sets: the deepest real file nests 54 levels).
 check comes before the allocation it bounds, so the memory a refused parse
 holds depends on the cap and not on the size of the input: the test refuses an
 input four times and two hundred and fifty-six times over the cap of `nodes`,
-`tokens`, `nesting` and `literal_length` and requires the same peak memory
-(within the slack of one table that has doubled).
+`tokens`, `nesting` and `literal_length` and requires about the same peak
+memory (within twice, and four KiB, the slack of a table that has doubled).
 
 **Allocation failure.** Every allocation of a parse goes through the caller's
 allocator, so each can be refused. `Hostile.EveryAllocationOfEveryGoalMayFail...`
@@ -1306,8 +1313,8 @@ edition decide differently, and `v8-defect`, citing the clause. There are
 fourteen rows, all of one kind: **a call as an assignment target in strict
 code.** Clause B.3.9 makes it a runtime ReferenceError only in code that is not
 strict, and an early error in strict code; V8 accepts it in both. test262 says so
-(eight of its tests, which V8 fails), and so do six generated programs, in strict
-and module mode. The first run over 150,000 generated programs found two more
+(eight of its tests, which V8 fails), and so do three generated programs, in strict
+and module mode (six inputs). The first run over 150,000 generated programs found two more
 shapes of disagreement and no defect of ours: `using` declarations, which the
 pinned V8 implements and the 17th edition does not have (so the generator does
 not write one: every program that had one disagreed, which said nothing else),

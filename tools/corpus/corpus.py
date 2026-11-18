@@ -110,7 +110,7 @@ def check_table(rows):
         if shas.setdefault((row.package, row.version), row.tarball_sha) != row.tarball_sha:
             fail("%s %s names two tarball hashes" % (row.package, row.version))
         # Registry names and member paths are never absolute or leave their directory.
-        for part in (row.member, row.license_member, row.package):
+        for part in (row.member, row.license_member, row.package, row.version):
             if part.startswith("/") or ".." in part.split("/"):
                 fail("%r is not a plain relative name" % part)
 
@@ -123,7 +123,8 @@ def fetch(root):
         done.setdefault((row.package, row.version), []).append(row)
     for (package, version), group in done.items():
         if all(os.path.isfile(r.path(root)) and os.path.isfile(r.license_path(root)) and
-               sha256(open(r.path(root), "rb").read()) == r.member_sha for r in group):
+               sha256(open(r.path(root), "rb").read()) == r.member_sha and
+               sha256(open(r.license_path(root), "rb").read()) == r.license_sha for r in group):
             print("have    %s %s" % (package, version))
             continue
         first = group[0]
@@ -142,7 +143,10 @@ def fetch(root):
                                             (row.license_member, row.license_sha, row.license_path(root))):
                     # A member is read by its exact name and written to a path built here: the
                     # tarball's own paths are never used to place a file.
-                    handle = archive.extractfile("package/" + member)
+                    try:
+                        handle = archive.extractfile("package/" + member)
+                    except KeyError:
+                        handle = None
                     if handle is None:
                         fail("%s %s has no member %s" % (package, version, member))
                     body = handle.read()
