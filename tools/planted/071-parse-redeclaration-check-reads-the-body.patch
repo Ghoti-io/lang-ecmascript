@@ -1,0 +1,13 @@
+--- a/src/parse/early.c
++++ b/src/parse/early.c
+@@ -578,7 +578,9 @@
+     }
+     return;
+   }
+-  scope_check(p, &f);
++  if (parser_materializing(p)) {
++    scope_check(p, &f);
++  }
+   // What stays for the scope around: the var declarations, until a function
+   // boundary; everything else ends here.
+   size_t kept = f.first;

@@ -72,5 +72,7 @@
 068|parse-regexp-repeated-search-flag-accepted|A repeated g or y flag is accepted|068-parse-regexp-repeated-search-flag-accepted.patch|test
 069|parse-regexp-checked-only-when-built|A regular expression literal in a function body is validated only when the body is built|069-parse-regexp-checked-only-when-built.patch|test
 070|data-version-pin-differs|The engine pins a Unicode version that unicode and regex do not report|070-data-version-pin-differs.patch|check-data-versions
+071|parse-redeclaration-check-reads-the-body|The redeclaration check runs only for scopes whose nodes were built, which is what a check that read a body node would do|071-parse-redeclaration-check-reads-the-body.patch|check-differential
+072|parse-regexp-check-reads-the-body|A literal is validated only when its node is built|072-parse-regexp-check-reads-the-body.patch|check-differential
 073|parse-directive-flag-left-by-a-nested-body|A string statement that ends a nested function body is taken for a directive of the list around it|073-parse-directive-flag-left-by-a-nested-body.patch|test
 074|parse-heritage-ignores-the-pending-error|A class heritage that is an object literal with a CoverInitializedName is accepted|074-parse-heritage-ignores-the-pending-error.patch|test

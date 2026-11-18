@@ -48,6 +48,8 @@ PARSER_SNIPPETS = {
     "nested": "((((((((((((((((((((x))))))))))))))))))));\n[[[[[[[[[[[[[[[[[[[[x]]]]]]]]]]]]]]]]]]]];\n!!!!!!!!!!!!!!!!!!!!x;\nfunction f() { function g() { function h() { function i() { function j() {} } } } }\n(a = (b = (c = (d = () => 1) => 2) => 3) => 4) => 5;\n",
     "builtin": "%ArrayPrototype(x); y = %B + a % b;\n",
     "templates": "`a${b}c${`d${`e${f}`}`}`; a`\\u{`; `\\01`;",
+    "early-valid": "{ function f() {} function f() {} } try {} catch (e) { var e; } for (let a of b) { let a; var c; } switch (a) { case 1: function g() {} case 2: function g() {} } class D { #p; get #q() {} set #q(v) {} static { var s; } m() { this.#p; #q in this; return () => super.x; } } function h(a, a) { return /(?<n>x)\\k<n>[a-z]+/u.test(a); } outer: for (;;) { inner: while (1) { continue outer; } }\n",
+    "early-invalid": "let a; let a; break; { function f() {} let f; } function g(a = 1) { 'use strict'; } class C { #a; #a; constructor() {} constructor() {} } this.#b; a: a: ; try {} catch ([e]) { var e; } /(/; /a/gg; /[z-a]/; return; super.x; new.target; delete x; with (a) b;\n",
 }
 
 # (label, option byte) for the parser: bit 0 UTF-16, 1 strict, 2 stream,

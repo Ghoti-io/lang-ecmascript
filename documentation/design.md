@@ -612,7 +612,14 @@ Every early error of the edition is reported by the first parse, in every
 strictness, and none reads a node. The checks live in the parser's own
 records (`src/parse/early.c` and the context flags of `parser.h`), so a body
 the checking builder did not build is checked exactly as a built one is; the
-two builders must give the same result for the same input at the same place.
+two builders must give the same result for the same input at the same place,
+and `make check-differential` runs both over every test262 pair in scope (a
+module pair as a Script with the Module goal's settings, which the goal not
+being served would otherwise reduce to nothing) and fails on any difference in
+result, rule or place. It was seen to fail on two plants that make a check
+depend on whether the nodes it concerns were built, which is the only way a
+check can differ between the two. The real-world corpus is run through it
+when that corpus is pinned.
 
 **Context flags** are the grammar's parameters and the static semantics that
 `Contains` expresses, carried in the parser's flags: whether `return`,
@@ -648,7 +655,8 @@ boundary; a scope with no lexical name, function or parameter of its own has
 nothing to check and passes them on untouched. The cost of a var is then
 one record and one check at each enclosing scope that has a lexical name, which
 the nesting cap bounds (measured: 100,000 vars in the innermost of 250 nested
-blocks that each declare a name take 0.15 s). Checking at the end, and not at each declaration, is what lets a
+blocks that each declare a name take 0.16 s, against 0.04 s when no block declares one and 0.05 s for the same
+vars in one block). Checking at the end, and not at each declaration, is what lets a
 directive late in a function body decide whether its parameters may repeat,
 and costs the same linear time: a scope's names are hashed once when it ends.
 *Rejected:* a hash per scope kept up as names are declared, which must also
@@ -753,19 +761,20 @@ depths and takes the slope):
 
 | Shape | Bytes per level | Shape | Bytes per level |
 | --- | --- | --- | --- |
-| `(((x)))` | 1,920 | `{{{}}}` | 256 |
-| `[[[x]]]` | 1,712 | `function f(){function f(){...}}` | 736 |
-| `({a:({a:x})})` | 1,816 | `class A{m(){class A{m(){...}}}}` | 1,264 |
-| `() => () => x` | 1,552 | `if (a) if (a) x;` | 784 |
-| `f(f(f(x)))` | 1,136 | `a = a = x` | 288 |
-| `` `${`${x}`}` `` | 1,728 | `a ? b : a ? b : x` | 336 |
-| `[[[x]]] = y` | 1,712 | `!!!x` | 160 |
-| `(a = (a = x) => 0) => 0` | 1,104 | `a ** a ** x`, `new new x` | 256, 240 |
-| `a: a: x` | 784 | `async function f() { await ...` | 992 |
+| `(((x)))` | 2,144 | `{{{}}}` | 288 |
+| `[[[x]]]` | 1,888 | `function f(){function f(){...}}` | 880 |
+| `({a:({a:x})})` | 2,016 | `class A{m(){class A{m(){...}}}}` | 1,520 |
+| `() => () => x` | 1,808 | `if (a) if (a) x;` | 928 |
+| `f(f(f(x)))` | 1,296 | `a = a = x` | 352 |
+| `` `${`${x}`}` `` | 1,888 | `a ? b : a ? b : x` | 400 |
+| `[[[x]]] = y` | 1,888 | `!!!x` | 176 |
+| `(a = (a = x) => 0) => 0` | 1,248 | `a ** a ** x`, `new new x` | 256, 304 |
+| `l0: l1: x` | 848 | `async function f() { await ...` | 1,104 |
 
-The worst is 1,920 bytes per level (a parenthesized group, which holds a
-snapshot of the parser to return to), the commonest real nesting is a
-function or a block at 256 to 736. An address-sanitized build takes about 4.4
+The worst is 2,144 bytes per level (a parenthesized group, which holds a
+snapshot of the parser to return to; the snapshot grew when story 5 gave the
+parser the stacks of its early errors to cut back, from 1,920), the commonest
+real nesting is a function or a block at 288 to 880. An address-sanitized build takes about 4.4
 KiB for the same input. The frames that hold a snapshot, and the other large
 frames on the recursive path, are marked not to be inlined, because inlining
 them into the path moved the worst case from 1.9 to 2.4 KiB per level on the
@@ -774,7 +783,7 @@ its caller before the arrow function is parsed, so that its frame is not under
 every level of nested arrow bodies.
 
 *Decision.* The default `nesting` is 256 and the default `native_stack_bytes`
-1 MiB. At 256 levels the worst shape takes 492 KB, so the deepest input the
+1 MiB. At 256 levels the worst shape takes 549 KB, so the deepest input the
 default nesting admits parses in under half of the default grant, with the
 reserve to spare, on a thread that has 1 MiB: a test finds, for each of nineteen
 shapes, the deepest input the default admits and parses it with the default

@@ -73,7 +73,12 @@ static char * g_class(size_t n) { return rep("class A{m(){", "", "}}", n); }
 static char * g_pattern(size_t n) { char * a = rep("[", "x", "]", n); char * s = malloc(strlen(a) + 8); sprintf(s, "%s=y", a); free(a); return s; }
 static char * g_arrowparam(size_t n) { return rep("(a=", "x", ")=>0", n); }
 static char * g_new(size_t n) { return rep("new ", "x", "", n); }
-static char * g_label(size_t n) { return rep("a:", "x;", "", n); }
+/* Each label is its own: a label cannot be declared inside itself. */
+static char * g_label(size_t n) {
+  char * s = malloc(n * 12 + 8); char * p = s;
+  for (size_t i = 0; i < n; i++) { p += sprintf(p, "l%zu:", i); }
+  strcpy(p, "x;"); return s;
+}
 static char * g_await(size_t n) { return rep("async function f(){await ", "x", "}", n); }
 static int try_parse(const char * src, uint64_t nesting, uint64_t stack) {
   GLECMA_Source * s; if (glecma_source_create_utf8(src, strlen(src), NULL, NULL, NULL, &s)) return -1;

@@ -31,12 +31,20 @@
  * INTERPRETING.md says), `module` (a Module) and `raw` (a Script exactly as
  * written).
  *
+ * With `--differential` it answers a different question for each pair: it
+ * parses the text with the tree builder and again with the checking builder
+ * (which builds no function body), and answers `SAME <result>` with the rule
+ * and place when it was a syntax error, or `DIFF <tree> | <checking>`. No
+ * check reads a node, so the two must agree (tools/check-differential.py).
+ *
  * It is the only place the gate calls the library: `parse_pair` is a call of
  * the public parse entry. Work not built (the Module goal) answers
  * ERR_UNSUPPORTED, which is never an acceptance and never a SyntaxError.
  */
 
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
+
+#include "parse/parse_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,6 +88,33 @@ static GLECMA_Result parse_pair(GLECMA_Source * source, Mode mode) {
   return result;
 }
 
+// The result, and for a syntax error the rule and where, of one parse with
+// the tree builder or the checking builder, as text.
+static void describe(GLECMA_Source * source, Mode mode, uint32_t internal,
+    char * out, size_t size) {
+  // The Module goal is not served yet, which would answer both builders the
+  // same and compare nothing: a module pair is read as a Script with the Module
+  // goal's settings, so that the checks that hold in a Module are compared.
+  GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+  if (mode == MODE_MODULE) {
+    internal |= GLECMA_PARSE_INTERNAL_MODULE_RULES;
+  }
+  GLECMA_Tree * tree = NULL;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+  GLECMA_Result result = glecma_parse_internal(source, &options, NULL, internal,
+      &failure, &tree);
+  glecma_tree_destroy(tree);
+  if (result == GLECMA_ERR_SYNTAX) {
+    snprintf(out, size, "%s %s@%zu", result_name(result), glecma_rule_name(failure.rule),
+        failure.location.offset);
+  } else if (result == GLECMA_ERR_LIMIT) {
+    snprintf(out, size, "%s %s", result_name(result),
+        failure.limit != NULL ? failure.limit : "?");
+  } else {
+    snprintf(out, size, "%s", result_name(result));
+  }
+}
+
 static int read_file(const char * path, char ** text, size_t * length) {
   FILE * file = fopen(path, "rb");
   if (file == NULL) {
@@ -119,7 +154,8 @@ static int read_file(const char * path, char ** text, size_t * length) {
   return 1;
 }
 
-int main(void) {
+int main(int argc, char ** argv) {
+  const int differential = argc > 1 && strcmp(argv[1], "--differential") == 0;
   static const char directive[] = "\"use strict\";\n";
   static char line[1 << 14];
   while (fgets(line, sizeof line, stdin) != NULL) {
@@ -167,6 +203,21 @@ int main(void) {
     GLECMA_Source * source = NULL;
     GLECMA_Result result = glecma_source_create_utf8(
         begin, begin_length, NULL, NULL, &failure, &source);
+    if (result == GLECMA_OK && differential) {
+      char tree_answer[160], checking_answer[160];
+      describe(source, mode, 0, tree_answer, sizeof tree_answer);
+      describe(source, mode, GLECMA_PARSE_INTERNAL_CHECKING, checking_answer,
+          sizeof checking_answer);
+      if (strcmp(tree_answer, checking_answer) == 0) {
+        printf("SAME %s\n", tree_answer);
+      } else {
+        printf("DIFF %s | %s\n", tree_answer, checking_answer);
+      }
+      glecma_source_release(source);
+      free(prefixed);
+      free(text);
+      continue;
+    }
     if (result == GLECMA_OK) {
       result = parse_pair(source, mode);
       glecma_source_release(source);
