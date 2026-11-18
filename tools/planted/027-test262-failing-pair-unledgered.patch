@@ -1,10 +1,11 @@
---- a/tests/data-test262-pending.tsv
-+++ b/tests/data-test262-pending.tsv
-@@ -7,7 +7,6 @@
- # A selector ending in / names every file under that directory; the mode is * or one mode.
- # The ledger is empty when the parser is complete.
- # selector	mode	reason	cleared by
--test/built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
- test/language/comments/hashbang/module.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
- test/language/eval-code/direct/export.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
- test/language/eval-code/direct/import.js	*	the Module goal is not built: a Module parse answers unsupported, which never scores	M1 story 6
+--- a/src/parse/module.c
++++ b/src/parse/module.c
+@@ -555,7 +555,7 @@
+       return parse_import_declaration(p);
+     }
+   } else if (parser_is_kw(p, GLECMA_KW_EXPORT)) {
+-    return parse_export_declaration(p);
++    parser_unexpected(p);
+   }
+   return parse_statement_list_item(p);
+ }

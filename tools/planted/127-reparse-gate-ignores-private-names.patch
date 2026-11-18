@@ -1,0 +1,13 @@
+--- a/tests/reparse_support.h
++++ b/tests/reparse_support.h
+@@ -314,9 +314,7 @@
+         s->stats->flags[bit]++;
+       }
+     }
+-    if (ctx.names > 0) {
+-      s->stats->with_names++;
+-    }
++    (void)0;
+   }
+ }
+ 

@@ -1,0 +1,13 @@
+--- a/src/parse/module.c
++++ b/src/parse/module.c
+@@ -484,9 +484,7 @@
+   static const uint16_t default_name[] = {'d', 'e', 'f', 'a', 'u', 'l', 't'};
+   GLECMA_Result named = p->builder->ops->text(p->builder, default_name, 7, true,
+       &name);
+-  if (named != GLECMA_OK) {
+-    parser_fail_result(p, named);
+-  }
++  (void)named;
+   add_export(p, name.units, &at, at.offset);
+   parser_kid(p, value);
+   return parser_make(p, GLECMA_NODE_EXPORT_DEFAULT, 0, 0, start, p->prev_end,

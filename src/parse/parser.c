@@ -354,7 +354,11 @@ bool parser_memo_has(const Parser * p, size_t key) {
 /* ---- Sets of interned names ------------------------------------------------ */
 
 static size_t ptr_slot(const uint16_t * key, size_t mask) {
-  return (size_t)(((uintptr_t)key >> 4) * (uintptr_t)0x9E3779B97F4A7C15ull >> 20) & mask;
+  // 64-bit arithmetic on every target: a 32-bit uintptr_t would truncate the
+  // multiplier and leave 12 bits of index, whatever the table's size.
+  uint64_t h = (uint64_t)(uintptr_t)key >> 4;
+  h *= UINT64_C(0x9E3779B97F4A7C15);
+  return (size_t)(h >> 32) & mask;
 }
 
 // Adds a key; false when it was already there.
@@ -468,7 +472,9 @@ GLECMA_BNode parser_make(Parser * p, uint32_t kind, uint32_t flags,
   spec.op = op;
   spec.start = start;
   spec.end = end;
-  spec.children = p->kids + kids_mark;
+  // No pointer arithmetic on the children array before it exists: a node with no
+  // child may be the first thing the parse makes.
+  spec.children = p->kids != NULL ? p->kids + kids_mark : NULL;
   spec.child_count = p->kids_len - kids_mark;
   GLECMA_BNode node = NULL;
   GLECMA_Result r = p->builder->ops->node(p->builder, &spec, &node);
@@ -490,7 +496,9 @@ GLECMA_BNode parser_make_body(Parser * p, uint32_t kind, uint32_t flags,
   spec.flags = flags;
   spec.start = start;
   spec.end = end;
-  spec.children = p->kids + kids_mark;
+  // No pointer arithmetic on the children array before it exists: a node with no
+  // child may be the first thing the parse makes.
+  spec.children = p->kids != NULL ? p->kids + kids_mark : NULL;
   spec.child_count = p->kids_len - kids_mark;
   GLECMA_BNode node = NULL;
   GLECMA_Result r = p->builder->ops->body_end(p->builder, &spec, &node);

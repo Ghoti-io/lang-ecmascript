@@ -306,12 +306,25 @@ GLECMA_Result glecma_lexer_set_range(GLECMA_Lexer * lexer, size_t start,
   if (lexer == NULL || start >= end || end > lexer->source->units) {
     return GLECMA_ERR_INVALID;
   }
-  GLECMA_Location from = {0, 0, 0};
-  if (glecma_source_location(lexer->source, start, &from) != GLECMA_OK) {
-    return GLECMA_ERR_INVALID;
+  // The range ends at a code point, not inside one: a UTF-8 continuation byte,
+  // or the low half of a surrogate pair, is the middle of one. (The start's
+  // location is looked up below, which refuses the same for the start.)
+  const GLECMA_Source * source = lexer->source;
+  if (end < source->units) {
+    if (source->encoding == GLECMA_ENCODING_UTF8) {
+      if ((((const uint8_t *)source->text)[end] & 0xC0u) == 0x80u) {
+        return GLECMA_ERR_INVALID;
+      }
+    } else {
+      const uint16_t * units = (const uint16_t *)source->text;
+      if (units[end] >= 0xDC00u && units[end] <= 0xDFFFu && units[end - 1] >= 0xD800u &&
+          units[end - 1] <= 0xDBFFu) {
+        return GLECMA_ERR_INVALID;
+      }
+    }
   }
-  GLECMA_Location to = {0, 0, 0};
-  if (glecma_source_location(lexer->source, end, &to) != GLECMA_OK) {
+  GLECMA_Location from = {0, 0, 0};
+  if (glecma_source_location(source, start, &from) != GLECMA_OK) {
     return GLECMA_ERR_INVALID;
   }
   glecma_lexer_reset(lexer, &from);

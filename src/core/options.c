@@ -120,6 +120,33 @@ static const char * const defined_features[] = {
   NULL
 };
 
+// How many names a set holds that it has room for.
+static size_t feature_set_held(const GLECMA_FeatureSet * set) {
+  if (set == NULL || (size_t)set->size < FEATURE_SET_HEADER_SIZE) {
+    return 0;
+  }
+  size_t count = set->count;
+  size_t capacity = feature_set_capacity(set);
+  return count < capacity ? count : capacity;
+}
+
+bool glecma_feature_set_same(const GLECMA_FeatureSet * a,
+    const GLECMA_FeatureSet * b) {
+  const size_t count_a = feature_set_held(a);
+  const size_t count_b = feature_set_held(b);
+  // A set holds a name once (glecma_feature_set_add), so equal counts and
+  // each name of one in the other is the same set.
+  if (count_a != count_b) {
+    return false;
+  }
+  for (size_t i = 0; i < count_a; i++) {
+    if (!glecma_feature_set_has(b, a->names[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool glecma_feature_built(const char * name) {
   if (name == NULL) {
     return false;

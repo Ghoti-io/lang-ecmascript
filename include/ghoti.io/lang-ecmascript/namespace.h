@@ -132,6 +132,7 @@
 #define GLECMA_ValueKind GHOTIIO_LANG_ECMASCRIPT(GLECMA_ValueKind)
 #define glecma_failure_set GHOTIIO_LANG_ECMASCRIPT(glecma_failure_set)
 #define glecma_feature_built GHOTIIO_LANG_ECMASCRIPT(glecma_feature_built)
+#define glecma_feature_set_same GHOTIIO_LANG_ECMASCRIPT(glecma_feature_set_same)
 #define glecma_feature_set_first_unbuilt \
   GHOTIIO_LANG_ECMASCRIPT(glecma_feature_set_first_unbuilt)
 #define glecma_keyword_text GHOTIIO_LANG_ECMASCRIPT(glecma_keyword_text)

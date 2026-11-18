@@ -1,0 +1,13 @@
+--- a/src/core/options.c
++++ b/src/core/options.c
+@@ -125,9 +125,7 @@
+   if (set == NULL || (size_t)set->size < FEATURE_SET_HEADER_SIZE) {
+     return 0;
+   }
+-  size_t count = set->count;
+-  size_t capacity = feature_set_capacity(set);
+-  return count < capacity ? count : capacity;
++  return set->count;
+ }
+ 
+ bool glecma_feature_set_same(const GLECMA_FeatureSet * a,

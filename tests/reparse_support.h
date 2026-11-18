@@ -59,9 +59,14 @@
 extern "C" {
 #endif
 
+/* The context flags a function can be read in, in the order of their bits, with the declaration form last. */
+#define RP_FLAG_COUNT 10
+
 typedef struct RpStats {
   uint64_t functions;                     /* functions read again */
   uint64_t kinds[GLECMA_FNKIND_COUNT];    /* by kind */
+  uint64_t flags[RP_FLAG_COUNT];          /* functions read with each context flag (bit 9: written as a declaration) */
+  uint64_t with_names;                    /* functions read with private names in scope */
 } RpStats;
 
 /* The context the code at a point of the tree is in: the flags and how many private names are visible. */
@@ -302,6 +307,17 @@ static inline void rp_check(RpState * s, const GLECMA_Node * node, uint32_t kind
   }
   s->stats->functions++;
   s->stats->kinds[kind]++;
+  {
+    const uint32_t seen = (ctx.flags & GLECMA_CONTEXT_FUNCTION_MASK) | (declaration ? 0x200u : 0u);
+    for (unsigned bit = 0; bit < RP_FLAG_COUNT; bit++) {
+      if ((seen >> bit) & 1u) {
+        s->stats->flags[bit]++;
+      }
+    }
+    if (ctx.names > 0) {
+      s->stats->with_names++;
+    }
+  }
 }
 
 static inline bool rp_push_name(RpState * s, const uint16_t * units, size_t length) {

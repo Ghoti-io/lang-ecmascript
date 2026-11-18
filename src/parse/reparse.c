@@ -85,9 +85,11 @@ static GLECMA_BNode read_function(Parser * p, const ReparseData * data) {
     parser_next(p); // `async`
   }
   // A declaration binds its name in the code around it, which here is the scope
-  // of the read; its name may be missing only in `export default function () {}`.
+  // of the read; its name may be missing only in `export default function () {}`,
+  // which is a module's.
   return data->declaration
-      ? parse_function_declaration(p, start, is_async, true, true).node
+      ? parse_function_declaration(p, start, is_async, true,
+            (p->flags & PF_MODULE) != 0).node
       : parse_function_expression(p, start, is_async).node;
 }
 
@@ -151,12 +153,11 @@ static void run_function(Parser * p, GLECMA_Tree * tree, const ParseJob * job,
     case GLECMA_FNKIND_METHOD:
     case GLECMA_FNKIND_GETTER:
     case GLECMA_FNKIND_SETTER:
-      node = parse_method_range(p, false, false);
+      node = parse_method_range(p, data->kind);
       break;
     case GLECMA_FNKIND_CONSTRUCTOR:
     case GLECMA_FNKIND_DERIVED_CONSTRUCTOR:
-      node = parse_method_range(p, true,
-          data->kind == GLECMA_FNKIND_DERIVED_CONSTRUCTOR);
+      node = parse_method_range(p, data->kind);
       break;
     case GLECMA_FNKIND_FIELD_INITIALIZER:
       node = read_initializer(p);
@@ -181,21 +182,6 @@ static void run_function(Parser * p, GLECMA_Tree * tree, const ParseJob * job,
 #define CONTEXT_WITHIN(size, member)                                           \
   ((size_t)(size) >= offsetof(GLECMA_FunctionContext, member) +                \
           sizeof(((GLECMA_FunctionContext *)0)->member))
-
-// Whether two feature sets name the same features, in any order.
-static bool same_features(const GLECMA_FeatureSet * a, const GLECMA_FeatureSet * b) {
-  const uint32_t count_a = a != NULL ? a->count : 0u;
-  const uint32_t count_b = b != NULL ? b->count : 0u;
-  if (count_a != count_b) {
-    return false;
-  }
-  for (uint32_t i = 0; i < count_a; i++) {
-    if (!glecma_feature_set_has(b, a->names[i])) {
-      return false;
-    }
-  }
-  return true;
-}
 
 GLECMA_Result glecma_parse_function_internal(GLECMA_Source * source,
     const GLECMA_FunctionContext * context, const GLECMA_ParseOptions * options,
@@ -256,7 +242,7 @@ GLECMA_Result glecma_parse_function_internal(GLECMA_Source * source,
           options->size >= offsetof(GLECMA_ParseOptions, features) +
               sizeof(options->features)
       ? options->features : NULL;
-  if (!same_features(c.features, features)) {
+  if (!glecma_feature_set_same(c.features, features)) {
     return parser_refuse(failure, GLECMA_ERR_INVALID,
         "the function context and the parse options name different feature sets");
   }

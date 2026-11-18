@@ -232,7 +232,10 @@ typedef struct NameTable {
 } NameTable;
 
 static size_t name_slot(const uint16_t * name, size_t mask) {
-  return (size_t)(((uintptr_t)name >> 4) * (uintptr_t)0x9E3779B97F4A7C15ull >> 20) & mask;
+  // 64-bit arithmetic on every target (see ptr_slot in parser.c).
+  uint64_t h = (uint64_t)(uintptr_t)name >> 4;
+  h *= UINT64_C(0x9E3779B97F4A7C15);
+  return (size_t)(h >> 32) & mask;
 }
 
 static void table_free(Parser * p, NameTable * table) {
@@ -282,7 +285,7 @@ static void early_outer_answer(Parser * p, size_t first) {
 void early_class_leave(Parser * p) {
   const ClassFrame frame = p->classes[--p->class_len];
   const size_t count = p->priv_decl_len - frame.decl_first;
-  const PrivDecl * decls = p->priv_decls + frame.decl_first;
+  const PrivDecl * decls = p->priv_decls != NULL ? p->priv_decls + frame.decl_first : NULL;
   NameTable table = {NULL, NULL, NULL, 0};
   if (count > 0) {
     table_open(p, &table, count);
@@ -490,7 +493,7 @@ static GLECMA_Location location_of(const Parser * p, size_t offset) {
 // The records of a scope that is ending, looked at together: the first that
 // clashes with an earlier one under the same name is the error.
 static void scope_check(Parser * p, const Frame * f) {
-  const ScopeRec * recs = p->recs + f->first;
+  const ScopeRec * recs = p->recs != NULL ? p->recs + f->first : NULL;
   const size_t count = p->rec_len - f->first;
   if (count < 2) {
     return;

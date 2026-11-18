@@ -107,10 +107,12 @@ typedef struct GLECMA_DynamicFunction {
  * The tree's goal is ::GLECMA_PARSE_DYNAMIC_FUNCTION and its strictness that of
  * the body (a "use strict" directive in it makes the function strict).
  *
- * A failure's location is in the text that was being read: the parameters', the body's
- * (the line feed the algorithm puts in front of it is not counted), or, for an
- * error only the assembled text has (a duplicate parameter in strict code, a
- * directive with non-simple parameters), the assembled text, which only a
+ * A failure found in one piece alone (the parameters, or the body) is placed in
+ * the source the caller gave for it, in that source's own units, line and
+ * column: the line feed the algorithm puts before the body is not counted, and
+ * an error at the end of the text is at the end of the piece. A failure only the
+ * assembled text has (a duplicate parameter in strict code, a directive over
+ * non-simple parameters) is in the assembled text, in UTF-16 units, which only a
  * successful call returns.
  *
  * @param function The pieces.

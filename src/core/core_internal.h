@@ -157,6 +157,15 @@ GLECMA_INTERNAL_API bool glecma_private_names_valid(
 GLECMA_INTERNAL_API bool glecma_feature_built(const char * name);
 
 /**
+ * @brief Whether two feature sets name the same features, in any order.
+ *
+ * A NULL set is the empty one, and a set is read as the library reads one
+ * everywhere: no further than its `size` has room for.
+ */
+GLECMA_INTERNAL_API bool glecma_feature_set_same(const GLECMA_FeatureSet * a,
+    const GLECMA_FeatureSet * b);
+
+/**
  * @brief The first feature of a set that the build lacks.
  *
  * @param features The set, or NULL.

@@ -263,7 +263,18 @@ GLECMA_Result glecma_source_cursor_seek(GLECMA_SourceCursor * cursor,
     .line = checkpoint->line,
     .column = checkpoint->column,
   };
+  const uint8_t * const bytes = (const uint8_t *)source->text;
+  const uint16_t * const wide = (const uint16_t *)source->text;
+  const bool utf8 = source->encoding == GLECMA_ENCODING_UTF8;
   while (walk.offset < offset) {
+    // A unit below 0x80 that is not a line terminator is one code point of one
+    // column: most of any source, and what a seek is walking over.
+    const uint32_t unit = utf8 ? bytes[walk.offset] : wide[walk.offset];
+    if (unit < 0x80u && unit != 0x0Au && unit != 0x0Du) {
+      walk.offset++;
+      walk.column++;
+      continue;
+    }
     if (!glecma_source_cursor_next(&walk, NULL, NULL)) {
       return GLECMA_ERR_INTERNAL;
     }

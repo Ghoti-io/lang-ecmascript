@@ -1,0 +1,15 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -291,11 +291,7 @@
+   if (allocator == NULL) {
+     allocator = glecma_allocator_default();
+   }
+-  if (allocator->malloc_fn == NULL || allocator->calloc_fn == NULL ||
+-      allocator->realloc_fn == NULL || allocator->free_fn == NULL) {
+-    return parser_refuse(failure, GLECMA_ERR_INVALID,
+-        "the allocator has a NULL function");
+-  }
++  (void)0;
+ 
+   // The kind: its prefix and what its code is.
+   static const char * const prefixes[] = {"function", "function*",

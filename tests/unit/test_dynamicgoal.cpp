@@ -90,6 +90,63 @@ bool Accepts(uint32_t kind, const std::string & parameters, const std::string & 
 
 }  // namespace
 
+TEST(DynamicFunction, AFailureIsPlacedInThePieceTheCallerGaveInItsOwnUnits) {
+  // An error at the end of the text is at the end of the piece, not past it.
+  auto end = Make(GLECMA_DYNFN_FUNCTION, "", "x +");
+  ASSERT_EQ(end->result, GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(end->failure.location.offset, 3u);
+  EXPECT_EQ(end->failure.location.line, 1u);
+  EXPECT_EQ(end->failure.location.column, 3u);
+  auto empty_end = Make(GLECMA_DYNFN_FUNCTION, "a,,", "");
+  ASSERT_EQ(empty_end->result, GLECMA_ERR_SYNTAX);
+  EXPECT_LE(empty_end->failure.location.offset, 3u);
+  auto lines = Make(GLECMA_DYNFN_FUNCTION, "", "x;\ny +");
+  ASSERT_EQ(lines->result, GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(lines->failure.location.offset, 6u);
+  EXPECT_EQ(lines->failure.location.line, 2u);
+  // A UTF-8 piece's offsets are its own bytes, and its columns UTF-16 units: an astral character
+  // is four bytes and two units.
+  const std::string body = "'\xF0\x9F\x98\x80' x";  // '😀' x
+  auto astral = Make(GLECMA_DYNFN_FUNCTION, "", body);
+  ASSERT_EQ(astral->result, GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(astral->failure.location.offset, 7u);
+  EXPECT_EQ(astral->failure.location.column, 5u);
+  auto parameters = Make(GLECMA_DYNFN_FUNCTION, "\xF0\x9D\x92\x9C \xF0\x9D\x92\x9C", "");  // two names of U+1D49C
+  ASSERT_EQ(parameters->result, GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(parameters->failure.location.offset, 5u);
+  EXPECT_EQ(parameters->failure.location.column, 3u);
+  // A UTF-16 piece is its own text.
+  GLECMA_Source * wide = Utf16(u"'\xD83D\xDE00' x");
+  GLECMA_DynamicFunction function = GLECMA_DYNAMIC_FUNCTION_INIT;
+  function.body = wide;
+  GLECMA_Tree * tree = nullptr;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+  ASSERT_EQ(glecma_parse_dynamic_function(&function, nullptr, nullptr, &failure, &tree), GLECMA_ERR_SYNTAX);
+  EXPECT_EQ(failure.location.offset, 5u);
+  glecma_source_release(wide);
+}
+
+TEST(DynamicFunction, AnAllocatorWithoutAFunctionIsRefusedNotCalled) {
+  GLECMA_Allocator broken = *glecma_allocator_default();
+  GLECMA_Source * body = Utf8("return 1;");
+  GLECMA_DynamicFunction function = GLECMA_DYNAMIC_FUNCTION_INIT;
+  function.body = body;
+  GLECMA_Tree * tree = nullptr;
+  GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+  for (int hole = 0; hole < 4; hole++) {
+    GLECMA_Allocator a = broken;
+    switch (hole) {
+      case 0: a.malloc_fn = nullptr; break;
+      case 1: a.calloc_fn = nullptr; break;
+      case 2: a.realloc_fn = nullptr; break;
+      default: a.free_fn = nullptr; break;
+    }
+    EXPECT_EQ(glecma_parse_dynamic_function(&function, nullptr, &a, &failure, &tree), GLECMA_ERR_INVALID) << hole;
+    EXPECT_EQ(tree, nullptr);
+  }
+  glecma_source_release(body);
+}
+
 TEST(DynamicFunction, TheTreeIsTheFunctionExpressionOfTheAssembledText) {
   // "function anonymous(a,b\n) {\nx\n}": the text CreateDynamicFunction assembles.
   auto made = Make(GLECMA_DYNFN_FUNCTION, "a,b", "x");

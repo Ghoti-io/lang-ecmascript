@@ -1,0 +1,11 @@
+--- a/src/parse/func.c
++++ b/src/parse/func.c
+@@ -371,7 +371,7 @@
+   p->lex = after_key;
+   p->tok = token;
+   p->prev_end = end_of_key;
+-  if (!as_kind || p->tok.kind != GLECMA_TOK_LPAREN) {
++  if (p->tok.kind != GLECMA_TOK_LPAREN) {
+     parser_unexpected(p);
+   }
+   uint32_t kind = fn | FN_METHOD;

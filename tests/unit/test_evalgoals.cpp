@@ -28,7 +28,9 @@
 
 #include "../parse_test_support.h"
 #include "../test_helpers.h"
+#include "core/core_internal.h"
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -195,6 +197,16 @@ TEST(EvalGoals, StrictnessIsTheCallersAndCanOnlyBeAdded) {
       GLECMA_CONTEXT_STRICT);
   EXPECT_EQ(by_options.result, GLECMA_ERR_SYNTAX);
   EXPECT_TRUE(ParseWith("a;", GLECMA_PARSE_DIRECT_EVAL, nullptr, 0, GLECMA_CONTEXT_STRICT).result == GLECMA_OK);
+  // The context the tree keeps says the code was strict however the caller said it, so a compiler
+  // that reads the context needs nothing else.
+  auto kept = ParseWith("a;", GLECMA_PARSE_DIRECT_EVAL, nullptr, 0, GLECMA_CONTEXT_STRICT);
+  ASSERT_EQ(kept.result, GLECMA_OK);
+  EXPECT_EQ(glecma_tree_eval_context(kept.tree)->flags, GLECMA_CONTEXT_STRICT);
+  GLECMA_EvalContext mixed = GLECMA_EVAL_CONTEXT_INIT;
+  mixed.flags = kFn;
+  auto both = ParseWith("a;", GLECMA_PARSE_DIRECT_EVAL, &mixed, 0, GLECMA_CONTEXT_STRICT);
+  ASSERT_EQ(both.result, GLECMA_OK);
+  EXPECT_EQ(glecma_tree_eval_context(both.tree)->flags, kFn | GLECMA_CONTEXT_STRICT);
   // No directive undoes it.
   EXPECT_TRUE(glecma_tree_strict(Direct("'use sloppy'; a;", GLECMA_CONTEXT_STRICT).tree));
 }
@@ -377,6 +389,42 @@ TEST(EvalGoals, AnEvalContextIsCheckedBeforeAnyWork) {
   ASSERT_EQ(glecma_parse(source, &options, nullptr, nullptr, &tree), GLECMA_OK);
   glecma_tree_destroy(tree);
   glecma_source_release(source);
+}
+
+TEST(EvalGoals, FeatureSetsAreComparedAsTheLibraryReadsThemEverywhere) {
+  // The comparison a function re-parse makes of the first parse's set and the options': a set
+  // is its names in any order, a NULL one is empty, and a set is not read past its size.
+  GLECMA_FeatureSet a = GLECMA_FEATURE_SET_INIT, b = GLECMA_FEATURE_SET_INIT;
+  EXPECT_TRUE(glecma_feature_set_same(nullptr, nullptr));
+  EXPECT_TRUE(glecma_feature_set_same(&a, nullptr));
+  EXPECT_TRUE(glecma_feature_set_same(nullptr, &b));
+  ASSERT_EQ(glecma_feature_set_add(&a, "alpha"), GLECMA_OK);
+  EXPECT_FALSE(glecma_feature_set_same(&a, &b));
+  EXPECT_FALSE(glecma_feature_set_same(&b, &a));
+  EXPECT_FALSE(glecma_feature_set_same(&a, nullptr));
+  ASSERT_EQ(glecma_feature_set_add(&b, "alpha"), GLECMA_OK);
+  EXPECT_TRUE(glecma_feature_set_same(&a, &b));
+  ASSERT_EQ(glecma_feature_set_add(&a, "beta"), GLECMA_OK);
+  ASSERT_EQ(glecma_feature_set_add(&b, "gamma"), GLECMA_OK);
+  EXPECT_FALSE(glecma_feature_set_same(&a, &b));  // the same count, other names
+  ASSERT_EQ(glecma_feature_set_add(&a, "gamma"), GLECMA_OK);
+  ASSERT_EQ(glecma_feature_set_add(&b, "beta"), GLECMA_OK);
+  EXPECT_TRUE(glecma_feature_set_same(&a, &b));    // the same names in another order
+  // A set whose count claims more than it has room for is read as far as it goes; one whose size
+  // is below the header holds nothing.
+  GLECMA_FeatureSet claims = GLECMA_FEATURE_SET_INIT;
+  claims.count = 1000;
+  GLECMA_FeatureSet full = GLECMA_FEATURE_SET_INIT;
+  for (int i = 0; i < 16; i++) {
+    std::string name = "n" + std::to_string(i);
+    ASSERT_EQ(glecma_feature_set_add(&full, name.c_str()), GLECMA_OK);
+    std::memcpy(claims.names[i], full.names[i], sizeof(claims.names[i]));
+  }
+  EXPECT_TRUE(glecma_feature_set_same(&claims, &full));
+  GLECMA_FeatureSet tiny = GLECMA_FEATURE_SET_INIT;
+  tiny.size = 4;
+  tiny.count = 5;
+  EXPECT_TRUE(glecma_feature_set_same(&tiny, nullptr));
 }
 
 TEST(EvalGoals, ADefaultingCallFillsOnlyWhatTheSizeDeclares) {

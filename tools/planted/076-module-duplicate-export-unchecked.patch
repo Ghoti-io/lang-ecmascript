@@ -1,11 +1,11 @@
 --- a/src/parse/module.c
 +++ b/src/parse/module.c
-@@ -143,7 +143,7 @@
- 
+@@ -146,7 +146,7 @@
+ // offset is looked up only for the error, which is not the common case.
  static void add_export(Parser * p, const uint16_t * name,
-     const GLECMA_Location * at) {
+     const GLECMA_Location * at, size_t offset) {
 -  if (!parser_ptrset_add(p, &p->export_names, name)) {
 +  if (parser_ptrset_add(p, &p->export_names, name) && 0) {
-     parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, at);
+     GLECMA_Location where = at != NULL ? *at : location_of(p, offset);
+     parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, &where);
    }
- }

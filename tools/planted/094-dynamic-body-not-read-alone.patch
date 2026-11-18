@@ -1,6 +1,6 @@
 --- a/src/parse/dynamic.c
 +++ b/src/parse/dynamic.c
-@@ -343,14 +343,7 @@
+@@ -392,14 +392,7 @@
    }
    if (result == GLECMA_OK) {
      // 2. The body, alone.
@@ -10,7 +10,7 @@
 -    glecma_tree_destroy(discarded);
      discarded = NULL;
 -    if (result != GLECMA_OK) {
--      place_in_body(failure);
+-      place_in_piece(failure, body, 1);
 -    }
    }
    if (result == GLECMA_OK) {

@@ -13,8 +13,9 @@ initializers and static blocks), derives the context each had from the tree
 (tests/reparse_support.h) and reads it again. A wrong context flag, planted,
 makes it fail (tools/planted).
 
-It also fails when a kind of function was never read again, so that a driver
-that finds no functions of some kind cannot pass for having checked them.
+It also fails when a kind of function, a context flag or a private name in
+scope was never present in a function that was read again, so that a driver
+that finds none cannot pass for having checked them.
 
 Usage: check-reparse.py --root DIR --sums FILE --classification FILE
            --tags FILE --driver PROGRAM
@@ -30,6 +31,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("check_test262", os.path.join(HERE, "check-test262.py"))
 ct = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ct)
+
+# The context flags, in the order of their bits, then the declaration form, as the driver prints them.
+FLAGS = ["strict", "new.target", "super property", "super call", "field initializer",
+         "static block", "yield", "await", "module", "written as a declaration"]
 
 # The kinds, in the order of GLECMA_FNKIND_* from 1.
 KINDS = ["function", "generator", "async function", "async generator", "arrow",
@@ -65,17 +70,22 @@ def main():
     if len(answers) != len(pairs):
         ct.fail("the driver answered %d lines for %d pairs" % (len(answers), len(pairs)))
     totals = [0] * len(KINDS)
+    flag_totals = [0] * len(FLAGS)
+    names_total = 0
     parsed = functions = skipped = 0
     failures = []
     for (name, mode, _expect), answer in zip(pairs, answers):
         if answer.startswith("REPARSED "):
             numbers = [int(n) for n in answer.split()[1:]]
-            if len(numbers) != 1 + len(KINDS):
+            if len(numbers) != 1 + len(KINDS) + len(FLAGS) + 1:
                 ct.fail("a driver line has the wrong shape: %s" % answer)
             parsed += 1
             functions += numbers[0]
-            for i, n in enumerate(numbers[1:]):
+            for i, n in enumerate(numbers[1:1 + len(KINDS)]):
                 totals[i] += n
+            for i, n in enumerate(numbers[1 + len(KINDS):1 + len(KINDS) + len(FLAGS)]):
+                flag_totals[i] += n
+            names_total += numbers[-1]
         elif answer.startswith("SKIP "):
             skipped += 1
         else:
@@ -83,6 +93,8 @@ def main():
     print("check-reparse: %d pairs parsed (%d refused, which have no tree), %d functions read again, %d that do not equal the first parse's"
           % (parsed, skipped, functions, len(failures)))
     print("  by kind: " + ", ".join("%s %d" % (k, n) for k, n in zip(KINDS, totals)))
+    print("  by context: " + ", ".join("%s %d" % (k, n) for k, n in zip(FLAGS, flag_totals)) +
+          ", private names in scope %d" % names_total)
     if failures:
         for name, mode, answer in failures[:8]:
             print("  %s [%s]: %s" % (name, mode, answer), file=sys.stderr)
@@ -90,6 +102,12 @@ def main():
     never = [k for k, n in zip(KINDS, totals) if n == 0]
     if never:
         ct.fail("no function of these kinds was read again, so the check did not cover them: %s" % ", ".join(never))
+    # A flag no function was read with is a flag the check cannot have seen fail.
+    unseen = [k for k, n in zip(FLAGS, flag_totals) if n == 0]
+    if names_total == 0:
+        unseen.append("private names in scope")
+    if unseen:
+        ct.fail("no function was read again with these contexts, so the check did not cover them: %s" % ", ".join(unseen))
 
 
 if __name__ == "__main__":

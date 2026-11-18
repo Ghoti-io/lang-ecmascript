@@ -45,6 +45,7 @@
 
 #include <ghoti.io/lang-ecmascript/macros.h>
 
+#include <ghoti.io/lang-ecmascript/goals.h>
 #include <ghoti.io/lang-ecmascript/tree.h>
 
 #include "core/core_internal.h"
@@ -630,10 +631,12 @@ GLECMA_INTERNAL_API GLECMA_BNode parse_formal_parameters(Parser * p,
  * @brief A method, getter, setter or constructor read again from the text of its
  *   `toString`, in the flags of the class around it (func.c).
  *
+ * @param kind One of GLECMA_FNKIND_METHOD, _GETTER, _SETTER, _CONSTRUCTOR and
+ *   _DERIVED_CONSTRUCTOR; the text must be what the kind says (a getter has
+ *   `get`, a constructor no modifier and the name `constructor`).
  * @return The member's function node (a FUNCTION_EXPRESSION).
  */
-GLECMA_INTERNAL_API GLECMA_BNode parse_method_range(Parser * p, bool constructor,
-    bool derived);
+GLECMA_INTERNAL_API GLECMA_BNode parse_method_range(Parser * p, uint32_t kind);
 /** @brief A static block read again, from `static` to its closing brace. */
 GLECMA_INTERNAL_API GLECMA_BNode parse_static_block_range(Parser * p);
 /**

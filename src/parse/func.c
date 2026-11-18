@@ -321,7 +321,7 @@ static void parse_static_block(Parser * p, size_t start) {
 // and is then forgotten: the builder is taken back to where it stood, so that a
 // computed name's references and functions are not the method's. What the
 // first parse made of the member is the function node alone, and so is this.
-GLECMA_BNode parse_method_range(Parser * p, bool constructor, bool derived) {
+GLECMA_BNode parse_method_range(Parser * p, uint32_t member) {
   const size_t start = p->tok.start.offset;
   uint32_t fn = 0;
   GLECMA_Token after;
@@ -345,6 +345,25 @@ GLECMA_BNode parse_method_range(Parser * p, bool constructor, bool derived) {
   parser_snap(p, &snap);
   PKey key;
   parse_property_key(p, &key, true);
+  // The text must be what the kind says it is: a function read as another is
+  // not the function the first parse read.
+  bool as_kind;
+  switch (member) {
+    case GLECMA_FNKIND_GETTER:
+      as_kind = (fn & FN_GETTER) != 0;
+      break;
+    case GLECMA_FNKIND_SETTER:
+      as_kind = (fn & FN_SETTER) != 0;
+      break;
+    case GLECMA_FNKIND_METHOD:
+      as_kind = (fn & (FN_GETTER | FN_SETTER)) == 0;
+      break;
+    default: // a constructor: no modifier, and its name is `constructor`
+      as_kind = fn == 0 && !key.computed && !key.is_private &&
+          (key.tok.kind == GLECMA_TOK_NAME || key.tok.kind == GLECMA_TOK_STRING) &&
+          token_value_is(p, &key.tok, "constructor");
+      break;
+  }
   const GLECMA_Lexer after_key = p->lex;
   const GLECMA_Token token = p->tok;
   const size_t end_of_key = p->prev_end;
@@ -352,12 +371,12 @@ GLECMA_BNode parse_method_range(Parser * p, bool constructor, bool derived) {
   p->lex = after_key;
   p->tok = token;
   p->prev_end = end_of_key;
-  if (p->tok.kind != GLECMA_TOK_LPAREN) {
+  if (!as_kind || p->tok.kind != GLECMA_TOK_LPAREN) {
     parser_unexpected(p);
   }
   uint32_t kind = fn | FN_METHOD;
-  if (constructor) {
-    kind |= FN_CONSTRUCTOR | (derived ? FN_DERIVED : 0u);
+  if (member == GLECMA_FNKIND_CONSTRUCTOR || member == GLECMA_FNKIND_DERIVED_CONSTRUCTOR) {
+    kind |= FN_CONSTRUCTOR | (member == GLECMA_FNKIND_DERIVED_CONSTRUCTOR ? FN_DERIVED : 0u);
   }
   return parse_method(p, start, kind).node;
 }

@@ -1,0 +1,11 @@
+--- a/src/parse/dynamic.c
++++ b/src/parse/dynamic.c
+@@ -248,7 +248,7 @@
+       ? failure->location.offset - leading : 0;
+   GLECMA_Location at = {0, 1, 0};
+   if (piece != NULL) {
+-    at.offset = piece_offset(piece, units16);
++    at.offset = units16 + leading;
+     (void)glecma_source_location(piece, at.offset, &at);
+   }
+   failure->location = at;

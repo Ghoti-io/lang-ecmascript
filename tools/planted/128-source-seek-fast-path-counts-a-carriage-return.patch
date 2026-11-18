@@ -1,0 +1,11 @@
+--- a/src/source/source.c
++++ b/src/source/source.c
+@@ -270,7 +270,7 @@
+     // A unit below 0x80 that is not a line terminator is one code point of one
+     // column: most of any source, and what a seek is walking over.
+     const uint32_t unit = utf8 ? bytes[walk.offset] : wide[walk.offset];
+-    if (unit < 0x80u && unit != 0x0Au && unit != 0x0Du) {
++    if (unit < 0x80u && unit != 0x0Au) {
+       walk.offset++;
+       walk.column++;
+       continue;

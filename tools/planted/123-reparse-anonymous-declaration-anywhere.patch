@@ -1,0 +1,12 @@
+--- a/src/parse/reparse.c
++++ b/src/parse/reparse.c
+@@ -88,8 +88,7 @@
+   // of the read; its name may be missing only in `export default function () {}`,
+   // which is a module's.
+   return data->declaration
+-      ? parse_function_declaration(p, start, is_async, true,
+-            (p->flags & PF_MODULE) != 0).node
++      ? parse_function_declaration(p, start, is_async, true, true).node
+       : parse_function_expression(p, start, is_async).node;
+ }
+ 

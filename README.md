@@ -209,9 +209,10 @@ consumer.
 The tokenizer and the builder interface are internal: `glecma_parse` is the
 public entry that reads source, and the tests, fuzzers and benchmarks reach
 the tokenizer and the checking builder directly. `make fuzz-replay` runs the seed corpus of the
-tokenizer, source and parser fuzzers through their entry points; `make fuzz-tokenizer`,
-`make fuzz-source` and `make fuzz-parser` build them for libFuzzer (clang), and `make bench`
-reports the throughput of the source decoder and of the tokenizer.
+tokenizer, source, parser and goals fuzzers through their entry points; `make fuzz-tokenizer`,
+`make fuzz-source`, `make fuzz-parser` and `make fuzz-goals` build them for libFuzzer (clang), and `make bench`
+reports the throughput of the source decoder, the tokenizer, the parser (the Module goal included) and the
+function re-parse.
 
 `make test` runs the unit tests and the gates: every exported symbol carries
 the version namespace (`check-symbols`), every public header carries a

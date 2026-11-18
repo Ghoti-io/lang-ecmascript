@@ -1,13 +1,11 @@
 --- a/src/parse/dynamic.c
 +++ b/src/parse/dynamic.c
-@@ -348,9 +348,7 @@
-     result = parser_execute(&job, failure, &discarded);
+@@ -398,7 +398,7 @@
      glecma_tree_destroy(discarded);
      discarded = NULL;
--    if (result != GLECMA_OK) {
--      place_in_body(failure);
--    }
-+    (void)place_in_body;
+     if (result != GLECMA_OK) {
+-      place_in_piece(failure, body, 1);
++      (void)place_in_piece;
+     }
    }
    if (result == GLECMA_OK) {
-     // 3. The assembled text, as the kind's function expression, with every

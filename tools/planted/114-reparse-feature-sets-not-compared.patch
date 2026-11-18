@@ -1,11 +1,11 @@
 --- a/src/parse/reparse.c
 +++ b/src/parse/reparse.c
-@@ -256,7 +256,7 @@
+@@ -242,7 +242,7 @@
            options->size >= offsetof(GLECMA_ParseOptions, features) +
                sizeof(options->features)
        ? options->features : NULL;
--  if (!same_features(c.features, features)) {
-+  if (!same_features(c.features, features) && 0) {
+-  if (!glecma_feature_set_same(c.features, features)) {
++  if (!glecma_feature_set_same(c.features, features) && 0) {
      return parser_refuse(failure, GLECMA_ERR_INVALID,
          "the function context and the parse options name different feature sets");
    }

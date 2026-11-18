@@ -128,7 +128,13 @@ static GLECMA_Result units_reserve(const GLECMA_Allocator * a, Units * u,
   }
   size_t capacity = u->capacity == 0 ? 64 : u->capacity;
   while (capacity < u->length + more) {
+    if (capacity > SIZE_MAX / 2) {
+      return GLECMA_ERR_OOM;
+    }
     capacity *= 2;
+  }
+  if (capacity > SIZE_MAX / sizeof(uint16_t)) {
+    return GLECMA_ERR_OOM;
   }
   uint16_t * grown = (uint16_t *)a->realloc_fn(a->ctx, u->data,
       capacity * sizeof(uint16_t));
@@ -198,19 +204,54 @@ static GLECMA_Result make_source(const GLECMA_Allocator * allocator,
 
 /* ---- The entry ------------------------------------------------------------------------ */
 
-// A failure that was found in the body's own text is placed in the body: the
-// line feed the algorithm puts in front of it is not the caller's.
-static void place_in_body(GLECMA_Failure * failure) {
-  if (failure == NULL || failure->size < GLECMA_FAILURE_HEADER_SIZE) {
+// The offset in the piece's own units that a UTF-16 offset of the text that
+// was read stands for: a UTF-16 piece is the text, and a UTF-8 piece is walked
+// by code points. An offset inside a surrogate pair is the start of the pair.
+static size_t piece_offset(const GLECMA_Source * piece, size_t units16) {
+  if (piece == NULL || piece->units == 0) {
+    return 0;
+  }
+  GLECMA_LexText text;
+  glecma_lex_text_init(&text, piece);
+  if (text.u16 != NULL) {
+    return units16 < piece->units ? units16 : piece->units;
+  }
+  size_t offset = 0;
+  size_t seen = 0;
+  while (offset < piece->units) {
+    size_t length = 0;
+    uint32_t cp = glecma_lex_cp(&text, offset, &length);
+    if (cp == GLECMA_LEX_NONE || cp == GLECMA_LEX_BAD || length == 0) {
+      break;
+    }
+    const size_t width = cp > 0xFFFFu ? 2 : 1;
+    if (seen + width > units16) {
+      break;
+    }
+    seen += width;
+    offset += length;
+  }
+  return offset;
+}
+
+// A failure that was found in a piece's own text is placed in the piece the
+// caller gave: after the line feed the algorithm puts in front of the body
+// (`leading` units, which are not the caller's), clamped to the piece, and
+// as an offset, a line and a column of the caller's own source.
+static void place_in_piece(GLECMA_Failure * failure, const GLECMA_Source * piece,
+    size_t leading) {
+  if (failure == NULL || failure->size < GLECMA_FAILURE_HEADER_SIZE ||
+      (failure->result != GLECMA_ERR_SYNTAX && failure->result != GLECMA_ERR_LIMIT)) {
     return;
   }
-  if ((failure->result == GLECMA_ERR_SYNTAX || failure->result == GLECMA_ERR_LIMIT) &&
-      failure->location.offset > 0) {
-    failure->location.offset--;
-    if (failure->location.line > 1) {
-      failure->location.line--;
-    }
+  size_t units16 = failure->location.offset > leading
+      ? failure->location.offset - leading : 0;
+  GLECMA_Location at = {0, 1, 0};
+  if (piece != NULL) {
+    at.offset = piece_offset(piece, units16);
+    (void)glecma_source_location(piece, at.offset, &at);
   }
+  failure->location = at;
 }
 
 GLECMA_Result glecma_parse_dynamic_function(
@@ -249,6 +290,11 @@ GLECMA_Result glecma_parse_dynamic_function(
   }
   if (allocator == NULL) {
     allocator = glecma_allocator_default();
+  }
+  if (allocator->malloc_fn == NULL || allocator->calloc_fn == NULL ||
+      allocator->realloc_fn == NULL || allocator->free_fn == NULL) {
+    return parser_refuse(failure, GLECMA_ERR_INVALID,
+        "the allocator has a NULL function");
   }
 
   // The kind: its prefix and what its code is.
@@ -340,6 +386,9 @@ GLECMA_Result glecma_parse_dynamic_function(
     result = parser_execute(&job, failure, &discarded);
     glecma_tree_destroy(discarded);
     discarded = NULL;
+    if (result != GLECMA_OK) {
+      place_in_piece(failure, parameters, 0);
+    }
   }
   if (result == GLECMA_OK) {
     // 2. The body, alone.
@@ -349,7 +398,7 @@ GLECMA_Result glecma_parse_dynamic_function(
     glecma_tree_destroy(discarded);
     discarded = NULL;
     if (result != GLECMA_OK) {
-      place_in_body(failure);
+      place_in_piece(failure, body, 1);
     }
   }
   if (result == GLECMA_OK) {

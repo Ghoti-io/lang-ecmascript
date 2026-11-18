@@ -312,6 +312,42 @@ TEST(Reparse, MethodsAccessorsAndConstructorsAreReadFromTheirToStringText) {
   }
 }
 
+TEST(Reparse, AMemberIsTheKindItsTextSaysAndAnonymousIsAModulesDeclarationOnly) {
+  Program program("class C { get x() { return 1; } set x(v) {} m() {} *g() {} constructor() {} }");
+  struct Row { const char * text; uint32_t kind; bool ok; };
+  const Row rows[] = {
+    {"get x() { return 1; }", GLECMA_FNKIND_GETTER, true},
+    {"get x() { return 1; }", GLECMA_FNKIND_METHOD, false},
+    {"get x() { return 1; }", GLECMA_FNKIND_SETTER, false},
+    {"get x() { return 1; }", GLECMA_FNKIND_CONSTRUCTOR, false},
+    {"set x(v) {}", GLECMA_FNKIND_SETTER, true},
+    {"set x(v) {}", GLECMA_FNKIND_GETTER, false},
+    {"m() {}", GLECMA_FNKIND_METHOD, true},
+    {"m() {}", GLECMA_FNKIND_GETTER, false},
+    {"m() {}", GLECMA_FNKIND_SETTER, false},
+    {"m() {}", GLECMA_FNKIND_CONSTRUCTOR, false},
+    {"m() {}", GLECMA_FNKIND_DERIVED_CONSTRUCTOR, false},
+    {"*g() {}", GLECMA_FNKIND_METHOD, true},
+    {"*g() {}", GLECMA_FNKIND_CONSTRUCTOR, false},
+    {"constructor() {}", GLECMA_FNKIND_CONSTRUCTOR, true},
+    {"constructor() {}", GLECMA_FNKIND_DERIVED_CONSTRUCTOR, true},
+    {"constructor() {}", GLECMA_FNKIND_METHOD, true},  // a method called constructor, which is a static one's text
+  };
+  for (const Row & row : rows) {
+    auto again = Read(program, row.text, row.kind, kS);
+    EXPECT_EQ(again->result, row.ok ? GLECMA_OK : GLECMA_ERR_INTERNAL) << row.text << " as " << row.kind;
+  }
+  // A declaration has a name, except `export default function () {}`, which is a module's.
+  Program script("x = function () {};");
+  EXPECT_EQ(Read(script, "function () {}", GLECMA_FNKIND_FUNCTION, kD)->result, GLECMA_ERR_INTERNAL);
+  EXPECT_EQ(Read(script, "function () {}", GLECMA_FNKIND_FUNCTION)->result, GLECMA_OK);
+  Program module("export default function () {}", GLECMA_PARSE_MODULE);
+  EXPECT_EQ(Read(module, "function () {}", GLECMA_FNKIND_FUNCTION, kM | kA | kD)->result, GLECMA_OK);
+  EXPECT_EQ(Read(module, "function () {}", GLECMA_FNKIND_FUNCTION, kS | kD)->result, GLECMA_ERR_INTERNAL);
+  Program asynchronous("export default async function* () {}", GLECMA_PARSE_MODULE);
+  EXPECT_EQ(Read(asynchronous, "async function* () {}", GLECMA_FNKIND_ASYNC_GENERATOR, kM | kA | kD)->result, GLECMA_OK);
+}
+
 TEST(Reparse, ThePropertyNameIsReadAndForgottenSoItsReferencesAreNotTheFunctions) {
   Program program("class C { [key + other()](a) { return a + inner; } }");
   auto again = Read(program, "[key + other()](a) { return a + inner; }", GLECMA_FNKIND_METHOD, kS);

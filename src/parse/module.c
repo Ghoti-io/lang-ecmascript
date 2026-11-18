@@ -141,10 +141,14 @@ static void expect_word(Parser * p, GLECMA_Keyword keyword) {
 
 /* ---- Exported names ----------------------------------------------------------------- */
 
+// Adds an exported name. Where it was written is known as a location when a
+// token gave it, and as an offset when a scope record did: the location of an
+// offset is looked up only for the error, which is not the common case.
 static void add_export(Parser * p, const uint16_t * name,
-    const GLECMA_Location * at) {
+    const GLECMA_Location * at, size_t offset) {
   if (!parser_ptrset_add(p, &p->export_names, name)) {
-    parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, at);
+    GLECMA_Location where = at != NULL ? *at : location_of(p, offset);
+    parser_fail(p, GLECMA_RULE_MODULE_DUPLICATE_EXPORT, &where);
   }
 }
 
@@ -180,8 +184,7 @@ static void export_declared(Parser * p, size_t first) {
     const ScopeRec * rec = &p->recs[i];
     if (rec->kind == SR_VAR || rec->kind == SR_LEX || rec->kind == SR_FUNC ||
         rec->kind == SR_FUNC_OTHER) {
-      GLECMA_Location at = location_of(p, rec->offset);
-      add_export(p, rec->name, &at);
+      add_export(p, rec->name, NULL, rec->offset);
     }
   }
 }
@@ -392,7 +395,8 @@ static GLECMA_BNode parse_export_named(Parser * p, size_t start) {
         entry_start, p->prev_end, inner);
     parser_kid(p, node);
     // The name is the module's whether or not a `from` follows.
-    add_export(p, exported.text.units, &exported.token.start);
+    add_export(p, exported.text.units, &exported.token.start,
+        exported.token.start.offset);
     // The local name is a binding of this module unless a `from` follows: it
     // is then an IdentifierReference (clause 16.2.3.1).
     uint32_t rule = GLECMA_RULE_NONE;
@@ -440,7 +444,7 @@ static GLECMA_BNode parse_export_all(Parser * p, size_t start) {
     parser_next(p);
     ModuleName name = read_name(p, true);
     exported = name.node;
-    add_export(p, name.text.units, &name.token.start);
+    add_export(p, name.text.units, &name.token.start, name.token.start.offset);
   }
   expect_word(p, GLECMA_KW_FROM);
   GLECMA_BNode source = read_string(p);
@@ -478,8 +482,12 @@ static GLECMA_BNode parse_export_default(Parser * p, size_t start) {
   // Whatever the declaration is called, the module exports it as `default`.
   GLECMA_BText name;
   static const uint16_t default_name[] = {'d', 'e', 'f', 'a', 'u', 'l', 't'};
-  p->builder->ops->text(p->builder, default_name, 7, true, &name);
-  add_export(p, name.units, &at);
+  GLECMA_Result named = p->builder->ops->text(p->builder, default_name, 7, true,
+      &name);
+  if (named != GLECMA_OK) {
+    parser_fail_result(p, named);
+  }
+  add_export(p, name.units, &at, at.offset);
   parser_kid(p, value);
   return parser_make(p, GLECMA_NODE_EXPORT_DEFAULT, 0, 0, start, p->prev_end,
       mark);

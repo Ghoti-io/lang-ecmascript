@@ -1,12 +1,19 @@
 --- a/src/parse/early.c
 +++ b/src/parse/early.c
-@@ -339,7 +339,5 @@
+@@ -346,7 +346,7 @@
+   if (p->class_len == 0 && kept > frame.ref_first) {
+     // The outermost class of the code: what none of its classes declares is
+     // answered by the names of the code around it, if it has any (direct eval).
+-    early_outer_answer(p, frame.ref_first);
++    (void)frame;
+   }
+ }
+ 
+@@ -661,5 +661,5 @@
  // used outside every class, or in a class heritage, which sees only the names
  // of the classes around the class.
  void early_finish(Parser * p) {
--  if (p->priv_ref_len > 0) {
--    parser_fail(p, GLECMA_RULE_PRIVATE_NAME_UNDECLARED, &p->priv_refs[0].at);
--  }
+-  early_outer_answer(p, 0);
 -}
 +  (void)p;
 +}

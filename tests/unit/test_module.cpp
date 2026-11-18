@@ -28,6 +28,7 @@
 #include <gtest/gtest.h>
 
 #include "../parse_test_support.h"
+#include "../test_helpers.h"
 #include "parse/builder.h"
 
 using glecma_test::ParseAs;
@@ -494,6 +495,48 @@ TEST(Module, ManyDeclarationsStayLinear) {
   EXPECT_EQ(ParseModule(attrs + "};").result, GLECMA_OK);
   EXPECT_EQ(ParseModule(attrs + "k0: 'w'};").failure.rule,
       static_cast<uint32_t>(GLECMA_RULE_IMPORT_ATTRIBUTE_DUPLICATE));
+}
+
+TEST(Module, EveryAllocationOfAModuleParseMayFailWithNothingLeaked) {
+  // A module that holds each form that allocates of its own: imports with attributes and
+  // string names, the exported-name set and the local names to find, a default export.
+  const std::string modules[] = {
+    "import a, {b as c, 'd e' as f} from 'm' with {type: 'json', k: 'v'};\n"
+    "export {c as default}; export * as ns from 'n'; export var v = await a;\n"
+    "export function g() {} export class K { #p = 1; } export {f as 'q r'};\n",
+    // A refusal that comes after the allocations: the duplicate is found at the end of the module.
+    "export default 1; export default 2;",
+    "var a; export {a}; export {a, b};",
+  };
+  for (const std::string & text : modules) {
+    GLECMA_Source * source = nullptr;
+    ASSERT_EQ(glecma_source_create_utf8(text.data(), text.size(), nullptr, nullptr, nullptr, &source), GLECMA_OK);
+    GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+    options.goal = GLECMA_PARSE_MODULE;
+    size_t total = 0;
+    GLECMA_Result clean;
+    {
+      glecma_test::CountingAllocator counting;
+      GLECMA_Tree * tree = nullptr;
+      clean = glecma_parse(source, &options, counting.get(), nullptr, &tree);
+      total = counting.calls();
+      glecma_tree_destroy(tree);
+      EXPECT_EQ(counting.live(), 0u);
+    }
+    ASSERT_GE(total, 6u) << text;
+    for (size_t i = 0; i < total; i++) {
+      glecma_test::CountingAllocator counting;
+      counting.fail_at(i);
+      GLECMA_Tree * tree = nullptr;
+      GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+      GLECMA_Result r = glecma_parse(source, &options, counting.get(), &failure, &tree);
+      // An allocation that fails is the parse's failure, whatever the text would have been.
+      EXPECT_EQ(r, GLECMA_ERR_OOM) << "allocation " << i << " of " << total << " (clean result " << clean << ") in " << text;
+      EXPECT_EQ(tree, nullptr);
+      EXPECT_EQ(counting.live(), 0u) << "allocation " << i;
+    }
+    glecma_source_release(source);
+  }
 }
 
 int main(int argc, char * * argv) {

@@ -234,6 +234,11 @@ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,
   const bool module = goal == GLECMA_PARSE_MODULE;
   const bool strict_context = (context & GLECMA_CONTEXT_STRICT) != 0 ||
       (eval.flags & GLECMA_CONTEXT_STRICT) != 0;
+  // Whichever way the caller said it, the context the tree keeps says the code
+  // was strict, so that a compiler that reads the context needs no more.
+  if (goal == GLECMA_PARSE_DIRECT_EVAL && strict_context) {
+    eval.flags |= GLECMA_CONTEXT_STRICT;
+  }
 
   ParseJob job;
   memset(&job, 0, sizeof(job));

@@ -184,7 +184,10 @@ static void reparse_pair(GLECMA_Source * source, Mode mode) {
     for (unsigned k = 1; k < GLECMA_FNKIND_COUNT; k++) {
       printf(" %llu", (unsigned long long)stats.kinds[k]);
     }
-    printf("\n");
+    for (unsigned f = 0; f < RP_FLAG_COUNT; f++) {
+      printf(" %llu", (unsigned long long)stats.flags[f]);
+    }
+    printf(" %llu\n", (unsigned long long)stats.with_names);
   }
   glecma_tree_destroy(tree);
 }
