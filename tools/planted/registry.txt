@@ -132,3 +132,7 @@
 126|feature-set-compared-past-its-room|Two feature sets are compared by the count they claim, not by what they have room for|126-feature-set-compared-past-its-room.patch|test
 127|reparse-gate-ignores-private-names|The re-parse gate does not count a function read with private names in scope, so it cannot see that none was|127-reparse-gate-ignores-private-names.patch|check-reparse
 128|source-seek-fast-path-counts-a-carriage-return|A seek over plain ASCII counts a carriage return as one more column, so a location after a CRLF is wrong|128-source-seek-fast-path-counts-a-carriage-return.patch|test
+# Story 7 (the real-world corpus, the Node differential, hostile input) registers 129 on. Append only.
+129|corpus-regexp-class-slash-ends-the-literal|A slash inside a regular expression's character class ends the literal|129-corpus-regexp-class-slash-ends-the-literal.patch|check-corpus
+130|corpus-member-hash-not-the-pinned-one|The table pins a corpus file by a hash that is not the file's, so the corpus does not verify|130-corpus-member-hash-not-the-pinned-one.patch|check-corpus
+131|corpus-license-not-admitted|A corpus file is listed under a license that is not an admitted one|131-corpus-license-not-admitted.patch|check-corpus

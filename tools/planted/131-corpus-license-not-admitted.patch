@@ -1,0 +1,10 @@
+diff --git a/tools/corpus/CORPUS.tsv b/tools/corpus/CORPUS.tsv
+index 1fb9c1d..34a9795 100644
+--- a/tools/corpus/CORPUS.tsv
++++ b/tools/corpus/CORPUS.tsv
+@@ -19,4 +19,4 @@ three	0.187.0	ff540832ded0cfe919764d24a3d88f3e2a05f23303f876423e4f893841e90728	b
+ three	0.187.0	ff540832ded0cfe919764d24a3d88f3e2a05f23303f876423e4f893841e90728	build/three.core.js	613e370f76638fdef83926642bf256dc9615684922de1ce1f63a8583e5d78578	module	source	MIT	LICENSE	8b378ebe60e2fe500158cb0ac71cb5e8b7d92953c2abcc63a0eb90499653b5bc
+ vue	3.5.45	c2ec36a9b719e4277785f1ad36a1bb0424d8d32f0bea24abcce862e26821d585	dist/vue.esm-browser.js	47528b748162468b6a98fe6587ad4cfbe8febd504673cf28a07114dfcf4485a1	module	source	MIT	LICENSE	1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175
+ vue	3.5.45	c2ec36a9b719e4277785f1ad36a1bb0424d8d32f0bea24abcce862e26821d585	dist/vue.esm-browser.prod.js	a1c408b5bd9b941838db315ea6cadb4e485c66b73cca043250eee071234c04a9	module	minified	MIT	LICENSE	1bb85cc9b13b81ef41c81c51866172fc345e0503c86726a6755b796590b70175
+-acorn	8.19.0	c6fad21ffa1f2ba20338bf1dde1de911c2093c1aaf7b3af17c477661bd3bfaaf	dist/acorn.mjs	76254fc76529713b4dfd2532972d17a991ffd9aafeebb1f977445b5506b9fb0b	module	source	MIT	LICENSE	76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7
++acorn	8.19.0	c6fad21ffa1f2ba20338bf1dde1de911c2093c1aaf7b3af17c477661bd3bfaaf	dist/acorn.mjs	76254fc76529713b4dfd2532972d17a991ffd9aafeebb1f977445b5506b9fb0b	module	source	GPL-3.0-only	LICENSE	76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7

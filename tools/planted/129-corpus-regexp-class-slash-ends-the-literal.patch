@@ -1,0 +1,13 @@
+diff --git a/src/lex/literal.c b/src/lex/literal.c
+index d44294b..1c6acaa 100644
+--- a/src/lex/literal.c
++++ b/src/lex/literal.c
+@@ -743,7 +743,7 @@ GLECMA_Result glecma_lex_scan_regexp(GLECMA_Lexer * lexer,
+         in_class = true;
+       } else if (cp == ']') {
+         in_class = false;
+-      } else if (cp == '/' && !in_class) {
++      } else if (cp == '/') {
+         offset++;
+         count++;
+         break;

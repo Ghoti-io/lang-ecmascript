@@ -44,6 +44,10 @@
  * or `FAIL <what differed>`, and `SKIP <result>` for a pair that was refused
  * (tests/reparse_support.h; tools/check-reparse.py).
  *
+ * With `--utf16` (alone or with either of the others) each text is read as UTF-8,
+ * transcoded to UTF-16 in host order and given to the UTF-16 constructor, so
+ * that the answer is the one the other encoding gives (tools/check-corpus.py).
+ *
  * It is the only place the gate calls the library: `parse_pair` is a call of
  * the public parse entry. Work not built answers ERR_UNSUPPORTED, which is
  * never an acceptance and never a SyntaxError.
@@ -55,6 +59,7 @@
 
 #include "../reparse_support.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -192,9 +197,62 @@ static void reparse_pair(GLECMA_Source * source, Mode mode) {
   glecma_tree_destroy(tree);
 }
 
+// The text as UTF-16 units: false when it is not well-formed UTF-8 (the
+// UTF-8 constructor reports that, and the caller then uses it).
+static int to_utf16(const char * text, size_t length, uint16_t ** out, size_t * out_units) {
+  uint16_t * units = malloc((length + 1) * sizeof(uint16_t));
+  if (units == NULL) {
+    return 0;
+  }
+  size_t count = 0;
+  for (size_t i = 0; i < length;) {
+    const unsigned char c = (unsigned char)text[i];
+    uint32_t cp;
+    size_t n;
+    if (c < 0x80) { cp = c; n = 1; }
+    else if (c >= 0xC2 && c <= 0xDF) { cp = c & 0x1Fu; n = 2; }
+    else if (c >= 0xE0 && c <= 0xEF) { cp = c & 0x0Fu; n = 3; }
+    else if (c >= 0xF0 && c <= 0xF4) { cp = c & 0x07u; n = 4; }
+    else { free(units); return 0; }
+    if (i + n > length) { free(units); return 0; }
+    for (size_t k = 1; k < n; k++) {
+      const unsigned char d = (unsigned char)text[i + k];
+      if ((d & 0xC0u) != 0x80u) { free(units); return 0; }
+      cp = (cp << 6) | (d & 0x3Fu);
+    }
+    if ((n == 3 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) ||
+        (n == 4 && (cp < 0x10000 || cp > 0x10FFFF))) {
+      free(units);
+      return 0;
+    }
+    if (cp >= 0x10000) {
+      cp -= 0x10000;
+      units[count++] = (uint16_t)(0xD800u + (cp >> 10));
+      units[count++] = (uint16_t)(0xDC00u + (cp & 0x3FFu));
+    } else {
+      units[count++] = (uint16_t)cp;
+    }
+    i += n;
+  }
+  *out = units;
+  *out_units = count;
+  return 1;
+}
+
 int main(int argc, char ** argv) {
-  const int differential = argc > 1 && strcmp(argv[1], "--differential") == 0;
-  const int reparse = argc > 1 && strcmp(argv[1], "--reparse") == 0;
+  int differential = 0, reparse = 0, utf16 = 0;
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "--differential") == 0) {
+      differential = 1;
+    } else if (strcmp(argv[i], "--reparse") == 0) {
+      reparse = 1;
+    } else if (strcmp(argv[i], "--utf16") == 0) {
+      utf16 = 1;
+    } else {
+      fprintf(stderr, "t262_driver: unknown argument %s\n", argv[i]);
+      return 2;
+    }
+  }
   static const char directive[] = "\"use strict\";\n";
   static char line[1 << 14];
   while (fgets(line, sizeof line, stdin) != NULL) {
@@ -240,8 +298,15 @@ int main(int argc, char ** argv) {
     }
     GLECMA_Failure failure = GLECMA_FAILURE_INIT;
     GLECMA_Source * source = NULL;
-    GLECMA_Result result = glecma_source_create_utf8(
-        begin, begin_length, NULL, NULL, &failure, &source);
+    uint16_t * units = NULL;
+    size_t unit_count = 0;
+    GLECMA_Result result;
+    if (utf16 && to_utf16(begin, begin_length, &units, &unit_count)) {
+      result = glecma_source_create_utf16(units, unit_count, NULL, NULL, &failure, &source);
+      free(units);
+    } else {
+      result = glecma_source_create_utf8(begin, begin_length, NULL, NULL, &failure, &source);
+    }
     if (result == GLECMA_OK && reparse) {
       reparse_pair(source, mode);
       glecma_source_release(source);
