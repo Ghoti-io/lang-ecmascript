@@ -1,0 +1,11 @@
+--- a/src/parse/entry.c
++++ b/src/parse/entry.c
+@@ -199,7 +199,7 @@
+       module ? GLECMA_NODE_MODULE : GLECMA_NODE_SCRIPT,
+       is_strict ? GLECMA_NODEF_STRICT : 0u, 0, 0, units, mark);
+   *strict = is_strict;
+-  glecma_tree_finish(tree, root, job->goal, is_strict);
++  glecma_tree_finish(tree, root, job->goal, module ? false : is_strict);
+ }
+ 
+ GLECMA_Result glecma_parse_internal(GLECMA_Source * source,

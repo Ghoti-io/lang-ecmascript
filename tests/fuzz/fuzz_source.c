@@ -46,12 +46,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void check(int condition) {
-  if (!condition) {
-    abort();
-  }
-}
-
 // A well-formed UTF-8 sequence decoder of this file's own, written from
 // Table 3-7 and not from the library's.
 static size_t utf8_sequence(const uint8_t * s, size_t left, uint32_t * cp) {

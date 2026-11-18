@@ -1,0 +1,3 @@
+var async, get, set, of, let, yield, await, static; x = { async, get, set, async() {}, get() {}, get a() {} }; async
+function f() {} for (async of => 1;;); for (let in a); let
+q = 1;

@@ -77,6 +77,49 @@ OPTIONS = [
     ("utf16-strict", 0x03),
 ]
 
+# What the goals' harness reads (fuzz_goals.c): module items, eval code that
+# needs the caller's context, and the pieces of a dynamic function.
+GOAL_SNIPPETS = {
+    "module-valid": "import a, {b as c, 'd e' as f} from 'm' with {type: 'json'};\nexport {c as default}; export * as ns from 'n'; export var v = await import('o');\nawait 1; for await (x of y); import.meta.url; export function* g() { yield 1 } export async function h() {} export class K { #p = 1; static { this.q = 1 } get p() { return this.#p } }\nexport {a as 'string name', f as other}; export {x as y} from 'z';\n",
+    "module-errors": "export {u}; var a; export {a}; export {a}; import {b} from 'm'; var b; export default 1; export default 2; import {c, c} from 'm'; export {'s'}; import {default} from 'm'; with (a) b; import.meta = 1; function f() { await 1 }\n",
+    "module-await": "await a; (async () => await b)(); class C { [await c]() {} static x = await; } function* g() { yield await; } label: await: 1; var await;\n",
+    "eval-context": "new.target; super.x; super(); arguments; this.#x; this.#yy; this.#\\u{1D49C}z; () => super.y; () => new.target; () => arguments; class C { #w; m() { return this.#w + this.#x; } static { this.#x } } function f() { new.target; super.z }\n",
+    "eval-strict": "with (a) b; 010; var eval; delete x; 'use strict'; arguments = 1;\n",
+    "eval-meta": "import.meta; import x from 'm'; export var a; return 1; await 1; yield 1;\n",
+}
+
+# (parameters, body): the pieces of a dynamic function, joined with the split
+# the second byte of the seed names.
+DYNAMIC_PIECES = [
+    ("a, b = 1, ...c", "return a + b + c.length;"),
+    ("a /*", "*/ return a"),
+    ("a //", "return a"),
+    ("a, a", "'use strict';"),
+    ("a = 1", "'use strict';"),
+    ("", "yield 1; await 2;"),
+    ("{a} = {}, [b]", "let a;"),
+    ("a = yield", "return new.target;"),
+    ("", "} function g() {"),
+    ("eval", "'use strict'; super.x"),
+]
+
+# The first byte: bits 0-2 the goal (0 Script, 1 Module, 2 direct eval, 3
+# indirect eval, 4-7 a dynamic function of the kind), 3 UTF-16, 4 stream, 5-6
+# limits, 7 a feature set.
+GOAL_OPTIONS = [
+    ("script", 0x00, 0x00), ("script-strict", 0x00, 0x01), ("script-checking", 0x00, 0x80),
+    ("module", 0x01, 0x00), ("module-strict", 0x01, 0x01), ("module-checking", 0x01, 0x80),
+    ("module-utf16", 0x09, 0x00), ("module-stream", 0x11, 0x00), ("module-tiny", 0x21, 0x00),
+    ("module-stack", 0x41, 0x00), ("module-tokens", 0x61, 0x00), ("module-feature", 0x81, 0x00),
+    ("eval", 0x02, 0x00), ("eval-new-target", 0x02, 0x02), ("eval-super", 0x02, 0x06),
+    ("eval-super-call", 0x02, 0x0E), ("eval-field", 0x02, 0x16), ("eval-names", 0x02, 0x26),
+    ("eval-all", 0x02, 0x3E), ("eval-strict", 0x02, 0x01), ("eval-options-strict", 0x02, 0x40),
+    ("eval-invalid", 0x02, 0x04), ("eval-invalid-call", 0x02, 0x0C), ("eval-checking", 0x02, 0xA6),
+    ("eval-utf16", 0x0A, 0x26), ("eval-stream", 0x12, 0x26), ("eval-tiny", 0x22, 0x26),
+    ("eval-feature", 0x82, 0x00),
+    ("indirect", 0x03, 0x00), ("indirect-checking", 0x03, 0x80), ("indirect-utf16", 0x0B, 0x00),
+]
+
 def write(path, option, text, wide, second=None):
     data = text.encode("utf-16-le" if wide else "utf-8", "surrogatepass")
     header = bytes([option]) + (bytes([second]) if second is not None else b"")
@@ -85,7 +128,7 @@ def write(path, option, text, wide, second=None):
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "corpus")
-    for sub in ("tokenizer", "source", "parser"):
+    for sub in ("tokenizer", "source", "parser", "goals"):
         os.makedirs(os.path.join(root, sub), exist_ok=True)
     for name, text in SNIPPETS.items():
         for label, option in OPTIONS:
@@ -102,6 +145,18 @@ def main():
     for name, text in list(SNIPPETS.items()) + list(PARSER_SNIPPETS.items()):
         for label, option in PARSER_OPTIONS:
             write(os.path.join(root, "parser", "%s-%s.bin" % (name, label)), option, text, option & 1)
+    os.makedirs(os.path.join(root, "goals"), exist_ok=True)
+    for name, text in list(GOAL_SNIPPETS.items()) + list(PARSER_SNIPPETS.items()):
+        for label, first, second in GOAL_OPTIONS:
+            write(os.path.join(root, "goals", "%s-%s.bin" % (name, label)), first, text, first & 8, second)
+    for index, (parameters, body) in enumerate(DYNAMIC_PIECES):
+        for kind in range(4):
+            for label, extra in (("utf8", 0x00), ("utf16", 0x08), ("tiny", 0x20), ("feature", 0x80)):
+                wide = extra & 8
+                pieces = (parameters + body).encode("utf-16-le" if wide else "utf-8", "surrogatepass")
+                split = len(parameters.encode("utf-16-le" if wide else "utf-8", "surrogatepass"))
+                with open(os.path.join(root, "goals", "dynamic-%d-kind%d-%s.bin" % (index, kind, label)), "wb") as f:
+                    f.write(bytes([0x04 + kind + extra, split % 256]) + pieces)
     write(os.path.join(root, "source", "program-cap.bin"), 0x02, SNIPPETS["program"], False)
     for label, raw in (("overlong", b"a\xc0\x80b"), ("surrogate", b"\xed\xa0\x80"), ("truncated", b"x\xf0\x9f"), ("high", b"\xf5\x80\x80\x80")):
         with open(os.path.join(root, "source", "bad-%s.bin" % label), "wb") as f:

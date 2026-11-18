@@ -20,6 +20,8 @@ under bench/" and exit status 2.
 | `parse-utf16` | the same, from the seeds transcoded to UTF-16 | the same |
 | `parse-checking-utf8` | the same with the checking builder, which builds no function body | the same |
 | `tree-destroy` | every seed's tree released; the parse that made it is not in the clock | the same |
+| `parse-module-utf8` | one generated module (imports with attributes, exports of declarations, lists and `default`, and statements) parsed under the Module goal with the tree builder; the clock stops before the tree is released | the generated module, about 256 KiB |
+| `reparse-functions-utf8` | every function of the five parse seeds read again with `glecma_parse_function`, from its range and a context derived from the tree; the first trees and the list of functions are built at setup | the five seeds (the same as `parse-utf8`) |
 
 Creating a source decodes every code point and indexes its lines, which is
 the decoder's whole cost. The seed set is the three files under
@@ -198,3 +200,75 @@ parsing a generated file (`{ let a0; { let a1; ... { var v0; var v1; ... } } }`)
 through the test262 driver, once: 100,000 vars in the innermost of 250 nested
 blocks that each declare a name take 0.16 s, 0.04 s when no block declares one
 and 0.05 s for the same vars in a single block (`design.md`, "Early errors").
+
+Story 6 (the Module, eval, dynamic-function and function re-parse goals)
+changed the one entry every goal now runs through (`parser_execute`), added
+the module and eval paths to the parser, and the tokenizer's bounded range,
+and, in review, gave the source's seek an ASCII fast path.
+It added two cases, which have no "before": `parse-module-utf8` (one generated module of 265,626 bytes per unit) and `reparse-functions-utf8`
+(5,240 functions, 195,956 bytes of function text per unit). The "before" rows
+are the library at the end of story 5 (`72c6a91`) built with the same harness
+(the two new cases omitted) and run in the same session, alternating with
+the "after" runs. **The machine was not quiet this time:** other work was
+running, the calibration spread is 6.5% to 24.8%, and several rows spread over
+20%, so a difference under about 10% is not a finding. The best of nine
+repeats; two runs of each.
+
+| Story | Case | Best | Median | Spread | Throughput | Calibration (best) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 6 before (1) | `calibration-xorshift` | 1.32 ns/step | 1.36 ns/step | 8.4% |  | 1.32 ns/step |
+| 6 before (1) | `source-decode-utf8` | 2.77 ms | 2.88 ms | 21.9% | 271 MiB/s | 1.32 ns/step |
+| 6 before (1) | `source-decode-utf16` | 1.74 ms | 1.81 ms | 6.9% | 807 MiB/s | 1.32 ns/step |
+| 6 before (1) | `tokenize-utf8` | 10.3 ms | 10.8 ms | 6.7% | 122 MiB/s, 39.0 Mtokens/s | 1.32 ns/step |
+| 6 before (1) | `tokenize-utf16` | 10.8 ms | 11.0 ms | 8.9% | 224 MiB/s, 37.2 Mtokens/s | 1.32 ns/step |
+| 6 before (1) | `parse-utf8` | 31.3 ms | 32.2 ms | 35.5% | 40.0 MiB/s, 12.8 Mtokens/s | 1.32 ns/step |
+| 6 before (1) | `parse-utf16` | 32.2 ms | 33.1 ms | 4.7% | 74.9 MiB/s, 12.4 Mtokens/s | 1.32 ns/step |
+| 6 before (1) | `parse-checking-utf8` | 30.6 ms | 31.3 ms | 8.2% | 40.8 MiB/s, 13.1 Mtokens/s | 1.32 ns/step |
+| 6 before (1) | `tree-destroy` | 0.615 ms | 0.666 ms | 23.0% | 2,035 MiB/s | 1.32 ns/step |
+| 6 before (2) | `calibration-xorshift` | 1.43 ns/step | 1.45 ns/step | 6.5% |  | 1.43 ns/step |
+| 6 before (2) | `source-decode-utf8` | 2.65 ms | 2.67 ms | 23.1% | 283 MiB/s | 1.43 ns/step |
+| 6 before (2) | `source-decode-utf16` | 1.64 ms | 1.67 ms | 2.6% | 857 MiB/s | 1.43 ns/step |
+| 6 before (2) | `tokenize-utf8` | 10.0 ms | 10.1 ms | 13.8% | 125 MiB/s, 40.0 Mtokens/s | 1.43 ns/step |
+| 6 before (2) | `tokenize-utf16` | 10.3 ms | 10.6 ms | 8.5% | 233 MiB/s, 38.7 Mtokens/s | 1.43 ns/step |
+| 6 before (2) | `parse-utf8` | 28.8 ms | 29.8 ms | 4.1% | 43.5 MiB/s, 13.9 Mtokens/s | 1.43 ns/step |
+| 6 before (2) | `parse-utf16` | 28.7 ms | 29.0 ms | 3.2% | 84.1 MiB/s, 14.0 Mtokens/s | 1.43 ns/step |
+| 6 before (2) | `parse-checking-utf8` | 27.3 ms | 28.2 ms | 34.4% | 45.9 MiB/s, 14.7 Mtokens/s | 1.43 ns/step |
+| 6 before (2) | `tree-destroy` | 0.529 ms | 0.588 ms | 51.3% | 2,364 MiB/s | 1.43 ns/step |
+| 6 after (1) | `calibration-xorshift` | 1.44 ns/step | 1.47 ns/step | 24.8% |  | 1.44 ns/step |
+| 6 after (1) | `source-decode-utf8` | 2.75 ms | 2.93 ms | 11.3% | 273 MiB/s | 1.44 ns/step |
+| 6 after (1) | `source-decode-utf16` | 1.81 ms | 2.09 ms | 26.5% | 777 MiB/s | 1.44 ns/step |
+| 6 after (1) | `tokenize-utf8` | 10.4 ms | 10.5 ms | 35.7% | 120 MiB/s, 38.5 Mtokens/s | 1.44 ns/step |
+| 6 after (1) | `tokenize-utf16` | 11.1 ms | 11.4 ms | 8.5% | 217 MiB/s, 36.1 Mtokens/s | 1.44 ns/step |
+| 6 after (1) | `parse-utf8` | 31.6 ms | 31.8 ms | 3.2% | 39.6 MiB/s, 12.7 Mtokens/s | 1.44 ns/step |
+| 6 after (1) | `parse-utf16` | 32.2 ms | 33.7 ms | 25.9% | 74.9 MiB/s, 12.4 Mtokens/s | 1.44 ns/step |
+| 6 after (1) | `parse-checking-utf8` | 29.1 ms | 30.4 ms | 13.1% | 43.0 MiB/s, 13.7 Mtokens/s | 1.44 ns/step |
+| 6 after (1) | `tree-destroy` | 0.496 ms | 0.561 ms | 30.2% | 2,524 MiB/s | 1.44 ns/step |
+| 6 after (1) | `parse-module-utf8` | 5.8 ms | 5.9 ms | 2.6% | 43.6 MiB/s | 1.44 ns/step |
+| 6 after (1) | `reparse-functions-utf8` | 32.4 ms | 33.6 ms | 7.9% | 5.8 MiB/s | 1.44 ns/step |
+| 6 after (2) | `calibration-xorshift` | 1.26 ns/step | 1.40 ns/step | 17.8% |  | 1.26 ns/step |
+| 6 after (2) | `source-decode-utf8` | 2.67 ms | 2.87 ms | 16.9% | 281 MiB/s | 1.26 ns/step |
+| 6 after (2) | `source-decode-utf16` | 1.63 ms | 1.67 ms | 8.7% | 866 MiB/s | 1.26 ns/step |
+| 6 after (2) | `tokenize-utf8` | 9.5 ms | 9.6 ms | 1.6% | 132 MiB/s, 42.1 Mtokens/s | 1.26 ns/step |
+| 6 after (2) | `tokenize-utf16` | 10.0 ms | 10.0 ms | 2.3% | 242 MiB/s, 40.2 Mtokens/s | 1.26 ns/step |
+| 6 after (2) | `parse-utf8` | 27.2 ms | 27.4 ms | 4.7% | 46.0 MiB/s, 14.7 Mtokens/s | 1.26 ns/step |
+| 6 after (2) | `parse-utf16` | 28.2 ms | 28.4 ms | 1.7% | 85.5 MiB/s, 14.2 Mtokens/s | 1.26 ns/step |
+| 6 after (2) | `parse-checking-utf8` | 26.5 ms | 26.6 ms | 4.3% | 47.2 MiB/s, 15.1 Mtokens/s | 1.26 ns/step |
+| 6 after (2) | `tree-destroy` | 0.530 ms | 0.698 ms | 29.3% | 2,362 MiB/s | 1.26 ns/step |
+| 6 after (2) | `parse-module-utf8` | 6.4 ms | 7.3 ms | 53.3% | 39.8 MiB/s | 1.26 ns/step |
+| 6 after (2) | `reparse-functions-utf8` | 33.2 ms | 35.2 ms | 22.5% | 5.6 MiB/s | 1.26 ns/step |
+
+The decoder, tokenizer and parser rows did not change beyond the noise: the
+best `parse-utf8` is 28.8 and 31.3 ms before and 27.2 and 31.6 ms after, the
+best `parse-checking-utf8` 27.3 and 30.6 ms before and 26.5 and 29.1 ms after,
+and the quietest pair of runs (the second "before" and the second "after")
+agree to within 6%. The module goal costs 5.8 to 6.4 ms for 265,626 bytes
+(about 21 ns a byte, against about 21 ns a byte for the script seeds). Reading
+one function again costs 32.4 and 33.2 ms for 5,240 functions, about 6.2
+microseconds each, or 165 ns a byte of function text: the cost of reading
+the range's text a second time, rescanning its tokens, and building its tree,
+which is what the compiler of M3 will pay once per function it compiles on
+its first call. An earlier measurement, before the ASCII path was added to the
+source's seek and the tokenizer's bounded range stopped looking up a line and
+column for the range's end, was about 12 microseconds each (a single run of
+the whole set, 65 ms, on the same machine). No budget is asserted (X-M1-s6-2).
+

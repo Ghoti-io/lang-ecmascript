@@ -51,6 +51,7 @@
 #include <ghoti.io/lang-ecmascript/lang-ecmascript.h>
 
 #include "fuzz_common.h"
+#include "../reparse_support.h"
 #include "parse/builder.h"
 #include "parse/parse_internal.h"
 
@@ -58,130 +59,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static void check(int condition) {
-  if (!condition) {
-    abort();
-  }
-}
-
-typedef struct Walk {
-  const GLECMA_Node ** stack;
-  size_t count;
-  size_t capacity;
-} Walk;
-
-static void push(Walk * walk, const GLECMA_Node * node) {
-  if (walk->count == walk->capacity) {
-    walk->capacity = walk->capacity ? walk->capacity * 2 : 256;
-    walk->stack = (const GLECMA_Node **)realloc(walk->stack,
-        walk->capacity * sizeof(*walk->stack));
-    check(walk->stack != NULL);
-  }
-  walk->stack[walk->count++] = node;
-}
-
-// Every node, its children inside it, its kind known, its texts readable.
-static size_t walk_tree(const GLECMA_Tree * tree, size_t units) {
-  Walk walk = {NULL, 0, 0};
-  const GLECMA_Node * root = glecma_tree_root(tree);
-  check(root != NULL && glecma_node_kind(root) == GLECMA_NODE_SCRIPT);
-  push(&walk, root);
-  size_t nodes = 0;
-  while (walk.count > 0) {
-    const GLECMA_Node * node = walk.stack[--walk.count];
-    nodes++;
-    check(glecma_node_kind(node) > 0 && glecma_node_kind(node) < GLECMA_NODE_KIND_COUNT);
-    check(glecma_node_start(node) <= glecma_node_end(node));
-    check(glecma_node_end(node) <= units);
-    const uint16_t * text;
-    size_t length;
-    for (size_t i = 0; i < 2; i++) {
-      if (glecma_node_text(node, i, &text, &length)) {
-        check(text != NULL || length == 0);
-        for (size_t k = 0; k < length; k++) {
-          (void)text[k];
-        }
-      }
-    }
-    for (size_t i = 0; i < glecma_node_child_count(node); i++) {
-      const GLECMA_Node * child = glecma_node_child(node, i);
-      if (child == NULL) {
-        continue;
-      }
-      check(glecma_node_start(child) >= glecma_node_start(node));
-      check(glecma_node_end(child) <= glecma_node_end(node));
-      push(&walk, child);
-    }
-  }
-  free(walk.stack);
-  return nodes;
-}
-
-static void check_events(const GLECMA_Tree * tree, size_t units) {
-  uint32_t open[4096];
-  size_t depth = 0;
-  for (size_t i = 0; i < glecma_tree_event_count(tree); i++) {
-    const GLECMA_BEvent * e = glecma_tree_event(tree, i);
-    check(e != NULL && e->start <= e->end && e->end <= units);
-    if (e->type == GLECMA_BEV_SCOPE_ENTER) {
-      if (depth < sizeof open / sizeof open[0]) {
-        open[depth] = e->what;
-      }
-      depth++;
-    } else if (e->type == GLECMA_BEV_SCOPE_LEAVE) {
-      check(depth > 0);
-      depth--;
-      if (depth < sizeof open / sizeof open[0]) {
-        check(open[depth] == e->what);
-      }
-    } else if (e->type == GLECMA_BEV_DECLARE || e->type == GLECMA_BEV_REFERENCE) {
-      check(e->name.units != NULL && e->name.length > 0);
-    } else {
-      check(e->type == GLECMA_BEV_USE);
-    }
-  }
-  check(depth == 0);
-}
-
-static int same_events(const GLECMA_Tree * a, const GLECMA_Tree * b) {
-  if (glecma_tree_event_count(a) != glecma_tree_event_count(b)) {
-    return 0;
-  }
-  for (size_t i = 0; i < glecma_tree_event_count(a); i++) {
-    const GLECMA_BEvent * x = glecma_tree_event(a, i);
-    const GLECMA_BEvent * y = glecma_tree_event(b, i);
-    if (x->type != y->type || x->what != y->what || x->start != y->start ||
-        x->end != y->end || x->name.length != y->name.length ||
-        (x->name.length > 0 &&
-            memcmp(x->name.units, y->name.units, x->name.length * 2) != 0)) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-static const char * const limit_names[] = {
-  "tokens", "literal_length", "nesting", "nodes", "native_stack_bytes",
-};
-
-static void check_failure(GLECMA_Result r, const GLECMA_Failure * f, size_t units) {
-  check(f->result == (uint32_t)r);
-  if (r == GLECMA_ERR_SYNTAX) {
-    check(f->rule >= 1 && f->rule < (uint32_t)GLECMA_RULE_COUNT);
-    check(f->message != NULL && f->location.offset <= units && f->location.line >= 1);
-    check(f->limit == NULL);
-  } else if (r == GLECMA_ERR_LIMIT) {
-    check(f->limit != NULL);
-    int known = 0;
-    for (size_t i = 0; i < sizeof limit_names / sizeof limit_names[0]; i++) {
-      known |= strcmp(f->limit, limit_names[i]) == 0;
-    }
-    check(known && f->rule == 0);
-  } else {
-    check(f->rule == 0 && f->limit == NULL);
-  }
-}
 
 int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
   if (size == 0) {
@@ -261,6 +138,16 @@ int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
     check_events(tree, units);
     check(same_events(tree, other));
     check(glecma_tree_source(tree) == source);
+    if (!checking) {
+      // Every function of an accepted program reads again, from its range
+      // and the context the tree says it had, as the tree it was.
+      RpStats stats;
+      char message[600];
+      memset(&stats, 0, sizeof stats);
+      if (!builtin) {
+        check(rp_check_tree(source, tree, &options, &stats, message, sizeof message) == 0);
+      }
+    }
     FILE * sink = fopen("/dev/null", "w");
     if (sink != NULL) {
       check(glecma_tree_dump(tree, sink) == GLECMA_OK);

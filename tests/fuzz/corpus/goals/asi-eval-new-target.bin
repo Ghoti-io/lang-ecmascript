@@ -1,0 +1,10 @@
+a
+b
+++c
+/d/g.test(e)
+var f = 1
+var g = 2
+let h = f
+(g)
+throw
+x

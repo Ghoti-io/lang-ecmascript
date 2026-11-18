@@ -67,12 +67,6 @@ typedef struct {
   int failed;
 } Visit;
 
-static void check(int condition) {
-  if (!condition) {
-    abort();
-  }
-}
-
 static bool visit(void * context, const GLECMA_Token * token) {
   Visit * v = (Visit *)context;
   size_t units = glecma_source_units(v->source);

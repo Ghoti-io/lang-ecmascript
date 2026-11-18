@@ -119,6 +119,9 @@
 114|reparse-feature-sets-not-compared|A function context and parse options that name different feature sets are accepted|114-reparse-feature-sets-not-compared.patch|test
 115|reparse-kind-text-mismatch-accepted|A function read as a kind its text is not (a generator as a plain function, an async arrow as an arrow) is accepted|115-reparse-kind-text-mismatch-accepted.patch|test
 116|reparse-initializer-flags-missing|A class field initializer read again has not the method's super.x, new.target and arguments rule it had|116-reparse-initializer-flags-missing.patch|check-reparse
+117|eval-context-flags-dropped-from-the-tree|The tree of direct eval code records no context flags|117-eval-context-flags-dropped-from-the-tree.patch|fuzz-replay
+118|module-tree-not-strict|The tree of a Module does not record that it is strict|118-module-tree-not-strict.patch|fuzz-replay
+119|reparse-super-property-flag-ignored-fuzz|The fuzz replay reads every function of every seed again, and sees a function that does not inherit super.x from its method|101-reparse-super-property-flag-ignored.patch|fuzz-replay
 # The review of story 6 registers 120 onward.
 120|module-default-name-oom-swallowed|A failed allocation while naming export default is ignored, so a module with a duplicate default is accepted or refused for the wrong cause|120-module-default-name-oom-swallowed.patch|test
 121|dynamic-allocator-not-validated|An allocator with a NULL function is called by the dynamic-function entry and not refused|121-dynamic-allocator-not-validated.patch|test

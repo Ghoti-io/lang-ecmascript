@@ -1,0 +1,1 @@
+&x => x; (a, b = 1, ...c) => a; async y => await y; async (a) => { await a }; (a = (b = c) => d) => e; ({a = 1}) => a; ([a, [b]]) => a; async(a, b); (x => 1)(2);

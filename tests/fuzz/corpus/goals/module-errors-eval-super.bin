@@ -1,0 +1,1 @@
+export {u}; var a; export {a}; export {a}; import {b} from 'm'; var b; export default 1; export default 2; import {c, c} from 'm'; export {'s'}; import {default} from 'm'; with (a) b; import.meta = 1; function f() { await 1 }

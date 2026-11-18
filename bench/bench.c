@@ -422,6 +422,177 @@ static uint64_t tree_destroy_run(uint64_t iterations, double * elapsed) {
   return sink;
 }
 
+/* ---- The Module goal and the function re-parse -------------------------- */
+
+#include "../tests/reparse_support.h"
+
+/* A module of about SEED_TARGET_BYTES: imports with attributes, exports of
+ * each form, top-level await and import.meta, each copy with names of its own
+ * (a module's declarations are unique). */
+static GLECMA_Source * module_source = NULL;
+static size_t module_bytes = 0;
+
+/* Copies `text`, writing the number `index` where it has an `@`. */
+static size_t expand(char * out, size_t room, const char * text, unsigned index) {
+  size_t length = 0;
+  for (; *text != '\0'; text++) {
+    if (*text == '@') {
+      int n = snprintf(out + length, room - length, "%u", index);
+      if (n < 0 || (size_t)n >= room - length) {
+        setup_failed("the module seed overflowed");
+      }
+      length += (size_t)n;
+    } else {
+      if (length + 1 >= room) {
+        setup_failed("the module seed overflowed");
+      }
+      out[length++] = *text;
+    }
+  }
+  out[length] = '\0';
+  return length;
+}
+
+static void load_module(void) {
+  if (module_source != NULL) {
+    return;
+  }
+  static const char * const lines[] = {
+    "import d@, {a@ as b@, 'str name' as c@} from 'm@.js' with {type: 'json', kind@: 'x'};\n",
+    "import * as ns@ from 'n@.js';\n",
+    "export function f@(x, y = b@) { return x + y + c@ + d@; }\n",
+    "export const k@ = await ns@.load(import.meta.url, `t${f@(1)}`);\n",
+    "export {b@ as e@, c@ as 'q r@'};\n",
+    "export * as w@ from 'o@.js';\n",
+    "export class K@ extends d@ { #p = 1; static { this.s = f@; } get p() { return this.#p; } }\n",
+  };
+  size_t capacity = SEED_TARGET_BYTES + 4096, length = 0;
+  char * text = malloc(capacity);
+  if (text == NULL) {
+    setup_failed("out of memory");
+  }
+  for (unsigned i = 0; length + 1024 < capacity; i++) {
+    for (size_t k = 0; k < sizeof(lines) / sizeof(lines[0]); k++) {
+      length += expand(text + length, capacity - length, lines[k], i);
+    }
+  }
+  /* A module exports `default` once. */
+  length += expand(text + length, capacity - length, "export default class Z extends d0 {}\n", 0);
+  module_bytes = length;
+  if (glecma_source_create_utf8(text, length, NULL, NULL, NULL, &module_source) != GLECMA_OK) {
+    setup_failed("the module was refused by the library");
+  }
+  free(text);
+}
+
+static uint64_t parse_module_run(uint64_t iterations, double * elapsed) {
+  load_module();
+  GLECMA_ParseOptions options = GLECMA_PARSE_OPTIONS_INIT;
+  options.goal = GLECMA_PARSE_MODULE;
+  uint64_t sink = 0;
+  double total = 0.0;
+  for (uint64_t i = 0; i < iterations; i++) {
+    GLECMA_Tree * tree = NULL;
+    double start = now_ns();
+    GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+    if (glecma_parse(module_source, &options, NULL, &failure, &tree) != GLECMA_OK) {
+      fprintf(stderr, "bench: %s at %zu\n", failure.message ? failure.message : "?", failure.location.offset);
+      setup_failed("the module was refused by the parser");
+    }
+    total += now_ns() - start;
+    sink += glecma_node_end(glecma_tree_root(tree));
+    glecma_tree_destroy(tree);
+  }
+  *elapsed = total;
+  return sink;
+}
+
+static uint64_t module_bytes_per_iter(void) {
+  load_module();
+  return module_bytes;
+}
+
+/* One unit of work is every function of every seed read again from its range, in the context it had.
+ * The functions are found once, outside the clock, by the walk the re-parse gate uses. */
+static RpJob * reparse_jobs[MAX_SEEDS];
+static size_t reparse_counts[MAX_SEEDS];
+static uint64_t reparse_total_bytes = 0;
+static bool reparse_ready = false;
+
+static void load_reparse(void) {
+  if (reparse_ready) {
+    return;
+  }
+  load_seeds();
+  for (size_t s = 0; s < seed_count; s++) {
+    GLECMA_Tree * tree = NULL;
+    char message[200];
+    if (glecma_parse(seeds[s].source8, NULL, NULL, NULL, &tree) != GLECMA_OK ||
+        rp_collect(seeds[s].source8, tree, &reparse_jobs[s], &reparse_counts[s], message, sizeof message) != 0) {
+      setup_failed("a seed's functions could not be found");
+    }
+    for (size_t j = 0; j < reparse_counts[s]; j++) {
+      reparse_total_bytes += reparse_jobs[s][j].context.end - reparse_jobs[s][j].context.start;
+    }
+    /* The private names of a job point into this tree's texts: it lives as long as the process. */
+    (void)tree;
+  }
+  uint64_t functions = 0;
+  for (size_t s = 0; s < seed_count; s++) {
+    functions += reparse_counts[s];
+  }
+  fprintf(stderr, "bench: the re-parse case reads %llu functions, %llu bytes of function text, per unit\n",
+      (unsigned long long)functions, (unsigned long long)reparse_total_bytes);
+  reparse_ready = true;
+}
+
+static uint64_t reparse_run(uint64_t iterations, double * elapsed) {
+  load_reparse();
+  uint64_t sink = 0;
+  double total = 0.0;
+  GLECMA_Tree ** trees = NULL;
+  size_t room = 0;
+  for (size_t s = 0; s < seed_count; s++) {
+    room += reparse_counts[s];
+  }
+  trees = (GLECMA_Tree **)malloc((room == 0 ? 1 : room) * sizeof(*trees));
+  if (trees == NULL || room == 0) {
+    setup_failed("no function to read again, or out of memory");
+  }
+  for (uint64_t i = 0; i < iterations; i++) {
+    size_t at = 0;
+    double start = now_ns();
+    for (size_t s = 0; s < seed_count; s++) {
+      for (size_t j = 0; j < reparse_counts[s]; j++) {
+        GLECMA_Failure failure = GLECMA_FAILURE_INIT;
+        if (glecma_parse_function(seeds[s].source8, &reparse_jobs[s][j].context, NULL, NULL, &failure,
+                &trees[at]) != GLECMA_OK) {
+          fprintf(stderr, "bench: %s (kind %u, flags %x, [%llu,%llu)) in %s\n",
+              failure.message ? failure.message : "?", (unsigned)reparse_jobs[s][j].context.kind,
+              (unsigned)reparse_jobs[s][j].context.flags,
+              (unsigned long long)reparse_jobs[s][j].context.start,
+              (unsigned long long)reparse_jobs[s][j].context.end, seeds[s].name);
+          setup_failed("a function was refused when read again");
+        }
+        at++;
+      }
+    }
+    total += now_ns() - start;
+    for (size_t k = 0; k < at; k++) {
+      sink += glecma_node_end(glecma_tree_root(trees[k]));
+      glecma_tree_destroy(trees[k]);
+    }
+  }
+  free(trees);
+  *elapsed = total;
+  return sink;
+}
+
+static uint64_t reparse_bytes_per_iter(void) {
+  load_reparse();
+  return reparse_total_bytes;
+}
+
 static const Case cases[] = {
   {"calibration-xorshift", calibration_run, NULL, NULL, 200000000ull, 1000000ull},
   {"source-decode-utf8", decode_utf8_run, decode_utf8_bytes, NULL, 200ull, 1ull},
@@ -432,6 +603,8 @@ static const Case cases[] = {
   {"parse-utf16", parse_utf16_run, tokenize_utf16_bytes, tokenize_tokens, 50ull, 1ull},
   {"parse-checking-utf8", parse_checking_utf8_run, tokenize_utf8_bytes, tokenize_tokens, 50ull, 1ull},
   {"tree-destroy", tree_destroy_run, tokenize_utf8_bytes, NULL, 50ull, 1ull},
+  {"parse-module-utf8", parse_module_run, module_bytes_per_iter, NULL, 50ull, 1ull},
+  {"reparse-functions-utf8", reparse_run, reparse_bytes_per_iter, NULL, 50ull, 1ull},
 };
 
 static int compare_double(const void * a, const void * b) {

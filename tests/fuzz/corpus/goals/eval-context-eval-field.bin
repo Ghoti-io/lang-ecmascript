@@ -1,0 +1,1 @@
+new.target; super.x; super(); arguments; this.#x; this.#yy; this.#\u{1D49C}z; () => super.y; () => new.target; () => arguments; class C { #w; m() { return this.#w + this.#x; } static { this.#x } } function f() { new.target; super.z }

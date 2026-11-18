@@ -1,0 +1,4 @@
+&import a, {b as c, 'd e' as f} from 'm' with {type: 'json'};
+export {c as default}; export * as ns from 'n'; export var v = await import('o');
+await 1; for await (x of y); import.meta.url; export function* g() { yield 1 } export async function h() {} export class K { #p = 1; static { this.q = 1 } get p() { return this.#p } }
+export {a as 'string name', f as other}; export {x as y} from 'z';

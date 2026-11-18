@@ -1,0 +1,1 @@
+@await a; (async () => await b)(); class C { [await c]() {} static x = await; } function* g() { yield await; } label: await: 1; var await;
