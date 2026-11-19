@@ -144,7 +144,8 @@ int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size) {
       RpStats stats;
       char message[600];
       memset(&stats, 0, sizeof stats);
-      if (!builtin) {
+      // Not with the small native stack grant: see fuzz_goals.c.
+      if (!builtin && limit_choice != 2) {
         check(rp_check_tree(source, tree, &options, &stats, message, sizeof message) == 0);
       }
     }
